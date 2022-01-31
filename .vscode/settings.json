@@ -1,5 +1,16 @@
 {
   "files.associations": {
-    "GLOBALS.H": "cpp"
+    "GLOBALS.H": "cpp",
+    "ANALYZE.C": "cpp",
+    "CGEN.C": "cpp",
+    "PARSE.C": "cpp",
+    "UTIL.C": "cpp",
+    "SCAN.C": "cpp",
+    "MAIN.C": "cpp",
+    "SYMTAB.H": "cpp",
+    "TM.C": "cpp",
+    "SYMTAB.C": "cpp",
+    "CODE.H": "cpp",
+    "CODE.C": "cpp"
   }
 }

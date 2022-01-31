@@ -1,16 +1,10 @@
 %{
 #include "globals.h"
-// #include "util.h"
+#include "util.h"
 #include "scan.h"
 /* lexeme of identifier or reserved word */
 char tokenString[MAXTOKENLEN+1];
- 
-extern yyval;
 %}
- 
-%option noyywrap
-%option nodefault
-%option yylineno
  
 digito       [0-9]
 NUM          {digito}+
