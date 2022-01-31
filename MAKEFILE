@@ -5,6 +5,8 @@
 #
 
 CC = gcc
+BISON = bison
+LEX =	lex
 
 CFLAGS = 
 
