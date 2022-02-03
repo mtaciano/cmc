@@ -1,5 +1,4 @@
-/* A program to perform Euclid's
- Algorithm to compute gcd */
+/* Um programa para calcular o mdc segundo o algoritmo de Euclides */
 
 int gcd(int u, int v, int a[]) {
   if (v==0) return u;

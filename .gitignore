@@ -4,5 +4,6 @@
 # Compilacao
 *.o
 cmin.tab.c
+cmin.tab.h
 lex.yy.c
 compiler
