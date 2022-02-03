@@ -54,7 +54,7 @@ main(int argc, char *argv[]) {
   }
   strcpy(pgm, argv[1]);
   if (strchr(pgm, '.') == NULL)
-    strcat(pgm, ".tny");
+    strcat(pgm, ".cm");
   source = fopen(pgm, "r");
   if (source == NULL) {
     fprintf(stderr, "File %s not found\n", pgm);

@@ -256,7 +256,7 @@ void printTree(TreeNode *tree) {
         fprintf(listing, "Return\n");
         break;
       case AssignK:
-        fprintf(listing, "Assign\n");
+        fprintf(listing, "Assign:\n");
         break;
       default:
         fprintf(listing, "Unknown StmtNode kind\n");
