@@ -5,16 +5,16 @@
 /* lexeme of identifier or reserved word */
 char tokenString[MAXTOKENLEN+1];
 %}
- 
+
 digito       [0-9]
 NUM          {digito}+
 letra        [a-zA-Z]
 ID           {letra}+
 newline      \n
 whitespace   [ \t]+
- 
+
 %%
- 
+
 "if"            {return IF;}
 "int"           {return INT;}
 "else"          {return ELSE;}
@@ -54,9 +54,9 @@ whitespace   [ \t]+
                   }
                 }
 .               {return ERROR;}
- 
+
 %%
- 
+
 TokenType getToken(void)
 { static int firstTime = TRUE;
   TokenType currentToken;

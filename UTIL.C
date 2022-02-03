@@ -310,7 +310,8 @@ void printTree(TreeNode *tree) {
       case ArrVarK:
         fprintf(listing, "Array Variable Declaration:  ");
         printTypes(tree);
-        fprintf(listing, " %s[%d];\n", tree->attr.arr.name, tree->attr.arr.size);
+        fprintf(listing, " %s[%d];\n", tree->attr.arr.name,
+                tree->attr.arr.size);
         break;
       case ArrParamK:
         fprintf(listing, "Array Parameter: %s\n", tree->attr.name);
