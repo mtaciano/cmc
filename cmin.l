@@ -13,6 +13,7 @@ ID           {letra}+
 newline      \n
 whitespace   [ \t]+
 
+%option noyywrap
 %%
 
 "if"            {return IF;}
