@@ -1,2 +1,8 @@
 # Qualquer merda do vscode (pessoal)
 .vscode/c_cpp_properties.json
+
+# Compilacao
+*.o
+cmin.tab.c
+lex.yy.c
+compiler
