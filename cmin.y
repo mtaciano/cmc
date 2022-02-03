@@ -344,8 +344,8 @@ arg_lista : arg_lista COMMA expressao
 %%
 
 int yyerror(char * message)
-{ fprintf(listaing,"Syntax error at line %d: %s\n",lineno,message);
-  fprintf(listaing,"Current token: ");
+{ fprintf(listing,"Syntax error at line %d: %s\n",lineno,message);
+  fprintf(listing,"Current token: ");
   printToken(yychar,tokenString);
   Error = TRUE;
   return 0;
