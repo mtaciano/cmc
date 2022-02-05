@@ -12,6 +12,7 @@
  * and its lexeme to the listing file
  */
 void printToken(TokenType, const char *);
+void printToken_n(TokenType token, const char *tokenString);
 
 /* Function newStmtNode creates a new statement
  * node for syntax tree construction
