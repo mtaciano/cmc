@@ -1,6 +1,5 @@
-
-# Makefile for C-Minus compiler
-# @trilliwon
+# Makefile para o compilador C-
+# Miguel Silva Taciano e Gabriel Bianchi e Silva
 
 CC = gcc
 BISON = bison
