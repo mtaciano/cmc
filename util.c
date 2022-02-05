@@ -99,7 +99,8 @@ void printToken(TokenType token, const char *tokenString) {
     fprintf(listing, "ID, name = %s\n", tokenString);
     break;
   case ERROR:
-    fprintf(listing, "ERROR: %s\n", tokenString);
+    fprintf(listing, "ERRO LEXICO: %s LINHA: %d\n", tokenString, lineno);
+    Error = TRUE;
     break;
   default: /* should never happen */
     fprintf(listing, "Unknown token: %d\n", token);
@@ -263,7 +264,7 @@ void printTree(TreeNode *tree) {
         break;
       }
     }
-    // OpK, ConstK, AssignK, IdK, TypeK, ArrIdK, CallK, CalK
+    // OpK, ConstK, AssignK, IdK, TypeK, ArrIdK, CallK, CalcK
     else if (tree->nodekind == ExpK) {
       if (tree->kind.exp != TypeK)
         switch (tree->kind.exp) {

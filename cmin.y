@@ -11,7 +11,7 @@
 #include "globals.h"
 #include "util.h"
 #include "scan.h"
-#include "parse.h"
+// #include "parse.h"
 
 #define YYSTYPE TreeNode *
 static int savedNumber;
@@ -95,6 +95,7 @@ fun_declaracao : tipo_especificador id {
                    $$ = newDeclNode(FunK);
                    $$->lineno = lineno;
                    $$->attr.name = savedName;
+                   // escopo
                  }
                  LPAREN params RPAREN composto_decl
                  { $$ = $3;
@@ -343,10 +344,11 @@ arg_lista : arg_lista COMMA expressao
 
 %%
 
-int yyerror(char * message)
-{ fprintf(listing,"Syntax error at line %d: %s\n",lineno,message);
-  fprintf(listing,"Current token: ");
-  printToken(yychar,tokenString);
+int yyerror(char * message) {
+  if(Error) {
+    return 0;
+  }
+  fprintf(listing,"ERRO SINTATICO: %s LINHA: %d\n", tokenString, lineno);
   Error = TRUE;
   return 0;
 }

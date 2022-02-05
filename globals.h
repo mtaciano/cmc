@@ -98,9 +98,9 @@ typedef struct treeNode {
     int val;
     char *name;
     ArrAttr arr;
-    struct ScopeListRec *scope;
   } attr;
 
+  char *scope;
   ExpType type; /* for type checking of exps */
 } TreeNode;
 
