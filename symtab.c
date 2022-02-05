@@ -8,10 +8,10 @@
 /* Kenneth C. Louden                                */
 /****************************************************/
 
-#include "symtab.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "symtab.h"
 
 /* SIZE is the size of the hash table */
 #define SIZE 211

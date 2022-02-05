@@ -10,7 +10,7 @@
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
 #define NO_PARSE FALSE
 /* set NO_ANALYZE to TRUE to get a parser-only compiler */
-#define NO_ANALYZE TRUE
+#define NO_ANALYZE FALSE
 
 /* set NO_CODE to TRUE to get a compiler that does not
  * generate code
@@ -67,23 +67,22 @@ main(int argc, char *argv[]) {
     ;
 #else
   syntaxTree = parse();
-  if (Error) {
-    exit(-1);
-  }
-  if (TraceParse) {
-    fprintf(listing, "\nArvore sintática:\n");
-    printTree(syntaxTree);
+  if (!Error) {
+    if (TraceParse) {
+      fprintf(listing, "\nArvore sintática:\n");
+      printTree(syntaxTree);
+    }
   }
 #if !NO_ANALYZE
   if (!Error) {
     if (TraceAnalyze)
-      fprintf(listing, "\nBuilding Symbol Table...\n");
+      fprintf(listing, "\nMontando tabela de símbolos...\n");
     buildSymtab(syntaxTree);
     if (TraceAnalyze)
-      fprintf(listing, "\nChecking Types...\n");
+      fprintf(listing, "\nVerificando tipos...\n");
     typeCheck(syntaxTree);
     if (TraceAnalyze)
-      fprintf(listing, "\nType Checking Finished\n");
+      fprintf(listing, "\nVerificação concluída.\n");
   }
 #if !NO_CODE
   if (!Error) {
