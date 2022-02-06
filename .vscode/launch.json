@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${fileDirname}/compiler",
-      "args": ["test/mdc.cm"],
+      "args": ["test/mdc_erro_semantico.cm"],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],

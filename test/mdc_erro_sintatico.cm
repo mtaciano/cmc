@@ -1,4 +1,5 @@
 /* Um programa para calcular o mdc segundo o algoritmo de Euclides */
+/* Linha 4: [ causa erro */
 
 int gcd(int u, int v, int a[[]) {
   if (v==0) return u;

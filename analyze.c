@@ -9,9 +9,67 @@
 #include "globals.h"
 #include "symtab.h"
 #include "analyze.h"
+#include "util.h"
 
 /* counter for variable memory locations */
 static int location = 0;
+static int hasReturn = FALSE;
+
+void findReturn(TreeNode *t) {
+  if (t != NULL) {
+    if (t->nodekind == StmtK && t->kind.stmt == ReturnK) {
+      hasReturn = TRUE;
+    }
+  }
+}
+
+static void insertInput(void) {
+  TreeNode *fun = newDeclNode(FunK);
+  fun->type = Integer;
+
+  TreeNode *type = newExpNode(TypeK);
+  type->attr.type = INT;
+
+  TreeNode *compound_stmt = newStmtNode(CompoundK);
+  compound_stmt->child[0] = NULL;
+  compound_stmt->child[1] = NULL;
+
+  fun->lineno = 0;
+  fun->attr.name = "input";
+  fun->child[0] = type;
+  fun->child[1] = NULL;
+  fun->child[2] = compound_stmt;
+
+  /* Insert input function*/
+  st_insert("input", 0, location++);
+}
+
+static void insertOutput(void) {
+
+  TreeNode *fun = newDeclNode(FunK);
+  fun->type = Void;
+
+  TreeNode *type = newDeclNode(FunK);
+  type->attr.type = VOID;
+
+  TreeNode *params = newDeclNode(ParamK);
+  params->attr.name = "x";
+  params->child[0] = newExpNode(TypeK);
+  params->child[0]->attr.type = INT;
+
+  TreeNode *compound_stmt = newStmtNode(CompoundK);
+  compound_stmt->child[0] = NULL;
+  compound_stmt->child[1] = NULL;
+
+  fun->lineno = 0;
+  fun->attr.name = "output";
+  fun->child[0] = type;
+  fun->child[1] = params;
+  fun->child[2] = compound_stmt;
+
+  /* Insert output function*/
+  st_insert("output", 0, location++);
+}
 
 /* Procedure traverse is a generic recursive
  * syntax tree traversal routine:
@@ -57,6 +115,19 @@ static void symbolError(TreeNode *t, char *message) {
 static void insertNode(TreeNode *t) {
   switch (t->nodekind) {
   case StmtK:
+    switch (t->kind.stmt) {
+    case AssignK:
+      if (st_lookup(t->child[0]->attr.name) == -1) {
+        if (t->child[0]->type == Void) {
+          symbolError(t, "Váriável não declarada");
+          break;
+        }
+      }
+      break;
+
+    default:
+      break;
+    }
     break;
 
   case ExpK:
@@ -143,6 +214,10 @@ static void insertNode(TreeNode *t) {
     case ParamK:
       if (t->attr.name != NULL) {
         /*  Look up to check parameter existence  */
+        if (t->child[0]->type == Void) {
+          symbolError(t, "Parâmetro não pode ser do tipo void");
+          break;
+        }
         if (st_lookup(t->attr.name) != -1) {
           symbolError(t, "Redefinição de parâmetro");
           break;
@@ -164,6 +239,8 @@ static void insertNode(TreeNode *t) {
  * table by preorder traversal of the syntax tree
  */
 void buildSymtab(TreeNode *syntaxTree) {
+  insertInput();
+  insertOutput();
   traverse(syntaxTree, insertNode, nullProc);
   if (TraceAnalyze) {
     fprintf(listing, "\nTabela de símbolos:\n\n");
@@ -185,30 +262,49 @@ static void checkNode(TreeNode *t) {
     switch (t->kind.stmt) {
     case AssignK: {
       // Verify the type match of two operands when assigning.
-      if (t->child[0]->attr.arr.type == IntegerArray) {
-        typeError(t->child[0], "Assignment to Integer Array Variable");
-      }
-
-      if (t->child[0]->attr.type == Void) {
-        typeError(t->child[0], "Assignment to Void Variable");
+      if (st_lookup(t->child[0]->attr.name) == -1) {
+        symbolError(t->child[0], "Váriavel não declarada");
       }
       break;
-    }
-    case ReturnK: {
-      const TreeNode *funcDecl;
-      const ExpType funcType = funcDecl->type;
-      const TreeNode *expr = t->child[0];
-
-      if (funcType == Void && (expr != NULL && expr->type != Void)) {
-        typeError(t, "expected no return value");
-      } else if (funcType == Integer && (expr == NULL || expr->type == Void)) {
-        typeError(t, "expected return value");
-      }
     }
     default:
       break;
     }
     break;
+  case ExpK:
+    switch (t->kind.exp) {
+    case IdK:
+    case ArrIdK:
+    case CallK: {
+      // check undeclation
+      if (st_lookup(t->attr.name) == -1) {
+        symbolError(t, "Símbolo não declarado");
+      }
+    }
+    default:
+      break;
+    }
+  case DeclK:
+    switch (t->kind.decl) {
+    case FunK:
+      // Find if the function has return in it
+      if (t->child[2] != NULL && t->child[2]->child[1] != NULL) {
+        traverse(t->child[2], findReturn, nullProc);
+        if (t->child[0] != NULL && t->child[0]->type == Void) {
+          if (hasReturn) {
+            symbolError(t, "Nenhum valor de retorno esperado");
+          }
+        } else if (t->child[0] != NULL && t->child[0]->type == Integer) {
+          if (!hasReturn) {
+            symbolError(t, "Valor de retorno esperado");
+          }
+        }
+        hasReturn = FALSE;
+      }
+      break;
+    default:
+      break;
+    }
   default:
     break;
   }
