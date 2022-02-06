@@ -8,3 +8,6 @@ cmin.tab.h
 lex.yy.c
 compiler
 compiladores.code-workspace
+
+# nao sei oq eh
+cmin.gv
