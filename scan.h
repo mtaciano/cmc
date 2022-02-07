@@ -1,21 +1,20 @@
 /****************************************************/
 /* File: scan.h                                     */
-/* The scanner interface for the TINY compiler      */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* Funções do scanner da linguagem C-               */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
 /****************************************************/
 
 #ifndef _SCAN_H_
 #define _SCAN_H_
 
-/* MAXTOKENLEN is the maximum size of a token */
+/* MAXTOKENLEN é o tamanho máximo de um token */
 #define MAXTOKENLEN 40
 
-/* tokenString array stores the lexeme of each token */
+/* tokenString array armazena o lexema de cada token */
 extern char tokenString[MAXTOKENLEN + 1];
 
-/* function getToken returns the
- * next token in source file
+/* Função getToken retorna o
+ * próximo token no arquivo fonte
  */
 TokenType getToken(void);
 

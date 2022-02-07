@@ -1,15 +1,14 @@
 /****************************************************/
 /* File: scan.c                                     */
-/* The scanner implementation for the TINY compiler */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* Implementação do scanner da linguagem C-         */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
 /****************************************************/
 
 #include "globals.h"
 #include "scan.h"
 #include "util.h"
 
-/* states in scanner DFA */
+/* estados no DFA do scanner */
 typedef enum {
   START,
   INNUM,
@@ -24,21 +23,22 @@ typedef enum {
   DONE
 } StateType;
 
-/* lexeme of identifier or reserved word */
+/* lexema do identificador ou palavra reservada */
 char tokenString[MAXTOKENLEN + 1];
 
-/* BUFLEN = length of the input buffer for
-   source code lines */
+/* BUFLEN = tamaho do  input buffer para
+   as linhas do código */
 #define BUFLEN 256
 
-static char lineBuf[BUFLEN]; /* holds the current line */
-static int linepos = 0;      /* current position in LineBuf */
-static int bufsize = 0;      /* current size of buffer string */
-static int EOF_flag = FALSE; /* corrects ungetNextChar behavior on EOF */
+static char lineBuf[BUFLEN]; /* linha atual */
+static int linepos = 0;      /* posição atual no LineBuf */
+static int bufsize = 0;      /* tamanho atual do buffer string */
+static int EOF_flag =
+    FALSE; /* arruma o comportamento do ungetNextChar no EOF */
 
-/* getNextChar fetches the next non-blank character
-   from lineBuf, reading in a new line if lineBuf is
-   exhausted */
+/* getNextChar retorna o próximo caractere não branco
+   no lineBuf, lendo uma nova linha de lineBuf se a linha
+   foi totalmente consumida */
 static int getNextChar(void) {
   if (!(linepos < bufsize)) {
     lineno++;
@@ -56,22 +56,23 @@ static int getNextChar(void) {
     return lineBuf[linepos++];
 }
 
-/* ungetNextChar backtracks one character
-   in lineBuf */
+/* ungetNextChar volta um caractere
+   no lineBuf */
 static void ungetNextChar(void) {
   if (!EOF_flag)
     linepos--;
 }
 
-/* lookup table of reserved words */
+/* tabela de consultas das palavras reservadas */
 static struct {
   char *str;
   TokenType tok;
-} reservedWords[MAXRESERVED] = {
-  {"else", ELSE}, {"if", IF}, {"int", INT}, {"return", RETURN}, {"void", VOID}, {"while", WHILE}};
+} reservedWords[MAXRESERVED] = {{"else", ELSE}, {"if", IF},
+                                {"int", INT},   {"return", RETURN},
+                                {"void", VOID}, {"while", WHILE}};
 
-/* lookup an identifier to see if it is a reserved word */
-/* uses linear search */
+/* Consulta um identificador para ver se é uma palavra reservada */
+/* usando busca linear */
 static TokenType reservedLookup(char *s) {
   int i;
   for (i = 0; i < MAXRESERVED; i++)
@@ -80,19 +81,16 @@ static TokenType reservedLookup(char *s) {
   return ID;
 }
 
-/****************************************/
-/* the primary function of the scanner  */
-/****************************************/
-/* function getToken returns the
- * next token in source file
+/* Função getToken retorna o
+ * próximo token do arquivo fonte
  */
-TokenType getToken(void) { /* index for storing into tokenString */
+TokenType getToken(void) { /* Index para guardar para o tokenString */
   int tokenStringIndex = 0;
-  /* holds current token to be returned */
+  /* Guarda o token atual para ser retornado */
   TokenType currentToken;
-  /* current state - always begins at START */
+  /* Estado atual - sempre começa em START */
   StateType state = START;
-  /* flag to indicate save to tokenString */
+  /* Flag para indicar salvar para o tokenString */
   int save;
   while (state != DONE) {
 
@@ -166,7 +164,7 @@ TokenType getToken(void) { /* index for storing into tokenString */
       break;
 
     case INNUM:
-      if (!isdigit(c)) { /* backup in the input */
+      if (!isdigit(c)) { /* Volta o input */
         ungetNextChar();
         save = FALSE;
         state = DONE;
@@ -176,7 +174,7 @@ TokenType getToken(void) { /* index for storing into tokenString */
 
     case INID:
 
-      if (!isalpha(c)) { /* backup in the input */
+      if (!isalpha(c)) { /* Volta o input */
         ungetNextChar();
         save = FALSE;
         state = DONE;
@@ -190,7 +188,7 @@ TokenType getToken(void) { /* index for storing into tokenString */
       if (c == '=') {
         currentToken = LE;
       } else {
-        /* backup in the input */
+        /* Volta o input */
         ungetNextChar();
         save = FALSE;
         currentToken = LT;
@@ -203,20 +201,20 @@ TokenType getToken(void) { /* index for storing into tokenString */
       if (c == '=') {
         currentToken = GE;
       } else {
-        /* backup in the input */
+        /* Volta o input */
         ungetNextChar();
         save = FALSE;
         currentToken = GT;
       }
       break;
 
-    case INNE: /* !=, only "!" does not exist */
+    case INNE: /* !=, apenas "!" não existe */
 
       state = DONE;
       if (c == '=') {
         currentToken = NE;
       } else {
-        /* backup in the input */
+        /* Volta o input */
         ungetNextChar();
         save = FALSE;
         currentToken = ERROR;
@@ -229,7 +227,7 @@ TokenType getToken(void) { /* index for storing into tokenString */
       if (c == '=') {
         currentToken = EQ;
       } else {
-        /* backup in the input */
+        /* Volta o input */
         ungetNextChar();
         save = FALSE;
         currentToken = ASSIGN;
@@ -241,7 +239,7 @@ TokenType getToken(void) { /* index for storing into tokenString */
         save = FALSE;
         state = INCOMMENT;
       } else {
-        /* backup in the input */
+        /* Volta o input */
         state = DONE;
         ungetNextChar();
         save = FALSE;
@@ -269,8 +267,8 @@ TokenType getToken(void) { /* index for storing into tokenString */
       }
       break;
     case DONE: /* Não faz nada */
-    default:   /* should never happen */
-      fprintf(listing, "Scanner Bug: state= %d\n", state);
+    default:   /* Nunca deve acontecer */
+      fprintf(listing, "Bug no scanner: estado = %d\n", state);
       state = DONE;
       currentToken = ERROR;
       break;
@@ -292,4 +290,4 @@ TokenType getToken(void) { /* index for storing into tokenString */
     printToken(currentToken, tokenString);
   }
   return currentToken;
-} /* end getToken */
+} /* fim getToken */

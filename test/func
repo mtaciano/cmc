@@ -1,0 +1,16 @@
+int gcd(){
+  int x;
+  while (x < 10) {
+    int y;
+    y = 1;
+    x = x + y;
+  }
+}
+
+void main(void) {
+  int x;
+  int y;
+  x = input();
+  y = input();
+  output(gcd());
+}

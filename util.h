@@ -1,41 +1,39 @@
 /****************************************************/
-/* File: util.h                                     */
-/* Utility functions for the TINY compiler          */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* Arquivo: util.h                                  */
+/* Funções Utilitarias para  o compilador de C-     */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
 /****************************************************/
 
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
-/* Procedure printToken prints a token
- * and its lexeme to the listing file
+/* Função printToken printa um token
+ * e seu lexema para o arquivo listing
  */
 void printToken(TokenType, const char *);
-void printToken_n(TokenType token, const char *tokenString);
 
-/* Function newStmtNode creates a new statement
- * node for syntax tree construction
+/* Função newStmtNode cria um novo nó do tipo statement
+ * para a contrução da árvore sintática
  */
 TreeNode *newStmtNode(StmtKind);
 
-/* Function newExpNode creates a new expression
- * node for syntax tree construction
+/* Função newExpNode cria um novo nó do tipo expressão
+ * para a contrução da árvore sintática
  */
 TreeNode *newExpNode(ExpKind);
 
-/* Function newDeclNode creates a new declaration
- * node for syntax tree construction
+/* Função newDeclNode cria um novo nó do tipo declaração
+ * para a contrução da árvore sintática
  */
 TreeNode *newDeclNode(DeclKind);
 
-/* Function copyString allocates and makes a new
- * copy of an existing string
+/* Função copyString aloca e cria uma nova
+ * cópia de uma string existente
  */
 char *copyString(char *);
 
-/* procedure printTree prints a syntax tree to the
- * listing file using indentation to indicate subtrees
+/* Função printTree printa a árvore sintática para o
+ * arquivo listing usando indentação para indicar sub-árvores
  */
 void printTree(TreeNode *);
 

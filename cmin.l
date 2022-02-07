@@ -1,8 +1,13 @@
+/****************************************************/
+/* File: cmin.l                                     */
+/* Especificação C-Minus Lex/Flex                   */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
+/****************************************************/
+
 %{
 #include "globals.h"
 #include "util.h"
 #include "scan.h"
-/* lexeme of identifier or reserved word */
 char tokenString[MAXTOKENLEN+1];
 %}
 
