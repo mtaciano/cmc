@@ -7,7 +7,7 @@ LEX = flex
 
 BIN = compiler
 
-OBJS = cmin.tab.o lex.yy.o main.o util.o symtab.o analyze.o
+OBJS = cmin.tab.o lex.yy.o main.o util.o symtab.o analyze.o code.o
 
 $(BIN): $(OBJS)
 	$(CC) $(OBJS) -o $(BIN)
@@ -17,6 +17,9 @@ main.o: main.c globals.h util.h scan.h analyze.h
 
 util.o: util.c util.h globals.h
 	$(CC) -g -c util.c
+
+code.o: globals.h
+	$(CC) -g -c code.c
 
 symtab.o: symtab.c symtab.h
 	$(CC) -g -c symtab.c
