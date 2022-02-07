@@ -1,8 +1,7 @@
 /****************************************************/
 /* File: parse.c                                    */
-/* The parser implementation for the TINY compiler  */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* Implementação do parse para a linguagem C-       */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
 /****************************************************/
 
 #include "globals.h"
@@ -10,9 +9,9 @@
 #include "scan.h"
 #include "util.h"
 
-static TokenType token; /* holds current token */
+static TokenType token; /* token atual */
 
-/* function prototypes for recursive calls */
+/* funções para chamadas recursivas */
 static TreeNode *stmt_sequence(void);
 static TreeNode *statement(void);
 static TreeNode *if_stmt(void);
@@ -27,7 +26,7 @@ static TreeNode *factor(void);
 
 static void syntaxError(char *message) {
   fprintf(listing, "\n>>> ");
-  fprintf(listing, "Syntax error at line %d: %s", lineno, message);
+  fprintf(listing, "ERRO SINTÁTICO: %s LINHA %d", message, lineno);
   Error = TRUE;
 }
 
@@ -35,7 +34,7 @@ static void match(TokenType expected) {
   if (token == expected)
     token = getToken();
   else {
-    syntaxError("unexpected token -> ");
+    syntaxError("token não esperado -> ");
     printToken(token, tokenString);
     fprintf(listing, "      ");
   }
@@ -44,15 +43,15 @@ static void match(TokenType expected) {
 TreeNode *stmt_sequence(void) {
   TreeNode *t = statement();
   TreeNode *p = t;
-  while ((token != ENDFILE) && (token != END) && (token != ELSE) && (token != UNTIL)) {
+  while ((token != ENDFILE) && (token != END) && (token != ELSE) &&
+         (token != UNTIL)) {
     TreeNode *q;
     match(SEMI);
     q = statement();
     if (q != NULL) {
       if (t == NULL)
         t = p = q;
-      else /* now p cannot be NULL either */
-      {
+      else {
         p->sibling = q;
         p = q;
       }
@@ -80,11 +79,11 @@ TreeNode *statement(void) {
     t = write_stmt();
     break;
   default:
-    syntaxError("unexpected token -> ");
+    syntaxError("token não esperado -> ");
     printToken(token, tokenString);
     token = getToken();
     break;
-  } /* end case */
+  }
   return t;
 }
 
@@ -211,7 +210,7 @@ TreeNode *factor(void) {
     match(RPAREN);
     break;
   default:
-    syntaxError("unexpected token -> ");
+    syntaxError("token não esperado -> ");
     printToken(token, tokenString);
     token = getToken();
     break;
@@ -219,17 +218,14 @@ TreeNode *factor(void) {
   return t;
 }
 
-/****************************************/
-/* the primary function of the parser   */
-/****************************************/
-/* Function parse returns the newly
- * constructed syntax tree
+/* Função parse retorna a árvore síntatica
+ * recentemente construída
  */
 TreeNode *parse(void) {
   TreeNode *t;
   token = getToken();
   t = stmt_sequence();
   if (token != ENDFILE)
-    syntaxError("Code ends before file\n");
+    syntaxError("Código termina antes do arquivo\n");
   return t;
 }

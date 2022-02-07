@@ -1,20 +1,19 @@
 /****************************************************/
 /* File: analyze.h                                  */
-/* Semantic analyzer interface for TINY compiler    */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* Funções para o analisador semântico              */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
 /****************************************************/
 
 #ifndef _ANALYZE_H_
 #define _ANALYZE_H_
 
-/* Function buildSymtab constructs the symbol 
- * table by preorder traversal of the syntax tree
+/* Função buildSymtab constrói uma tabela de símbolos
+ * por travessia em pré-ordem da árvore síntatica
  */
 void buildSymtab(TreeNode *);
 
-/* Procedure typeCheck performs type checking 
- * by a postorder syntax tree traversal
+/* Função typeCheck realiza verificação de tipos
+ * através de uma travessia em pós-ordem da árvore síntatica
  */
 void typeCheck(TreeNode *);
 

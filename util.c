@@ -1,36 +1,32 @@
 /****************************************************/
 /* File: util.c                                     */
-/* Utility function implementation                  */
-/* for the TINY compiler                            */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* Implementação das funções utilitarias            */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
 /****************************************************/
 
 #include "globals.h"
 #include "util.h"
 
-/* Procedure printToken prints a token
- * and its lexeme to the listing file
- */
+/* Printando os tokens e lexemas */
 void printToken(TokenType token, const char *tokenString) {
   switch (token) {
   case IF:
-    fprintf(listing, "reserved word: %s\n", tokenString);
+    fprintf(listing, "Palavra reservada: %s\n", tokenString);
     break;
   case ELSE:
-    fprintf(listing, "reserved word: %s\n", tokenString);
+    fprintf(listing, "Palavra reservada: %s\n", tokenString);
     break;
   case INT:
-    fprintf(listing, "reserved word: %s\n", tokenString);
+    fprintf(listing, "Palavra reservada: %s\n", tokenString);
     break;
   case VOID:
-    fprintf(listing, "reserved word: %s\n", tokenString);
+    fprintf(listing, "Palavra reservada: %s\n", tokenString);
     break;
   case RETURN:
-    fprintf(listing, "reserved word: %s\n", tokenString);
+    fprintf(listing, "Palavra reservada: %s\n", tokenString);
     break;
   case WHILE:
-    fprintf(listing, "reserved word: %s\n", tokenString);
+    fprintf(listing, "Palavra reservada: %s\n", tokenString);
     break;
   case PLUS:
     fprintf(listing, "+\n");
@@ -96,25 +92,25 @@ void printToken(TokenType token, const char *tokenString) {
     fprintf(listing, "NUM, val = %s\n", tokenString);
     break;
   case ID:
-    fprintf(listing, "ID, name = %s\n", tokenString);
+    fprintf(listing, "ID, nome = %s\n", tokenString);
     break;
   case ERROR:
     fprintf(listing, "ERRO LEXICO: %s LINHA: %d\n", tokenString, lineno);
     Error = TRUE;
     break;
-  default: /* should never happen */
-    fprintf(listing, "Unknown token: %d\n", token);
+  default: /* não deve acontecer normalmente */
+    fprintf(listing, "Token desconhecido: %d\n", token);
   }
 }
 
-/* Function newStmtNode creates a new statement
- * node for syntax tree construction
+/* Função newStmtNode cria um novo nó do tipo statement
+ * para a contrução da árvore sintática
  */
 TreeNode *newStmtNode(StmtKind kind) {
   TreeNode *t = (TreeNode *)malloc(sizeof(TreeNode));
   int i;
   if (t == NULL)
-    fprintf(listing, "Out of memory error at line %d\n", lineno);
+    fprintf(listing, "Sem memória na linha %d\n", lineno);
   else {
     for (i = 0; i < MAXCHILDREN; i++)
       t->child[i] = NULL;
@@ -126,14 +122,14 @@ TreeNode *newStmtNode(StmtKind kind) {
   return t;
 }
 
-/* Function newExpNode creates a new expression
- * node for syntax tree construction
+/* Função newExpNode cria um novo nó do tipo expressão
+ * para a contrução da árvore sintática
  */
 TreeNode *newExpNode(ExpKind kind) {
   TreeNode *t = (TreeNode *)malloc(sizeof(TreeNode));
   int i;
   if (t == NULL)
-    fprintf(listing, "Out of memory error at line %d\n", lineno);
+    fprintf(listing, "Erro de falta de momória na linha %d\n", lineno);
   else {
     for (i = 0; i < MAXCHILDREN; i++)
       t->child[i] = NULL;
@@ -146,14 +142,14 @@ TreeNode *newExpNode(ExpKind kind) {
   return t;
 }
 
-/* Function newDeclNode creates a new declaration
- * node for syntax tree construction
+/* Função newDeclNode cria um novo nó do tipo declaração
+ * para a contrução da árvore sintática
  */
 TreeNode *newDeclNode(DeclKind kind) {
   TreeNode *t = (TreeNode *)malloc(sizeof(TreeNode));
   int i;
   if (t == NULL)
-    fprintf(listing, "Out of memory error at line %d\n", lineno);
+    fprintf(listing, "Erro de falta de momória na linha %d\n", lineno);
   else {
     for (i = 0; i < MAXCHILDREN; i++)
       t->child[i] = NULL;
@@ -166,8 +162,8 @@ TreeNode *newDeclNode(DeclKind kind) {
   return t;
 }
 
-/* Function copyString allocates and makes a new
- * copy of an existing string
+/* Função copyString aloca e cria uma nova
+ * cópia de uma string existente
  */
 char *copyString(char *s) {
   int n;
@@ -177,29 +173,29 @@ char *copyString(char *s) {
   n = strlen(s) + 1;
   t = malloc(n);
   if (t == NULL)
-    fprintf(listing, "Out of memory error at line %d\n", lineno);
+    fprintf(listing, "Erro de falta de momória na linha %d\n", lineno);
   else
     strcpy(t, s);
   return t;
 }
 
-/* Variable indentno is used by printTree to
- * store current number of spaces to indent
+/* Variável indentno é usada pelo printTree para
+ * guardar o número atual da indentação
  */
 static indentno = 0;
 
-/* macros to increase/decrease indentation */
+/* macros para aumentar/diminuir a indentação */
 #define INDENT indentno += 2
 #define UNINDENT indentno -= 2
 
-/* printSpaces indents by printing spaces */
+/* printSpaces indenta printando espaços */
 static void printSpaces(void) {
   int i;
   for (i = 0; i < indentno; i++)
     fprintf(listing, " ");
 }
 
-/* printType print types of funcions and variables */
+/* printType printa os tipos de funções e variáveis */
 void printTypes(TreeNode *tree) {
   if (tree->child[0] != NULL) {
     switch (tree->child[0]->type) {
@@ -232,8 +228,8 @@ void printTypes(TreeNode *tree) {
   }
 }
 
-/* procedure printTree prints a syntax tree to the
- * listing file using indentation to indicate subtrees
+/* Função printTree printa a árvore sintática para o
+ * arquivo listing usando indentação para indicar sub-árvores
  */
 void printTree(TreeNode *tree) {
   int i;
@@ -251,16 +247,16 @@ void printTree(TreeNode *tree) {
         fprintf(listing, "While\n");
         break;
       case CompoundK:
-        fprintf(listing, "Compound statement\n");
+        fprintf(listing, "Declaração composta\n");
         break;
       case ReturnK:
         fprintf(listing, "Return\n");
         break;
       case AssignK:
-        fprintf(listing, "Assign:\n");
+        fprintf(listing, "Atribuição:\n");
         break;
       default:
-        fprintf(listing, "Unknown StmtNode kind\n");
+        fprintf(listing, "Tipo de declaração desconhecida\n");
         break;
       }
     }
@@ -284,14 +280,14 @@ void printTree(TreeNode *tree) {
           fprintf(listing, "ArrId: %s\n", tree->attr.arr.name);
           break;
         case CallK:
-          fprintf(listing, "Call Function: %s\n", tree->attr.name);
+          fprintf(listing, "Chamada de Função: %s\n", tree->attr.name);
           break;
         case CalcK:
-          fprintf(listing, "Operator: ");
+          fprintf(listing, "Operador: ");
           printToken(tree->child[1]->attr.op, "\0");
           break;
         default:
-          fprintf(listing, "Unknown ExpNode kind\n");
+          fprintf(listing, "Tipo de expressão desconhecida\n");
           break;
         }
     }
@@ -299,26 +295,26 @@ void printTree(TreeNode *tree) {
     else if (tree->nodekind == DeclK) {
       switch (tree->kind.decl) {
       case FunK:
-        fprintf(listing, "Function Declaration:  ");
+        fprintf(listing, "Declaração de Função:  ");
         printTypes(tree);
         fprintf(listing, " %s()\n", tree->attr.name);
         break;
       case VarK:
-        fprintf(listing, "Variable Declaration:  ");
+        fprintf(listing, "Declaração de variável:  ");
         printTypes(tree);
         fprintf(listing, " %s;\n", tree->attr.name);
         break;
       case ArrVarK:
-        fprintf(listing, "Array Variable Declaration:  ");
+        fprintf(listing, "Declaração de array de variável:  ");
         printTypes(tree);
         fprintf(listing, " %s[%d];\n", tree->attr.arr.name,
                 tree->attr.arr.size);
         break;
       case ArrParamK:
-        fprintf(listing, "Array Parameter: %s\n", tree->attr.name);
+        fprintf(listing, "Parâmetro de array: %s\n", tree->attr.name);
         break;
       case ParamK:
-        fprintf(listing, "Parameter: ");
+        fprintf(listing, "Parâmetro: ");
         printTypes(tree);
         if (tree->attr.name != NULL) {
           fprintf(listing, " %s\n", tree->attr.name);
@@ -327,11 +323,11 @@ void printTree(TreeNode *tree) {
         }
         break;
       default:
-        fprintf(listing, "Unknown Declaration\n");
+        fprintf(listing, "Declaração desconhecida\n");
         break;
       }
     } else
-      fprintf(listing, "Unknown node kind\n");
+      fprintf(listing, "Tipo de nó desconhecido\n");
     for (i = 0; i < MAXCHILDREN; i++)
       if (tree->child[i] != NULL)
         printTree(tree->child[i]);

@@ -1,10 +1,8 @@
 /****************************************************/
 /* File: globals.h                                  */
 /* Yacc/Bison Version                               */
-/* Global types and vars for TINY compiler          */
-/* must come before other include files             */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* Tipos globais                                    */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
 /****************************************************/
 
 #ifndef _GLOBALS_H_

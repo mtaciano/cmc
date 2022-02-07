@@ -1,12 +1,11 @@
 /****************************************************/
-/* File: CMIN.y                                   */
-/* The C-Minus Yacc/Bison specification file        */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
+/* File: cmin.y                                     */
+/* Especificação C-Minus Yacc/Bison                 */
+/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
 /****************************************************/
 
 %{
-#define YYPARSER /* distinguishes Yacc output from other code files */
+#define YYPARSER /* diferencia o output do Yacc de outros códigod de output */
 
 #include "globals.h"
 #include "util.h"
@@ -15,10 +14,10 @@
 
 #define YYSTYPE TreeNode *
 static int savedNumber;
-static char * savedName; /* for use in assignments */
-static int savedLineNo;  /* ditto */
-static TreeNode * savedTree; /* stores syntax tree for later return */
-static int yylex(void); /* evitar conflitos (editar dps) */
+static char * savedName;
+static int savedLineNo;
+static TreeNode * savedTree; /* arvore sintática para retornos */
+static int yylex(void); /* evitar conflitos (deixar que funciona) */
 
 %}
 
@@ -31,7 +30,7 @@ static int yylex(void); /* evitar conflitos (editar dps) */
 %right ASSIGN
 %token ERROR
 
-%% /* Grammar for TINY */
+%% /* Gramática do C- */
 
 programa : declaracao_lista { savedTree = $1; }
         ;
@@ -95,7 +94,6 @@ fun_declaracao : tipo_especificador id {
                    $$ = newDeclNode(FunK);
                    $$->lineno = lineno;
                    $$->attr.name = savedName;
-                   // escopo
                  }
                  LPAREN params RPAREN composto_decl
                  { $$ = $3;
