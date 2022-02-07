@@ -15,10 +15,33 @@
 /* contador da posição na memória */
 static int location = 0;
 static int hasReturn = FALSE;
+static int insideParam = FALSE;
 
 /* componentes da pilha */
 static int topoPilha = 0;
 static char pilha[TAM_PILHA][TAM_STRING];
+
+/* Função symbolError imprime um erro durante a tabela de simbolos
+ * tal erro tambem é um erro semantico
+ */
+static void symbolError(TreeNode *t, char *message) {
+  fprintf(listing, "ERRO SEMANTICO: %s LINHA: %d\n", message, t->lineno);
+  Error = TRUE;
+  exit(-1);
+}
+
+static void verificaMain(TreeNode *t) {
+  int linhaMax = st_lookup_max_linha("fun", "global");
+  int varLinhaMax = st_lookup_max_linha("var", "global");
+  int linhaMain = st_lookup("main");
+  if (linhaMax > linhaMain || varLinhaMax > linhaMain) {
+    int max = linhaMax > varLinhaMax ? linhaMax : varLinhaMax;
+    fprintf(listing, "ERRO SEMANTICO: declaração depois do main LINHA: %d\n",
+            max);
+    Error = TRUE;
+    exit(-1);
+  }
+}
 
 /* findReturn() verifica se a função possui retorno */
 static void findReturn(TreeNode *t) {
@@ -70,7 +93,7 @@ static void insertInput(void) {
   fun->child[2] = compound_stmt;
 
   /* Coloca o insert */
-  st_insert("input", "global", 0, location++);
+  st_insert("input", "fun", "int", "global", 0, location++);
 }
 
 static void insertOutput(void) {
@@ -97,7 +120,7 @@ static void insertOutput(void) {
   fun->child[2] = compound_stmt;
 
   /* Colocar o output */
-  st_insert("output", "global", 0, location++);
+  st_insert("output", "fun", "void", "global", 0, location++);
 }
 
 /* Procedure traverse is a generic recursive
@@ -128,20 +151,14 @@ static void nullProc(TreeNode *t) {
     return;
 }
 
-/* Função symbolError imprime um erro durante a tabela de simbolos
- * tal erro tambem é um erro semantico
- */
-static void symbolError(TreeNode *t, char *message) {
-  fprintf(listing, "ERRO SEMANTICO: %s LINHA: %d\n", message, t->lineno);
-  Error = TRUE;
-  exit(-1);
-}
-
 /* Procedure insertNode inserts
  * identifiers stored in t into
  * the symbol table
  */
 static void insertNode(TreeNode *t) {
+  char *varFun;
+  char *tipo;
+
   switch (t->nodekind) {
   case StmtK:
     switch (t->kind.stmt) {
@@ -163,13 +180,24 @@ static void insertNode(TreeNode *t) {
     switch (t->kind.exp) {
     case IdK:
     case ArrIdK:
+      varFun = "int";
+      tipo = "var";
     case CallK: {
+      if (t->kind.exp == CallK) {
+        varFun = "fun";
+        if (t->child[0] != NULL && t->child[0]->type == Void) {
+          tipo = "void";
+        } else if (t->child[0] != NULL && t->child[0]->type == Integer) {
+          tipo = "int";
+        }
+      }
+
       if (st_lookup(t->attr.name) == -1) {
         /* não está na tabela, nova definição */
-        st_insert(t->attr.name, t->scope, t->lineno, location++);
+        st_insert(t->attr.name, varFun, tipo, t->scope, t->lineno, location++);
       } else
         /* já na tabela */
-        st_insert(t->attr.name, t->scope, t->lineno, 0);
+        st_insert(t->attr.name, varFun, tipo, t->scope, t->lineno, 0);
       break;
     }
     default:
@@ -185,14 +213,24 @@ static void insertNode(TreeNode *t) {
         break;
       }
 
+      varFun = "fun";
+      if (t->child[0] != NULL && t->child[0]->type == Void) {
+        tipo = "void";
+      } else if (t->child[0] != NULL && t->child[0]->type == Integer) {
+        tipo = "int";
+      }
+
       if (st_lookup(t->attr.name) == -1) {
         /* não está na tabela, nova definição */
-        st_insert(t->attr.name, t->scope, t->lineno, location++);
+        st_insert(t->attr.name, varFun, tipo, t->scope, t->lineno, location++);
       }
       break;
     case VarK:
+      varFun = "var";
+      tipo = "int";
+
       /* verificar se a variavel já existe */
-      if (st_lookup(t->attr.name) != -1) {
+      if (st_lookup_scope(t->attr.name, t->scope) != -1) {
         symbolError(t, "Redefinição de variável");
         break;
       }
@@ -202,9 +240,11 @@ static void insertNode(TreeNode *t) {
         break;
       }
 
-      st_insert(t->attr.name, t->scope, t->lineno, location++);
+      st_insert(t->attr.name, varFun, tipo, t->scope, t->lineno, location++);
       break;
     case ArrVarK:
+      varFun = "var";
+      tipo = "int";
       // tipo não deve ser VOID
       if (t->child[0]->type == Void) {
         symbolError(t, "Variável do tipo array não pode ser void");
@@ -217,12 +257,15 @@ static void insertNode(TreeNode *t) {
         break;
       }
 
-      st_insert(t->attr.name, t->scope, t->lineno, location++);
+      st_insert(t->attr.name, varFun, tipo, t->scope, t->lineno, location++);
       break;
     case ArrParamK:
       if (t->attr.name == NULL) {
         break;
       }
+
+      varFun = "var";
+      tipo = "int";
 
       /* tipo não deve ser VOID */
       if (t->child[0]->type == Void) {
@@ -236,7 +279,7 @@ static void insertNode(TreeNode *t) {
         break;
       }
 
-      st_insert(t->attr.name, t->scope, t->lineno, location++);
+      st_insert(t->attr.name, varFun, tipo, t->scope, t->lineno, location++);
       break;
     case ParamK:
       if (t->attr.name != NULL) {
@@ -250,7 +293,9 @@ static void insertNode(TreeNode *t) {
           break;
         }
 
-        st_insert(t->attr.name, t->scope, t->lineno, location++);
+        varFun = "var";
+        tipo = "int";
+        st_insert(t->attr.name, varFun, tipo, t->scope, t->lineno, location++);
         break;
       }
       break;
@@ -260,6 +305,8 @@ static void insertNode(TreeNode *t) {
   default:
     break;
   }
+  varFun = "\0";
+  tipo = "\0";
 }
 
 /* Function buildSymtab constructs the symbol
@@ -271,7 +318,8 @@ void buildSymtab(TreeNode *syntaxTree) {
   strcpy(pilha[0], "global");
   traverse(syntaxTree, giveScope, popStack);
   traverse(syntaxTree, insertNode, nullProc);
-  if (TraceAnalyze) {
+  verificaMain(syntaxTree);
+  if (!Error && TraceAnalyze) {
     fprintf(listing, "\nTabela de símbolos:\n\n");
     printSymTab(listing);
   }

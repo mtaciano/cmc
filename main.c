@@ -15,7 +15,7 @@
 /* set NO_CODE to TRUE to get a compiler that does not
  * generate code
  */
-#define NO_CODE TRUE
+#define NO_CODE FALSE
 
 #include "util.h"
 #if NO_PARSE
@@ -25,7 +25,7 @@
 #if !NO_ANALYZE
 #include "analyze.h"
 #if !NO_CODE
-#include "cgen.h"
+#include "code.h"
 #endif
 #endif
 #endif
@@ -41,7 +41,7 @@ int EchoSource = FALSE;
 int TraceScan = TRUE;
 int TraceParse = TRUE;
 int TraceAnalyze = TRUE;
-int TraceCode = FALSE;
+int TraceCode = TRUE;
 
 int Error = FALSE;
 
@@ -61,7 +61,7 @@ main(int argc, char *argv[]) {
     exit(1);
   }
   listing = stdout; /* send listing to screen */
-  fprintf(listing, "\nCOMPILAÇÃO DO C-: %s\n", pgm);
+  fprintf(listing, "\nCOMPILAÇÃO DO C-: %s\n\n", pgm);
 #if NO_PARSE
   while (getToken() != ENDFILE)
     ;
@@ -69,7 +69,7 @@ main(int argc, char *argv[]) {
   syntaxTree = parse();
   if (!Error) {
     if (TraceParse) {
-      fprintf(listing, "\nArvore sintática:\n");
+      fprintf(listing, "\nArvore sintática:\n\n");
       printTree(syntaxTree);
     }
   }
@@ -86,18 +86,11 @@ main(int argc, char *argv[]) {
   }
 #if !NO_CODE
   if (!Error) {
-    char *codefile;
-    int fnlen = strcspn(pgm, ".");
-    codefile = (char *)calloc(fnlen + 4, sizeof(char));
-    strncpy(codefile, pgm, fnlen);
-    strcat(codefile, ".tm");
-    code = fopen(codefile, "w");
-    if (code == NULL) {
-      printf("Unable to open %s\n", codefile);
-      exit(1);
-    }
-    codeGen(syntaxTree, codefile);
-    fclose(code);
+    if (TraceCode)
+      fprintf(listing, "\nGerando código intermediário\n\n");
+    makeCode(syntaxTree);
+    if (TraceCode)
+      fprintf(listing, "\nGeração do código intermediário concluída.\n");
   }
 #endif
 #endif

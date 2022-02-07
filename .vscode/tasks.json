@@ -13,6 +13,7 @@
         "${fileDirname}/util.o",
         "${fileDirname}/symtab.o",
         "${fileDirname}/analyze.o",
+        "${fileDirname}/code.o",
         "-o",
         "${fileDirname}/compiler"
       ],
