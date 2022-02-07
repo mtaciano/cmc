@@ -163,11 +163,9 @@ static void insertNode(TreeNode *t) {
   case StmtK:
     switch (t->kind.stmt) {
     case AssignK:
-      if (st_lookup(t->child[0]->attr.name) == -1) {
-        if (t->child[0]->type == Void) {
-          symbolError(t, "Váriável não declarada");
-          break;
-        }
+      if (st_lookup_scope(t->child[0]->attr.name, t->scope) == -1 &&
+          st_lookup_scope(t->child[0]->attr.name, "global") == -1) {
+        symbolError(t, "Váriável não declarada");
       }
       break;
 
@@ -180,8 +178,8 @@ static void insertNode(TreeNode *t) {
     switch (t->kind.exp) {
     case IdK:
     case ArrIdK:
-      varFun = "int";
-      tipo = "var";
+      varFun = "var";
+      tipo = "int";
     case CallK: {
       if (t->kind.exp == CallK) {
         varFun = "fun";
@@ -252,12 +250,13 @@ static void insertNode(TreeNode *t) {
       }
 
       /*  verificar se a variável  array já foi declarada  */
-      if (st_lookup(t->attr.arr.name) != -1) {
+      if (st_lookup_scope(t->attr.arr.name, t->scope) != -1) {
         symbolError(t, "Variável do tipo array já declarada");
         break;
       }
 
-      st_insert(t->attr.name, varFun, tipo, t->scope, t->lineno, location++);
+      st_insert(t->attr.arr.name, varFun, tipo, t->scope, t->lineno,
+                location++);
       break;
     case ArrParamK:
       if (t->attr.name == NULL) {
@@ -274,7 +273,7 @@ static void insertNode(TreeNode *t) {
       }
 
       /* Verifica se o array já foi declarado */
-      if (st_lookup(t->attr.name) != -1) {
+      if (st_lookup_scope(t->attr.name, t->scope) != -1) {
         symbolError(t, "Parâmetro do tipo array já declarado");
         break;
       }
@@ -288,7 +287,7 @@ static void insertNode(TreeNode *t) {
           symbolError(t, "Parâmetro não pode ser do tipo void");
           break;
         }
-        if (st_lookup(t->attr.name) != -1) {
+        if (st_lookup_scope(t->attr.name, t->scope) != -1) {
           symbolError(t, "Redefinição de parâmetro");
           break;
         }
@@ -333,7 +332,8 @@ static void checkNode(TreeNode *t) {
   case StmtK:
     switch (t->kind.stmt) {
     case AssignK: {
-      if (st_lookup(t->child[0]->attr.name) == -1) {
+      if (st_lookup_scope(t->child[0]->attr.name, t->scope) == -1 &&
+          st_lookup_scope(t->child[0]->attr.name, "global") == -1) {
         symbolError(t->child[0], "Váriavel não declarada");
       }
       break;
