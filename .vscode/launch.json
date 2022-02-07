@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${fileDirname}/compiler",
-      "args": ["test/func.cm"],
+      "args": ["test/ordenar.cm"],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
