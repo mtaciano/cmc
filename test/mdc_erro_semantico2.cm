@@ -1,5 +1,5 @@
 /* Um programa para calcular o mdc segundo o algoritmo de Euclides */
-/* Linha 10: void retornando */
+/* Linha 13: variável declarada duas vezes */
 
 int gcd(int u, int v) {
   if (v==0) return u;
@@ -10,7 +10,7 @@ int gcd(int u, int v) {
 void main(void)
 {
   int x; int y;
+  int x;
   x = input(); y = input();
   output(gcd(x,y));
-  return x;
 }
