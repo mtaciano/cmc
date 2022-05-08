@@ -5,7 +5,7 @@ CC = gcc
 BISON = bison
 LEX = flex
 
-BIN = compiler
+BIN = compilador
 
 OBJS = cmin.tab.o lex.yy.o main.o util.o symtab.o analyze.o code.o
 
@@ -37,7 +37,8 @@ cmin.tab.o: cmin.y globals.h
 
 clean:
 	-rm -f $(BIN)
-	-rm -f cmin.tab.c
-	-rm -f cmin.tab.h
-	-rm -f lex.yy.c
+	-rm -f *.gv
+	-rm -f *.tab.c
+	-rm -f *.tab.h
+	-rm -f *.yy.c
 	-rm -f $(OBJS)
