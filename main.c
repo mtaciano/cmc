@@ -4,7 +4,7 @@
 /* Compiler Construction: Principles and Practice   */
 /* Kenneth C. Louden                                */
 /****************************************************/
-
+// TODO: atualizar os comentários, NO_PARSE, NO_ANALYZE e NO_CODE
 #include "globals.h"
 
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
