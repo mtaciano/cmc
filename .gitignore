@@ -1,13 +1,12 @@
-# Qualquer merda do vscode (pessoal)
-.vscode/c_cpp_properties.json
+# Configurações
+.vscode
+.ccls-cache
 
-# Compilacao
+# Compilação
 *.o
-cmin.tab.c
-cmin.tab.h
-lex.yy.c
-compiler
-compiladores.code-workspace
-
-# nao sei oq eh
-cmin.gv
+*.tab.c
+*.tab.h
+*.yy.c
+*.code-workspace
+*.gv
+compilador
