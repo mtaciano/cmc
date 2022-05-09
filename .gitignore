@@ -1,6 +1,7 @@
 # Configurações
 .vscode
 .ccls-cache
+compile_commands.json
 
 # Compilação
 *.o
