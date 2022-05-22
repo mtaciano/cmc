@@ -54,11 +54,13 @@ static BucketList hashTable[SIZE];
 /* Função st_insert coloca as linhas,
  * posicoes de memoria e os escopos na tabela de simbolos
  */
-void st_insert(char *name, char *varFun, char *tipo, char *scope, int lineno, int loc) {
+void st_insert(char *name, char *varFun, char *tipo, char *scope, int lineno,
+               int loc) {
   int h = hash(name);
   BucketList l = hashTable[h];
   if (strcmp(varFun, "var") == 0) {
-    while ((l != NULL) && ((strcmp(name, l->name) != 0) || (strcmp(scope, l->scope) != 0)))
+    while ((l != NULL) &&
+           ((strcmp(name, l->name) != 0) || (strcmp(scope, l->scope) != 0)))
       l = l->next;
     if (l == NULL) /* se não está na tabela, adicione */
     {
@@ -163,8 +165,10 @@ int st_lookup_max_linha(char *varFun, char *scope) {
  */
 void printSymTab(FILE *listing) {
   int i;
-  fprintf(listing, "NOME VARIÁVEL  LOCALIZAÇÃO  ESCOPO  TIPO_ID  TIPO_DADO  LINHAS\n");
-  fprintf(listing, "-------------  -----------  ------  -------  ---------  ------\n");
+  fprintf(listing,
+          "NOME VARIÁVEL  LOCALIZAÇÃO  ESCOPO  TIPO_ID  TIPO_DADO  LINHAS\n");
+  fprintf(listing,
+          "-------------  -----------  ------  -------  ---------  ------\n");
   for (i = 0; i < SIZE; ++i) {
     if (hashTable[i] != NULL) {
       BucketList l = hashTable[i];

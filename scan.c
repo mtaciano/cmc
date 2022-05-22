@@ -33,7 +33,8 @@ char tokenString[MAXTOKENLEN + 1];
 static char lineBuf[BUFLEN]; /* linha atual */
 static int linepos = 0;      /* posição atual no LineBuf */
 static int bufsize = 0;      /* tamanho atual do buffer string */
-static int EOF_flag = FALSE; /* arruma o comportamento do ungetNextChar no EOF */
+static int EOF_flag =
+    FALSE; /* arruma o comportamento do ungetNextChar no EOF */
 
 /* getNextChar retorna o próximo caractere não branco
    no lineBuf, lendo uma nova linha de lineBuf se a linha
@@ -66,8 +67,9 @@ static void ungetNextChar(void) {
 static struct {
   char *str;
   TokenType tok;
-} reservedWords[MAXRESERVED] = {{"else", ELSE},     {"if", IF},     {"int", INT},
-                                {"return", RETURN}, {"void", VOID}, {"while", WHILE}};
+} reservedWords[MAXRESERVED] = {{"else", ELSE}, {"if", IF},
+                                {"int", INT},   {"return", RETURN},
+                                {"void", VOID}, {"while", WHILE}};
 
 /* Consulta um identificador para ver se é uma palavra reservada */
 /* usando busca linear */
