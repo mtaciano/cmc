@@ -1,15 +1,13 @@
-/****************************************************/
-/* File: cmin.y                                     */
-/* Especificação C-Minus Yacc/Bison                 */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
-
+/* Especificação C- Yacc/Bison */
+/* TODO: comentar melhor */
 %{
 #define YYPARSER /* diferencia o output do Yacc de outros códigod de output */
 
 #include "globals.h"
 #include "util.h"
 #include "scan.h"
+// TODO: muito provavelmente parse.h não é necessário em nenhum lugar
+//   @t! portanto remover ele dos arquivos (main.c também possui ele)
 // #include "parse.h"
 
 #define YYSTYPE TreeNode *

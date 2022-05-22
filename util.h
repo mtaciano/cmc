@@ -1,8 +1,4 @@
-/****************************************************/
-/* Arquivo: util.h                                  */
-/* Funções Utilitarias para  o compilador de C-     */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Funções utilitarias para o compilador de C-
 
 #ifndef _UTIL_H_
 #define _UTIL_H_

@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: symtab.c                                   */
-/* Implementação da tabela de símbolos              */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Implementação da tabela de símbolos
 
 #include <stdio.h>
 #include <stdlib.h>

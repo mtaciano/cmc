@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: parse.h                                    */
-/* Parse para linguagem C-                          */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Parser para linguagem C-
 
 #ifndef _PARSE_H_
 #define _PARSE_H_

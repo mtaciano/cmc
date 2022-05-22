@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: analyze.h                                  */
-/* Funções para o analisador semântico              */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Funções para o analisador semântico
 
 #ifndef _ANALYZE_H_
 #define _ANALYZE_H_

@@ -1,10 +1,10 @@
-/****************************************************/
-/* File: main.c                                     */
-/* Main program for TINY compiler                   */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
-/****************************************************/
+// Ponto de entrada para o compilador
+// Responsável por chamar todos os componentes dele
+
 // TODO: atualizar os comentários, NO_PARSE, NO_ANALYZE e NO_CODE
+// TODO: garantir que todos os arquivos estejam padronizados
+// TODO: refatorar as partes ruins dos códigos
+// TODO: refatorar comentários
 #include "globals.h"
 
 /* set NO_PARSE to TRUE to get a scanner-only compiler */

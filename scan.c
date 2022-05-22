@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: scan.c                                     */
-/* Implementação do scanner da linguagem C-         */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Implementação do scanner da linguagem C-
 
 #include "globals.h"
 #include "scan.h"

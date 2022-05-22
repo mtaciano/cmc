@@ -1,10 +1,7 @@
-/****************************************************/
-/* File: globals.h                                  */
-/* Yacc/Bison Version                               */
-/* Tipos globais                                    */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Tipos globais
+// Protótipos usados por todo o código
 
+// TODO: comentar o código
 #ifndef _GLOBALS_H_
 #define _GLOBALS_H_
 
