@@ -7,229 +7,149 @@
 #include "globals.h"
 #include "code.h"
 
-#define TAM_PILHA 200
-#define TAM_STRING 10
+/* Struct de Quadruplas */
+typedef struct QuadRec {
+  char *command;
+  char *arg1;
+  char *arg2;
+  char *arg3;
+  struct QuadRec *next;
+} * Quad;
 
-/* Valor atual da pilha, número da variável atual de temporários (_Tx)
- * e número da variável atual de endereços (_Lx)
- */
-static int topoPilha = -1;
-static int atualTemp = 1;
-static int atualEnd = 1;
+/* Quadrupla final */
+static Quad quad;
 
-/* Pilha usada para guardar a ordem das operações */
-static char pilha[TAM_PILHA][TAM_STRING];
+/* Função insert_quad insere quadruplas na variável quad */
+static Quad insert_quad(char *cmd, char *arg1, char *arg2, char *arg3) {
+  if (quad == NULL) {
+    quad = (Quad)malloc(sizeof(struct QuadRec));
+    quad->command = cmd;
+    quad->arg1 = arg1;
+    quad->arg2 = arg2;
+    quad->arg3 = arg3;
+    quad->next = NULL;
+  } else {
+    Quad new_quad = (Quad)malloc(sizeof(struct QuadRec));
+    new_quad->command = cmd;
+    new_quad->arg1 = arg1;
+    new_quad->arg2 = arg2;
+    new_quad->arg3 = arg3;
+    new_quad->next = NULL;
 
-/* Quantos CalcK existem acima */
-static int calcNestedLevel = 0;
-
-/* Função addStack adiciona o nó atual no stack */
-static void addStack(TreeNode *t) {
-  switch (t->nodekind) {
-  case ExpK:
-    switch (t->kind.exp) {
-    case IdK:
-      topoPilha++;
-      strcpy(pilha[topoPilha], t->attr.name);
-      break;
-
-    case OpK:
-      switch (t->attr.op) {
-      case LT:
-        topoPilha++;
-        strcpy(pilha[topoPilha], "<");
-        break;
-
-      case LE:
-        topoPilha++;
-        strcpy(pilha[topoPilha], "<=");
-        break;
-
-      case GT:
-        topoPilha++;
-        strcpy(pilha[topoPilha], ">");
-        break;
-
-      case GE:
-        topoPilha++;
-        strcpy(pilha[topoPilha], ">=");
-        break;
-
-      case EQ:
-        topoPilha++;
-        strcpy(pilha[topoPilha], "==");
-        break;
-
-      case NE:
-        topoPilha++;
-        strcpy(pilha[topoPilha], "!=");
-        break;
-
-      case PLUS:
-        topoPilha++;
-        strcpy(pilha[topoPilha], "+");
-        break;
-
-      case MINUS:
-        topoPilha++;
-        strcpy(pilha[topoPilha], "-");
-        break;
-
-      case TIMES:
-        topoPilha++;
-        strcpy(pilha[topoPilha], "*");
-        break;
-
-      case OVER:
-        topoPilha++;
-        strcpy(pilha[topoPilha], "/");
-        break;
-
-      default:
-        break;
-      }
-      break;
-
-    case ConstK:
-      topoPilha++;
-      snprintf(pilha[topoPilha], TAM_STRING, "%d", t->attr.val);
-      break;
-
-    default:
-      break;
+    Quad last_quad = quad;
+    while (last_quad->next != NULL) {
+      last_quad = last_quad->next;
     }
-    break;
 
-  default:
+    last_quad->next = new_quad;
+  }
+}
+
+/* Função type_to_string transforma o tipo em uma string, void ou int */
+char *type_to_string(TreeNode *t) {
+  switch (t->type) {
+  case Integer:
+    return "INT";
+    break;
+  case Void:
+    return "VOID";
     break;
   }
 }
 
-/* Função popStack printa os três valores do topo da pilha
- * como é representado por código de três endereços
- */
-static void popStack(int n) {
-  for (int i = 0; i < n; i++) {
-    strcpy(pilha[topoPilha], "\0");
-    topoPilha--;
-  }
-}
+/* Função read_tree_node lê o nó da arvore e trata ele de acordo */
+/* TODO: tratar todos os casos possíveis */
+static void read_tree_node(TreeNode *t) {
+  // Provavelmente vai ter variaveis aqui
 
-/* Função printStack remove o nó atual do stack */
-static void printStack() {
-  fprintf(listing, "%s %s %s\n", pilha[topoPilha - 2], pilha[topoPilha - 1],
-          pilha[topoPilha]);
-  //
-}
-
-/* Função preProc realiza as operações necessárias na descida */
-static void preProc(TreeNode *t) {
-  // fazer coisas descendo
+  // Verifica o nó atual
   switch (t->nodekind) {
-  case ExpK:
-    switch (t->kind.exp) {
-    case IdK:
-    case OpK:
-    case ConstK:
-      addStack(t);
-      break;
-
-    case CalcK:
-      calcNestedLevel++;
-      break;
-
-    default:
-      break;
-    }
-
-    break;
-
-  case DeclK:
-    switch (t->kind.decl) {
-    case FunK:
-      fprintf(listing, "%s:\n", t->attr.name);
-      break;
-
-    default:
-      break;
-    }
-  }
-}
-
-static void postProc(TreeNode *t) {
-  switch (t->nodekind) {
-  case ExpK:
-    switch (t->kind.exp) {
-    case CalcK:
-      if (calcNestedLevel > 0) {
-        fprintf(listing, "_t%-2d = %-3s %-2s %s\n", atualTemp,
-                pilha[topoPilha - 2], pilha[topoPilha - 1], pilha[topoPilha]);
-        popStack(3);
-        // Adiciona _tx na pilha
-        topoPilha++;
-        snprintf(pilha[topoPilha], TAM_STRING, "_t%d", atualTemp);
-        atualTemp++;
-      } else if (calcNestedLevel == 0) {
-        fprintf(listing, "  %-2s = _t%s", pilha[topoPilha - 1],
-                pilha[topoPilha]);
-        popStack(2);
-      }
-
-      /* remove os 3 elementos do topo da pilha */
-      calcNestedLevel--;
-      break;
-
-    default:
-      break;
-    }
-    break;
-
   case StmtK:
     switch (t->kind.stmt) {
+    case IfK:
+      /* code */
+      break;
+    case WhileK:
+      /* code */
+      break;
     case AssignK:
-      fprintf(listing, "  %-2s = %s\n", pilha[topoPilha - 1], pilha[topoPilha]);
-      popStack(2);
+      /* code */
       break;
-
+    case CompoundK:
+      /* code */
       break;
-    default:
+    case ReturnK:
+      /* code */
       break;
     }
-
+    break;
+  case ExpK:
+    switch (t->kind.exp) {
+    case OpK:
+      /* code */
+      break;
+    case ConstK:
+      /* code */
+      break;
+    case IdK:
+      /* code */
+      break;
+    case TypeK:
+      /* code */
+      break;
+    case ArrIdK:
+      /* code */
+      break;
+    case CallK:
+      /* code */
+      break;
+    case CalcK:
+      /* code */
+      break;
+    }
+    break;
   case DeclK:
     switch (t->kind.decl) {
-    case FunK:
-      fprintf(listing, "\n");
+    case VarK:
+      /* code */
       break;
-
-    default:
+    case FunK:
+      char *type = type_to_string(t->child[0]);
+      char *name = t->attr.name;
+      insert_quad("FUN", type, name, "--");
+      break;
+    case ArrVarK:
+      /* code */
+      break;
+    case ArrParamK:
+      /* code */
+      break;
+    case ParamK:
+      /* code */
       break;
     }
-    break;
-
-  default:
     break;
   }
-}
-/* Função traverse é uma função recusiva que
- * atravessa a árvore sintática:
- * ela apilca preProc em pré-ordem e postProc em pós-ordem
- * na árvore apontada por t
- */
-static void traverse(TreeNode *t, void (*preProc)(TreeNode *),
-                     void (*postProc)(TreeNode *)) {
-  if (t != NULL) {
-    preProc(t);
-    for (int i = 0; i < MAXCHILDREN; i++) {
-      traverse(t->child[i], preProc, postProc);
+
+  // Verifica os 3 filhos
+  for (int i = 1; i < 3; i++) {
+    if (t->child[i] != NULL) {
+      read_tree_node(t->child[i]);
     }
-    postProc(t);
-    traverse(t->sibling, preProc, postProc);
+  }
+
+  // Verifica o irmão
+  if (t->sibling != NULL) {
+    read_tree_node(t->sibling);
   }
 }
 
 /* makeCode é responsável por gerar o código intermediário */
+/* TODO: transformar os nomes das funções e variáveis
+ *   @t! de Camel case para Snake case
+ */
 void makeCode(TreeNode *t) {
-  traverse(t, preProc, postProc);
+
+  read_tree_node(t);
   //
 }
