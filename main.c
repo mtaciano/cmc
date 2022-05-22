@@ -88,7 +88,7 @@ main(int argc, char *argv[]) {
   if (!Error) {
     if (TraceCode)
       fprintf(listing, "\nGerando código intermediário\n\n");
-    makeCode(syntaxTree);
+    make_code(syntaxTree);
     if (TraceCode)
       fprintf(listing, "\nGeração do código intermediário concluída.\n");
   }

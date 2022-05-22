@@ -7,7 +7,7 @@
 #ifndef _CODE_H_
 #define _CODE_H_
 
-/* makeCode é responsável por gerar o código intermediário */
-void makeCode(TreeNode *t);
+/* make_code é responsável por gerar o código intermediário */
+void make_code(TreeNode *t);
 
 #endif
