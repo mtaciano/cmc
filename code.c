@@ -1,12 +1,10 @@
-/****************************************************/
-/* File: code.c                                     */
-/* Código intermediário                             */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Código intermediário
 
 #include "globals.h"
 #include "code.h"
 
+// TODO: `STACK_SIZE` é um limite arbitrário, logo se possível mudar
+//   @t! para uma implementação sem limite, provavelmente através de realloc
 #define STACK_SIZE 50
 
 /* Struct de Quadruplas */
@@ -25,6 +23,8 @@ static Quad quad;
 static int t_num = 0;
 static int l_num = 0;
 
+// TODO: talvez seja melhor abstrair o conceito de `stack` para um struct
+//   @t! possivelmente implementar esse struct melhore a clareza do código
 /* Ordem de LOAD */
 static char stack_load[STACK_SIZE][50];
 static int stack_load_last = 0;
@@ -112,6 +112,8 @@ char *type_to_string(TreeNode *t) {
 }
 
 /* Função handle_if é responsável por criar as quadruplas para IF */
+// TODO: Provavelmente ela não é necessária mas sua implementação é mais fácil
+//   @t! Mudar, se possível, para o esquema de pré, mid e pós
 static void handle_if(TreeNode *t) {
   //
 }
@@ -120,7 +122,10 @@ static void handle_if(TreeNode *t) {
 /* TODO: tratar todos os casos possíveis */
 static void read_tree_node(TreeNode *t) {
   // TODO: melhorar e documentar
-  // Provavelmente vai ter variaveis aqui
+
+  // TODO: remover a maioria do código
+  //   @t! transformando read_tree_node em uma função que executa 3 outras
+  //   @t! sendo elas uma pré, uma mid e uma pós nó
   int is_fun = FALSE;
   int is_asn = FALSE;
   int is_const_asn = FALSE;
@@ -146,8 +151,6 @@ static void read_tree_node(TreeNode *t) {
       if (t->child[1]->nodekind == ExpK && t->child[1]->kind.exp == ConstK) {
         is_const_asn = TRUE;
       }
-      // child 0 = id
-      // child 1 = calc
       break;
     case CompoundK:
       /* code */
@@ -289,7 +292,6 @@ static void read_tree_node(TreeNode *t) {
   }
 
   if (is_asn) {
-    // TODO: conseguir mostrar as temps $t
     if (is_const_asn) {
       char *temp = (char *)malloc(50 * sizeof(char));
       strcpy(temp, stack_temp[stack_temp_last - 1]);

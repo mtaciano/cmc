@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: scan.h                                     */
-/* Funções do scanner da linguagem C-               */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Funções do scanner da linguagem C-
 
 #ifndef _SCAN_H_
 #define _SCAN_H_

@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: parse.c                                    */
-/* Implementação do parse para a linguagem C-       */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Implementação do parser para a linguagem C-
 
 #include "globals.h"
 #include "parse.h"

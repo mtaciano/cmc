@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: analyze.c                                  */
-/* Analize Semântica da linguagem C-                */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Analize Semântica da linguagem C-
 
 #include "globals.h"
 #include "symtab.h"

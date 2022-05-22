@@ -1,9 +1,5 @@
-/****************************************************/
-/* File: cmin.l                                     */
-/* Especificação C-Minus Lex/Flex                   */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
-
+/* Especificação C- Lex/Flex */
+/* TODO: possivelmente comentar o código (talvez não seja necessário) */
 %{
 #include "globals.h"
 #include "util.h"

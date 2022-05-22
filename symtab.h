@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: symtab.h                                   */
-/* Funções da tabela de símbolos                    */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Funções da tabela de símbolos
 
 #ifndef _SYMTAB_H_
 #define _SYMTAB_H_

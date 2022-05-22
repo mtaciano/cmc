@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: util.c                                     */
-/* Implementação das funções utilitarias            */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Implementação das funções utilitarias
 
 #include "globals.h"
 #include "util.h"
