@@ -10,8 +10,7 @@
 /* Função st_insert coloca as linhas,
  * posições de memória e os escopos na tabela de símbolos
  */
-void st_insert(char *name, char *varFun, char *tipo, char *scope, int lineno,
-               int loc);
+void st_insert(char *name, char *varFun, char *tipo, char *scope, int lineno, int loc);
 
 /* Função st_lookup retorna a posição na memória de
  * uma variável, e -1 se não encontrar
