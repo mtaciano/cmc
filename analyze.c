@@ -36,8 +36,7 @@ static void verificaMain(TreeNode *t) {
   int linhaMain = st_lookup("main");
   if (linhaMax > linhaMain || varLinhaMax > linhaMain) {
     int max = linhaMax > varLinhaMax ? linhaMax : varLinhaMax;
-    fprintf(listing, "ERRO SEMANTICO: declaração depois do main LINHA: %d\n",
-            max);
+    fprintf(listing, "ERRO SEMANTICO: declaração depois do main LINHA: %d\n", max);
     Error = TRUE;
     exit(-1);
   }
@@ -128,8 +127,7 @@ static void insertOutput(void) {
  * it applies preProc in preorder and postProc
  * in postorder to tree pointed to by t
  */
-static void traverse(TreeNode *t, void (*preProc)(TreeNode *),
-                     void (*postProc)(TreeNode *)) {
+static void traverse(TreeNode *t, void (*preProc)(TreeNode *), void (*postProc)(TreeNode *)) {
   if (t != NULL) {
     preProc(t);
     for (int i = 0; i < MAXCHILDREN; i++) {
@@ -255,8 +253,7 @@ static void insertNode(TreeNode *t) {
         break;
       }
 
-      st_insert(t->attr.arr.name, varFun, tipo, t->scope, t->lineno,
-                location++);
+      st_insert(t->attr.arr.name, varFun, tipo, t->scope, t->lineno, location++);
       break;
     case ArrParamK:
       if (t->attr.name == NULL) {
@@ -383,6 +380,4 @@ static void checkNode(TreeNode *t) {
 /* Procedure typeCheck performs type checking
  * by a postorder syntax tree traversal
  */
-void typeCheck(TreeNode *syntaxTree) {
-  traverse(syntaxTree, nullProc, checkNode);
-}
+void typeCheck(TreeNode *syntaxTree) { traverse(syntaxTree, nullProc, checkNode); }
