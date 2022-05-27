@@ -75,21 +75,15 @@ void pop(char stack[STACK_SIZE][50], int *stack_size) {
 
 /* Função insert_quad insere quadruplas na variável quad */
 static void insert_quad(char *cmd, char *arg1, char *arg2, char *arg3) {
+  Quad new_quad = (Quad)malloc(sizeof(struct QuadRec));
+  new_quad->command = cmd;
+  new_quad->arg1 = arg1;
+  new_quad->arg2 = arg2;
+  new_quad->arg3 = arg3;
+  new_quad->next = NULL;
   if (quad == NULL) {
-    quad = (Quad)malloc(sizeof(struct QuadRec));
-    quad->command = cmd;
-    quad->arg1 = arg1;
-    quad->arg2 = arg2;
-    quad->arg3 = arg3;
-    quad->next = NULL;
+    quad = new_quad;
   } else {
-    Quad new_quad = (Quad)malloc(sizeof(struct QuadRec));
-    new_quad->command = cmd;
-    new_quad->arg1 = arg1;
-    new_quad->arg2 = arg2;
-    new_quad->arg3 = arg3;
-    new_quad->next = NULL;
-
     Quad last_quad = quad;
     while (last_quad->next != NULL) {
       last_quad = last_quad->next;
