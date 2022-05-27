@@ -135,7 +135,7 @@ static void read_tree_node(TreeNode *t) {
 
   // Verifica o nó atual
   switch (t->nodekind) {
-  case StmtK:
+  case StmtK: {
     switch (t->kind.stmt) {
     case IfK:
       fprintf(listing, "aqui");
@@ -156,9 +156,8 @@ static void read_tree_node(TreeNode *t) {
       break;
     }
     break;
-  case ExpK:
-    char *temp = (char *)malloc(50 * sizeof(char));
-    char *c = (char *)malloc(50 * sizeof(char));
+  }
+  case ExpK: {
     switch (t->kind.exp) {
     case OpK:
       switch (t->attr.op) {
@@ -194,14 +193,17 @@ static void read_tree_node(TreeNode *t) {
       }
       break;
 
-    case ConstK:
+    case ConstK: {
+      char *temp = (char *)malloc(50 * sizeof(char));
+      char *c = (char *)malloc(50 * sizeof(char));
       snprintf(c, 50, "%d", t->attr.val);
       snprintf(temp, 50, "$t%d", t_num);
       push(stack_temp, temp, &stack_temp_last);
       insert_quad("LOAD", temp, c, "--");
       t_num++;
       break;
-    case IdK:
+    }
+    case IdK: {
       if (is_call || !is_fun) {
         char *temp = (char *)malloc(50 * sizeof(char));
         char *c = (char *)malloc(50 * sizeof(char));
@@ -210,8 +212,8 @@ static void read_tree_node(TreeNode *t) {
         t_num++;
         insert_quad("LOAD", temp, t->attr.name, "--");
       }
-
       break;
+    }
     case TypeK:
       /* code */
       break;
@@ -226,27 +228,36 @@ static void read_tree_node(TreeNode *t) {
       break;
     }
     break;
-  case DeclK:
-    char *name;
-    char *scope;
+  }
+  case DeclK: {
     switch (t->kind.decl) {
-    case VarK:
+    case VarK: {
+      char *name;
+      char *scope;
       name = t->attr.name;
       insert_quad("ALLOC", name, t->scope, "--");
       break;
-    case FunK:
+    }
+    case FunK: {
+      char *name;
+      char *temp = (char *)malloc(50 * sizeof(char));
+      char *c = (char *)malloc(50 * sizeof(char));
       is_fun = TRUE;
       temp = type_to_string(t->child[0]);
       name = t->attr.name;
       insert_quad("FUN", temp, name, "--");
       break;
+    }
     case ArrVarK:
       /* code */
       break;
     case ArrParamK:
       /* code */
       break;
-    case ParamK:
+    case ParamK: {
+      char *temp;
+      char *name;
+      char *scope;
       if (t->child[0] != NULL) {
         temp = type_to_string(t->child[0]);
         name = t->attr.name;
@@ -254,8 +265,9 @@ static void read_tree_node(TreeNode *t) {
         insert_quad("ARG", temp, name, scope);
       }
       break;
+    } break;
     }
-    break;
+  }
   }
 
   // Verifica os 3 filhos
@@ -329,8 +341,7 @@ static void read_tree_node(TreeNode *t) {
   }
 
   switch (t->nodekind) {
-  case ExpK:
-    char *temp = (char *)malloc(50 * sizeof(char));
+  case ExpK: {
     switch (t->kind.exp) {
     case OpK:
       switch (t->attr.op) {
@@ -360,7 +371,7 @@ static void read_tree_node(TreeNode *t) {
         break;
       }
       break;
-    case CalcK:
+    case CalcK: {
       char *t1 = (char *)malloc(50 * sizeof(char));
       strcpy(t1, stack_temp[stack_temp_last - 1]);
       pop(stack_temp, &stack_temp_last);
@@ -376,6 +387,7 @@ static void read_tree_node(TreeNode *t) {
       pop(stack_calc, &stack_calc_last);
       insert_quad(cmd, t3, t2, t1);
       break;
+    }
     case CallK:
       nested_call_level--;
       if (nested_call_level <= 0) { // Ultima call de todas
@@ -390,7 +402,7 @@ static void read_tree_node(TreeNode *t) {
         curr_node = curr_node->sibling;
         param_num++;
       }
-
+      char *temp = (char *)malloc(50 * sizeof(char));
       char *p_num = (char *)malloc(50 * sizeof(char));
       snprintf(temp, 50, "$t%d", t_num);
       push(stack_temp, temp, &stack_temp_last);
@@ -411,19 +423,21 @@ static void read_tree_node(TreeNode *t) {
       break;
     }
     break;
-  case StmtK:
+  }
+  case StmtK: {
     switch (t->kind.stmt) {
-    case ReturnK:
+    case ReturnK: {
       char *temp = (char *)malloc(50 * sizeof(char));
       strcpy(temp, stack_temp[stack_temp_last - 1]);
       pop(stack_temp, &stack_temp_last);
       insert_quad("RET", temp, "--", "--");
       break;
-
+    }
     default:
       break;
     }
     break;
+  }
   }
 }
 
