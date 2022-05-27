@@ -105,6 +105,9 @@ char *type_to_string(TreeNode *t) {
   case Integer:
     return "INT";
     break;
+  case IntegerArray:
+    return "INTARR";
+    break;
   case Void:
     return "VOID";
     break;
