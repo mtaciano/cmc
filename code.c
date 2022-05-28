@@ -111,13 +111,6 @@ char *type_to_string(TreeNode *t) {
   }
 }
 
-/* Função handle_if é responsável por criar as quadruplas para IF */
-// TODO: Provavelmente ela não é necessária mas sua implementação é mais fácil
-//   @t! Mudar, se possível, para o esquema de pré, mid e pós
-static void handle_if(TreeNode *t) {
-  //
-}
-
 /* Função read_tree_node lê o nó da arvore e trata ele de acordo */
 /* TODO: tratar todos os casos possíveis */
 static void read_tree_node(TreeNode *t) {
