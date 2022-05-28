@@ -1,8 +1,4 @@
-/****************************************************/
-/* File: code.c                                     */
-/* Código intermediário                             */
-/* Miguel Silva Taciano e Gabriel Bianchi e Silva   */
-/****************************************************/
+// Código intermediário
 
 #ifndef _CODE_H_
 #define _CODE_H_
