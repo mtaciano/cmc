@@ -1,4 +1,6 @@
 // Código intermediário
+// TODO: tratar while
+// TODO: tratar array
 
 #include "globals.h"
 #include "code.h"
@@ -94,6 +96,7 @@ static void insert_quad(char *cmd, char *arg1, char *arg2, char *arg3) {
 }
 
 /* Função type_to_string transforma o tipo em uma string, void ou int */
+// TODO: verificar se realmente é necessária uma função para isso
 char *type_to_string(TreeNode *t) {
   switch (t->type) {
   case Integer:
@@ -123,6 +126,7 @@ static void read_tree_node(TreeNode *t) {
   // TODO: remover a maioria do código
   //   @t! transformando read_tree_node em uma função que executa 3 outras
   //   @t! sendo elas uma pré, uma mid e uma pós nó
+  // TODO: documentar flags
   int is_fun = FALSE;
   int is_asn = FALSE;
   int is_const_asn = FALSE;
