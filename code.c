@@ -124,6 +124,9 @@ static void read_tree_node(TreeNode *t) {
   int is_asn = FALSE;
   int is_const_asn = FALSE;
   int is_call;
+  int is_iff = FALSE;
+  int is_curr_callk = FALSE;
+  static int is_inside_param = FALSE;
   if (nested_call_level <= 0) {
     is_call = FALSE;
   } else {
@@ -135,7 +138,7 @@ static void read_tree_node(TreeNode *t) {
   case StmtK: {
     switch (t->kind.stmt) {
     case IfK:
-      fprintf(listing, "aqui");
+      is_iff = TRUE;
       break;
     case WhileK:
       /* code */
@@ -218,6 +221,7 @@ static void read_tree_node(TreeNode *t) {
       /* code */
       break;
     case CallK:
+      is_curr_callk = TRUE;
       is_call = TRUE;
       nested_call_level++;
       break;
@@ -276,6 +280,15 @@ static void read_tree_node(TreeNode *t) {
       if (is_asn && is_const_asn && i == 1) {
         continue; // Id
       }
+      if (i == 1 && is_iff) {
+        char *t = (char *)malloc(50 * sizeof(char));
+        char *l = (char *)malloc(50 * sizeof(char));
+        strcpy(t, stack_temp[stack_temp_last - 1]);
+        snprintf(l, 50, "L%d", l_num);
+        l_num++;
+        pop(stack_temp, &stack_temp_last);
+        insert_quad("IFF", t, l, "--");
+      }
       if (i == 2 && is_fun) { // Todos parâmetros lidos
         while (stack_load_last > 0) {
           char *t = (char *)malloc(50 * sizeof(char));
@@ -289,7 +302,34 @@ static void read_tree_node(TreeNode *t) {
         }
       }
 
-      read_tree_node(t->child[i]);
+      if (is_curr_callk) { // CallK que chama
+        is_inside_param = TRUE;
+        read_tree_node(t->child[i]);
+        is_inside_param = FALSE;
+      } else if (is_inside_param) { // Filhos de CallK chamam
+        is_inside_param = FALSE;
+        read_tree_node(t->child[i]);
+        is_inside_param = TRUE;
+      } else {
+        read_tree_node(t->child[i]);
+      }
+
+      if (i == 1 && is_iff) {
+        char *l1 = (char *)malloc(50 * sizeof(char));
+        char *l2 = (char *)malloc(50 * sizeof(char));
+        snprintf(l1, 50, "L%d", l_num);
+        insert_quad("GOTO", l1, "--", "--");
+        snprintf(l2, 50, "L%d", l_num - 1); // Primeiro L do if atual
+        insert_quad("LAB", l2, "--", "--");
+      } else if (i == 2 && is_iff) {
+        char *l1 = (char *)malloc(50 * sizeof(char));
+        char *l2 = (char *)malloc(50 * sizeof(char));
+        snprintf(l1, 50, "L%d", l_num);
+        insert_quad("GOTO", l1, "--", "--");
+        snprintf(l2, 50, "L%d", l_num);
+        insert_quad("LAB", l2, "--", "--");
+        l_num++;
+      }
     }
   }
 
@@ -319,8 +359,7 @@ static void read_tree_node(TreeNode *t) {
     }
   }
 
-  if (is_call && ((t->nodekind == ExpK && t->kind.exp == IdK) ||
-                  (t->nodekind == ExpK && t->kind.exp == ConstK))) {
+  if (is_inside_param && !(t->nodekind == ExpK && t->kind.exp == CalcK)) {
     char *temp = (char *)malloc(50 * sizeof(char));
     strcpy(temp, stack_temp[stack_temp_last - 1]);
     pop(stack_temp, &stack_temp_last);
@@ -340,20 +379,26 @@ static void read_tree_node(TreeNode *t) {
   switch (t->nodekind) {
   case ExpK: {
     switch (t->kind.exp) {
-    case OpK:
+    case OpK: {
       switch (t->attr.op) {
-      case LT:
-        break;
-      case LE:
-        break;
-      case GT:
-        break;
-      case GE:
-        break;
-      case EQ:
-        break;
-      case NE:
-        break;
+      case LT: {
+        push(stack_calc, "LESS", &stack_calc_last);
+      } break;
+      case LE: {
+        push(stack_calc, "LEQ", &stack_calc_last);
+      } break;
+      case GT: {
+        push(stack_calc, "GREAT", &stack_calc_last);
+      } break;
+      case GE: {
+        push(stack_calc, "GRTEQ", &stack_calc_last);
+      } break;
+      case EQ: {
+        push(stack_calc, "EQUAL", &stack_calc_last);
+      } break;
+      case NE: {
+        push(stack_calc, "NOTEQ", &stack_calc_last);
+      } break;
       case PLUS:
         push(stack_calc, "ADD", &stack_calc_last);
         break;
@@ -368,6 +413,7 @@ static void read_tree_node(TreeNode *t) {
         break;
       }
       break;
+    }
     case CalcK: {
       char *t1 = (char *)malloc(50 * sizeof(char));
       strcpy(t1, stack_temp[stack_temp_last - 1]);
@@ -383,11 +429,20 @@ static void read_tree_node(TreeNode *t) {
       strcpy(cmd, stack_calc[stack_calc_last - 1]);
       pop(stack_calc, &stack_calc_last);
       insert_quad(cmd, t3, t2, t1);
+      if (is_inside_param) {
+        char *temp = (char *)malloc(50 * sizeof(char));
+        strcpy(temp, stack_temp[stack_temp_last - 1]);
+        pop(stack_temp, &stack_temp_last);
+        insert_quad("PARAM", temp, "--", "--");
+      }
+
       break;
     }
-    case CallK:
+    case CallK: {
+      is_curr_callk = FALSE;
       nested_call_level--;
       if (nested_call_level <= 0) { // Ultima call de todas
+        is_inside_param = FALSE;
         nested_call_level = 0;
         is_call = FALSE;
       }
@@ -405,15 +460,10 @@ static void read_tree_node(TreeNode *t) {
       push(stack_temp, temp, &stack_temp_last);
       snprintf(p_num, 50, "%d", param_num);
       insert_quad("CALL", temp, t->attr.name, p_num);
-      if (nested_call_level > 0) { // Call é um parametro
-        snprintf(temp, 50, "$t%d", t_num);
-        pop(stack_temp, &stack_temp_last);
-        insert_quad("PARAM", temp, "--", "--");
-        p_num++;
-      }
 
       t_num++;
       break;
+    }
     case IdK:
       break;
     default:
