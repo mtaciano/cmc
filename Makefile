@@ -4,10 +4,12 @@
 CC = gcc
 BISON = bison
 LEX = flex
+RS = cargo
+RS-FLAGS = --all-features --format-version=1 --manifest-path=rust/Cargo.toml
 
 BIN = compilador
 
-OBJS = cmin.tab.o lex.yy.o main.o util.o symtab.o analyze.o code.o
+OBJS = cmin.tab.o lex.yy.o main.o util.o symtab.o analyze.o code.o librust.a
 
 $(BIN): $(OBJS)
 	$(CC) $(OBJS) -o $(BIN)
@@ -35,6 +37,13 @@ cmin.tab.o: cmin.y globals.h
 	$(BISON) -d cmin.y
 	$(CC) -g -c cmin.tab.c
 
+librust.a: rust/src/lib.rs rust/Cargo.toml rust/wrapper.h
+	cd rust && $(RS) build --release
+	cd rust && mv target/release/librust.a ../librust.a
+
+bindings:
+	cd rust && cbindgen --config cbindgen.toml --crate rust --output ../rust.h
+
 clean:
 	-rm -f $(BIN)
 	-rm -f *.gv
@@ -42,3 +51,4 @@ clean:
 	-rm -f *.tab.h
 	-rm -f *.yy.c
 	-rm -f $(OBJS)
+	-rm -f rust.h
