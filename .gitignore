@@ -5,7 +5,9 @@ compile_commands.json
 .cache
 
 # Compilação
+rust/target
 *.o
+*.a
 *.tab.c
 *.tab.h
 *.yy.c
