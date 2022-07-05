@@ -37,7 +37,7 @@ cmin.tab.o: cmin.y globals.h
 	$(BISON) -d cmin.y
 	$(CC) -g -c cmin.tab.c
 
-librust.a: rust/src/lib.rs rust/Cargo.toml rust/wrapper.h
+librust.a: rust/src/lib.rs rust/Cargo.toml rust/wrapper.h code.h globals.h
 	cd rust && $(RS) build --release
 	cd rust && mv target/release/librust.a ../librust.a
 
@@ -51,4 +51,3 @@ clean:
 	-rm -f *.tab.h
 	-rm -f *.yy.c
 	-rm -f $(OBJS)
-	-rm -f rust.h
