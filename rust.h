@@ -1,5 +1,5 @@
-#ifndef RUST_H
-#define RUST_H
+#ifndef _RUST_H_
+#define _RUST_H_
 
 /* Generated with cbindgen:0.24.3 */
 
@@ -10,8 +10,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include "code.h"
 
 
-int32_t this_is_a_test(void);
+int32_t make_assembly(Quad quad);
 
-#endif /* RUST_H */
+#endif /* _RUST_H_ */

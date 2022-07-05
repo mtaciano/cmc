@@ -9,15 +9,6 @@
 //   @t! para uma implementação sem limite, provavelmente através de realloc
 #define STACK_SIZE 50
 
-/* Struct de Quadruplas */
-typedef struct QuadRec {
-  char *command;
-  char *arg1;
-  char *arg2;
-  char *arg3;
-  struct QuadRec *next;
-} * Quad;
-
 /* Quadrupla final */
 static Quad quad;
 
@@ -196,8 +187,7 @@ static void read_tree_node(TreeNode *t) {
     case ConstK: {
       char *temp = (char *)malloc(50 * sizeof(char));
       char *c = (char *)malloc(50 * sizeof(char));
-      snprintf(c, 50, "%d", t->attr.val);
-      snprintf(temp, 50, "$t%d", t_num);
+      snprintf(c, 50, "%d", t->attr.val); snprintf(temp, 50, "$t%d", t_num);
       push(stack_temp, temp, &stack_temp_last);
       insert_quad("LOAD", temp, c, "--");
       t_num++;
@@ -492,7 +482,7 @@ static void read_tree_node(TreeNode *t) {
 /* TODO: transformar os nomes das funções e variáveis
  *   @t! de Camel case para Snake case
  */
-void make_code(TreeNode *t) {
+Quad make_code(TreeNode *t) {
 
   read_tree_node(t);
   insert_quad("HALT", "--", "--", "--");
@@ -500,6 +490,8 @@ void make_code(TreeNode *t) {
   if (TraceCode) {
     print_quad(quad);
   }
+
+  return quad;
 }
 
 // TODO: GOTO e LAB na volta do return
