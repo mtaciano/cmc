@@ -90,7 +90,7 @@ main(int argc, char *argv[]) {
     if (TraceCode)
       fprintf(listing, "\nGerando código intermediário\n\n");
     Quad q = make_code(syntaxTree);
-    make_assembly(q);
+    make_output(q);
     if (TraceCode)
       fprintf(listing, "\nGeração do código intermediário concluída.\n");
   }

@@ -13,6 +13,6 @@
 #include "code.h"
 
 
-int32_t make_assembly(Quad quad);
+int32_t make_output(Quad quad);
 
 #endif /* _RUST_H_ */
