@@ -21,7 +21,10 @@ fn main() {
     let bindings = bindgen::Builder::default()
         // O header para que queremos gerar headers
         .header("wrapper.h")
-        // Diz para o carvo invalidar a crate quando qualquer
+        .generate_comments(true)
+        .allowlist_recursively(true)
+        .allowlist_type("Quad")
+        // Diz para o cargo invalidar a crate quando qualquer
         // header incluído muda
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         // Termina o Builder e gera os bindings
