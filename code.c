@@ -36,9 +36,9 @@ static int nested_call_level = 0;
 /* Função print_quad printa a quadrupla inteira */
 static void print_quad(Quad q) {
   Quad curr_q = q;
-  fprintf(listing, "|%6s, %6s, %6s, %6s|\n\n", "CMD", "ARG1", "ARG2", "ARG3");
+  fprintf(listing, "|%7s, %7s, %7s, %7s|\n\n", "CMD", "ARG1", "ARG2", "ARG3");
   while (curr_q != NULL) {
-    fprintf(listing, "(%6s, %6s, %6s, %6s)\n", curr_q->command, curr_q->arg1,
+    fprintf(listing, "(%7s, %7s, %7s, %7s)\n", curr_q->command, curr_q->arg1,
             curr_q->arg2, curr_q->arg3);
     curr_q = curr_q->next;
   }
@@ -117,6 +117,8 @@ static void read_tree_node(TreeNode *t) {
   int is_call;
   int is_iff = FALSE;
   int is_while = FALSE;
+  int is_arr = FALSE;
+  int is_arr_asn = FALSE;
   int is_curr_callk = FALSE;
   static int is_inside_param = FALSE;
   static int is_inside_while = FALSE;
@@ -143,6 +145,10 @@ static void read_tree_node(TreeNode *t) {
     } break;
     case AssignK:
       is_asn = TRUE;
+      if (t->child[0]->nodekind == ExpK && t->child[0]->kind.exp == ArrIdK) {
+        is_arr_asn = TRUE;
+      }
+
       if (t->child[1]->nodekind == ExpK && t->child[1]->kind.exp == ConstK) {
         is_const_asn = TRUE;
       }
@@ -216,7 +222,7 @@ static void read_tree_node(TreeNode *t) {
       /* code */
       break;
     case ArrIdK:
-      /* code */
+      is_arr = TRUE;
       break;
     case CallK:
       is_curr_callk = TRUE;
@@ -247,9 +253,15 @@ static void read_tree_node(TreeNode *t) {
       insert_quad("FUN", temp, name, "--");
       break;
     }
-    case ArrVarK:
-      /* code */
+    case ArrVarK: {
+      char *name;
+      char *scope;
+      char *size = malloc(50 * sizeof size);
+      name = t->attr.arr.name;
+      snprintf(size, 50, "%d", t->attr.arr.size);
+      insert_quad("ARRLOC", name, t->scope, size);
       break;
+    }
     case ArrParamK:
       /* code */
       break;
@@ -287,6 +299,7 @@ static void read_tree_node(TreeNode *t) {
         pop(stack_temp, &stack_temp_last);
         insert_quad("IFF", t, l, "--");
       }
+
       if (i == 2 && is_fun) { // Todos parâmetros lidos
         while (stack_load_last > 0) {
           char *t = (char *)malloc(50 * sizeof(char));
@@ -340,6 +353,17 @@ static void read_tree_node(TreeNode *t) {
         snprintf(l2, 50, "L%d", l_num - 1); // Primeiro L do if atual
         insert_quad("LAB", l2, "--", "--");
       }
+
+      if (is_arr) {
+        char *name = malloc(50 * sizeof name);
+        char *temp = malloc(50 * sizeof temp);
+        char *offset = malloc(50 * sizeof offset);
+        snprintf(temp, 50, "$t%d", t_num);
+        strcpy(offset, stack_temp[stack_temp_last - 1]);
+        strcpy(name, t->attr.name);
+        insert_quad("ARRLOAD", temp, name, offset);
+        push(stack_temp, temp, &stack_temp_last);
+      }
     }
   }
 
@@ -354,8 +378,16 @@ static void read_tree_node(TreeNode *t) {
       pop(stack_temp, &stack_temp_last);
       char *val = (char *)malloc(50 * sizeof(char));
       snprintf(val, 50, "%d", t->child[1]->attr.val);
-      insert_quad("ASSIGN", temp, val, "--");
-      insert_quad("STORE", t->child[0]->attr.name, temp, "--");
+      if (is_arr_asn) {
+        char *offset = malloc(50 * sizeof offset);
+        strcpy(offset, stack_temp[stack_temp_last - 1]);
+        pop(stack_temp, &stack_temp_last);
+        insert_quad("ASSIGN", temp, val, "--");
+        insert_quad("ARRSTR", t->child[0]->attr.name, temp, offset);
+      } else {
+        insert_quad("ASSIGN", temp, val, "--");
+        insert_quad("STORE", t->child[0]->attr.name, temp, "--");
+      }
     } else {
       char *t1 = (char *)malloc(50 * sizeof(char));
       strcpy(t1, stack_temp[stack_temp_last - 1]);
@@ -363,9 +395,16 @@ static void read_tree_node(TreeNode *t) {
       char *t2 = (char *)malloc(50 * sizeof(char));
       strcpy(t2, stack_temp[stack_temp_last - 1]);
       pop(stack_temp, &stack_temp_last);
-
-      insert_quad("ASSIGN", t2, t1, "--");
-      insert_quad("STORE", t->child[0]->attr.name, t2, "--");
+      if (is_arr_asn) {
+        char *offset = malloc(50 * sizeof offset);
+        strcpy(offset, stack_temp[stack_temp_last - 2]);
+        pop(stack_temp, &stack_temp_last);
+        insert_quad("ASSIGN", t2, t1, "--");
+        insert_quad("ARRSTR", t->child[0]->attr.name, t2, offset);
+      } else {
+        insert_quad("ASSIGN", t2, t1, "--");
+        insert_quad("STORE", t->child[0]->attr.name, t2, "--");
+      }
     }
   }
 
@@ -445,9 +484,11 @@ static void read_tree_node(TreeNode *t) {
         pop(stack_temp, &stack_temp_last);
         insert_quad("PARAM", temp, "--", "--");
       }
-
       break;
     }
+    case ArrIdK:
+      is_arr = TRUE;
+      break;
     case CallK: {
       is_curr_callk = FALSE;
       nested_call_level--;
