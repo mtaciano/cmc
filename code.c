@@ -327,6 +327,9 @@ static void read_tree_node(TreeNode *t) {
         snprintf(l2, 50, "L%d", l_num);
         insert_quad("LAB", l2, "--", "--");
         l_num++;
+        if (is_inside_while) {
+          l_num -= 2;
+        }
       }
 
       if (i == 1 && is_while) {
