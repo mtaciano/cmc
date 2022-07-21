@@ -24,6 +24,8 @@ fn main() {
         .generate_comments(true)
         .allowlist_recursively(true)
         .allowlist_type("Quad")
+        .allowlist_var("listing")
+        .allowlist_var("TraceCode")
         // Diz para o cargo invalidar a crate quando qualquer
         // header incluído muda
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
