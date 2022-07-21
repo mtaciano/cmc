@@ -4,4 +4,4 @@
 #include "../globals.h"
 #include "../code.h"
 
-#endif // !WRAPPER_H
+#endif // !_WRAPPER_H_

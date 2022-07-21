@@ -5,9 +5,9 @@ edition = "2021"
 
 [profile.release]
 strip = true
-lto = true
-codegen-units = 1
-opt-level = "z"
+# lto = true
+# codegen-units = 1
+# opt-level = "z"
 
 [lib]
 crate-type = ["staticlib"]
