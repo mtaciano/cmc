@@ -116,8 +116,10 @@ static void read_tree_node(TreeNode *t) {
   int is_const_asn = FALSE;
   int is_call;
   int is_iff = FALSE;
+  int is_while = FALSE;
   int is_curr_callk = FALSE;
   static int is_inside_param = FALSE;
+  static int is_inside_while = FALSE;
   if (nested_call_level <= 0) {
     is_call = FALSE;
   } else {
@@ -131,9 +133,14 @@ static void read_tree_node(TreeNode *t) {
     case IfK:
       is_iff = TRUE;
       break;
-    case WhileK:
-      /* code */
-      break;
+    case WhileK: {
+      char *l1 = (char *)malloc(50 * sizeof(char));
+      snprintf(l1, 50, "L%d", l_num);
+      insert_quad("LAB", l1, "--", "--");
+      l_num++;
+      is_inside_while = TRUE;
+      is_while = TRUE;
+    } break;
     case AssignK:
       is_asn = TRUE;
       if (t->child[1]->nodekind == ExpK && t->child[1]->kind.exp == ConstK) {
@@ -187,7 +194,8 @@ static void read_tree_node(TreeNode *t) {
     case ConstK: {
       char *temp = (char *)malloc(50 * sizeof(char));
       char *c = (char *)malloc(50 * sizeof(char));
-      snprintf(c, 50, "%d", t->attr.val); snprintf(temp, 50, "$t%d", t_num);
+      snprintf(c, 50, "%d", t->attr.val);
+      snprintf(temp, 50, "$t%d", t_num);
       push(stack_temp, temp, &stack_temp_last);
       insert_quad("LOAD", temp, c, "--");
       t_num++;
@@ -270,7 +278,7 @@ static void read_tree_node(TreeNode *t) {
       if (is_asn && is_const_asn && i == 1) {
         continue; // Id
       }
-      if (i == 1 && is_iff) {
+      if ((i == 1 && is_iff) || (i == 1 && is_while)) {
         char *t = (char *)malloc(50 * sizeof(char));
         char *l = (char *)malloc(50 * sizeof(char));
         strcpy(t, stack_temp[stack_temp_last - 1]);
@@ -319,6 +327,15 @@ static void read_tree_node(TreeNode *t) {
         snprintf(l2, 50, "L%d", l_num);
         insert_quad("LAB", l2, "--", "--");
         l_num++;
+      }
+
+      if (i == 1 && is_while) {
+        char *l1 = (char *)malloc(50 * sizeof(char));
+        char *l2 = (char *)malloc(50 * sizeof(char));
+        snprintf(l1, 50, "L%d", l_num - 2);
+        insert_quad("GOTO", l1, "--", "--");
+        snprintf(l2, 50, "L%d", l_num - 1); // Primeiro L do if atual
+        insert_quad("LAB", l2, "--", "--");
       }
     }
   }
