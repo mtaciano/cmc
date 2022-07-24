@@ -5,28 +5,8 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 use std::ffi::CStr;
 
-// HACK: &'static str para acalmar o compilador
-// TODO: apurar futuramente se o lifetime é verdade
-#[derive(Debug)]
-#[allow(dead_code)]
-struct RustQuad {
-    cmd: &'static str,
-    arg1: &'static str,
-    arg2: &'static str,
-    arg3: &'static str,
-}
-
-// TODO: implementar
-#[allow(dead_code)]
-struct RustAsm {
-    inner: i32,
-}
-
-// TODO: implementar
-#[allow(dead_code)]
-struct RustBin {
-    inner: i32,
-}
+mod assembly;
+mod binary;
 
 impl From<Quad> for RustQuad {
     fn from(q: Quad) -> Self {
@@ -42,13 +22,22 @@ impl From<Quad> for RustQuad {
 
         // SEGURANÇA: As mesmas regras acima se aplicam
         RustQuad {
-            cmd: unsafe { CStr::from_ptr(q.command).to_str().unwrap().clone() },
-            arg1: unsafe { CStr::from_ptr(q.arg1).to_str().unwrap().clone() },
-            arg2: unsafe { CStr::from_ptr(q.arg2).to_str().unwrap().clone() },
-            arg3: unsafe { CStr::from_ptr(q.arg3).to_str().unwrap().clone() },
+            cmd: unsafe {
+                CStr::from_ptr(q.command).to_str().unwrap().to_owned()
+            },
+            arg1: unsafe {
+                CStr::from_ptr(q.arg1).to_str().unwrap().to_owned()
+            },
+            arg2: unsafe {
+                CStr::from_ptr(q.arg2).to_str().unwrap().to_owned()
+            },
+            arg3: unsafe {
+                CStr::from_ptr(q.arg3).to_str().unwrap().to_owned()
+            },
         }
     }
 }
+
 trait FromQuad {
     fn from_quad(quad: Quad) -> Self;
 }
@@ -79,73 +68,36 @@ where
     }
 }
 
-#[allow(dead_code)]
-fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
-    // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
-    // justamente pelo código ser _single-thread_
-    unsafe {
-        if TraceCode == 1 {
-            // TODO: usar `listing`
-            println!("\nGerando código assembly\n");
-        }
-    }
-
-    let _ = quad;
-
-    // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
-    // justamente pelo código ser _single-thread_
-    unsafe {
-        if TraceCode == 1 {
-            // TODO: usar `listing`
-            println!("\nGeração do código assembly concluída.");
-        }
-    };
-
-    let asm = RustAsm { inner: 0 };
-
-    let mut vec = Vec::new();
-    vec.push(asm);
-
-    vec
+#[derive(Debug)]
+struct RustQuad {
+    cmd: String,
+    arg1: String,
+    arg2: String,
+    arg3: String,
 }
 
-#[allow(dead_code)]
-fn make_binary(asm: Vec<RustAsm>) -> Vec<RustBin> {
-    // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
-    // justamente pelo código ser _single-thread_
-    unsafe {
-        if TraceCode == 1 {
-            // TODO: usar `listing`
-            println!("\nGerando binário\n");
-        }
-    }
+// TODO: implementar
+#[derive(Debug, Clone)]
+struct RustAsm {
+    cmd: String,
+    arg1: String,
+    arg2: String,
+    arg3: String,
+}
 
-    let _ = asm;
-
-    // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
-    // justamente pelo código ser _single-thread_
-    unsafe {
-        if TraceCode == 1 {
-            // TODO: usar `listing`
-            println!("\nGeração do binário concluída.");
-        }
-    };
-
-    let bin = RustBin { inner: 0 };
-
-    let mut vec = Vec::new();
-    vec.push(bin);
-
-    vec
+// TODO: implementar
+#[derive(Debug)]
+struct RustBin {
+    inner: u32,
 }
 
 #[no_mangle]
 pub extern "C" fn make_output(quad: Quad) -> libc::c_int {
     let quad_vec = Vec::<RustQuad>::from_quad(quad);
 
-    let asm_vec = make_assembly(quad_vec);
+    let asm_vec = crate::assembly::make_assembly(quad_vec);
 
-    let _ = make_binary(asm_vec);
+    let _ = crate::binary::make_binary(asm_vec);
 
     0
 }
