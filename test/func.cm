@@ -1,0 +1,20 @@
+int funcc (void)
+{
+	int b;
+  b = 1;
+  return b;
+}
+
+/* int func (void)
+{
+	int a;
+  a = 1;
+  return funcc();
+} */
+
+void main(void)
+{
+  int y;
+  y = funcc();
+}
+
