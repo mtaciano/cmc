@@ -3,7 +3,7 @@
 #![allow(non_snake_case)]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-use std::ffi::CStr;
+use std::{ffi::CStr, fs::OpenOptions, io::Write};
 
 mod assembly;
 mod binary;
@@ -92,12 +92,22 @@ struct RustBin {
 }
 
 #[no_mangle]
-pub extern "C" fn make_output(quad: Quad) -> libc::c_int {
+pub extern "C" fn make_output(quad: Quad) {
     let quad_vec = Vec::<RustQuad>::from_quad(quad);
 
     let asm_vec = crate::assembly::make_assembly(quad_vec);
 
-    let _ = crate::binary::make_binary(asm_vec);
+    let bin_vec = crate::binary::make_binary(asm_vec);
 
-    0
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("out_bin.txt")
+        .expect("Não foi possível criar um arquivo de saída para o binário.");
+
+    for bin in bin_vec.iter() {
+        writeln!(&mut file, "{:032b}", bin.inner)
+            .expect("Erro escrevendo binário em arquivo.");
+    }
 }

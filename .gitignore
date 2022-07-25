@@ -14,3 +14,4 @@ rust/target
 *.code-workspace
 *.gv
 compilador
+out_bin.txt
