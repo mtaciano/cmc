@@ -45,6 +45,10 @@ librust.a: rust/src/lib.rs rust/Cargo.toml rust/wrapper.h rust/src/assembly.rs r
 bindings:
 	cd rust && cbindgen --config cbindgen.toml --crate rust --output ../rust.h
 
+# Só rodar se a pasta existir
+cpu:
+	cp out_bin.txt ../processador/out_bin.txt
+
 clean:
 	-rm -f $(BIN)
 	-rm -f *.gv
