@@ -76,7 +76,6 @@ struct RustQuad {
     arg3: String,
 }
 
-// TODO: implementar
 #[derive(Debug, Clone)]
 struct RustAsm {
     cmd: String,
@@ -85,7 +84,6 @@ struct RustAsm {
     arg3: String,
 }
 
-// TODO: implementar
 #[derive(Debug)]
 struct RustBin {
     inner: u32,
