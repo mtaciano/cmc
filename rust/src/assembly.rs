@@ -698,13 +698,15 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
     let mut available_reg = Vec::with_capacity(32);
     for i in 0..32 {
         let mut reserved = false;
+        let mut available = true;
         if i >= 28 {
             reserved = true;
+            available = false;
         }
         available_reg.push(Register {
             number: i,
             reserved,
-            available: true,
+            available,
         });
     }
 
