@@ -408,13 +408,6 @@ static void read_tree_node(TreeNode *t) {
     }
   }
 
-  if (is_inside_param && !(t->nodekind == ExpK && t->kind.exp == CalcK)) {
-    char *temp = (char *)malloc(50 * sizeof(char));
-    strcpy(temp, stack_temp[stack_temp_last - 1]);
-    pop(stack_temp, &stack_temp_last);
-    insert_quad("PARAM", temp, "--", "--");
-  }
-
   // Verifica o irmão
   if (t->sibling != NULL) {
     read_tree_node(t->sibling);
@@ -536,6 +529,13 @@ static void read_tree_node(TreeNode *t) {
     }
     break;
   }
+  }
+
+  if (is_inside_param && !(t->nodekind == ExpK && t->kind.exp == CalcK)) {
+    char *temp = (char *)malloc(50 * sizeof(char));
+    strcpy(temp, stack_temp[stack_temp_last - 1]);
+    pop(stack_temp, &stack_temp_last);
+    insert_quad("PARAM", temp, "--", "--");
   }
 }
 
