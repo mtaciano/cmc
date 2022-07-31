@@ -1,4 +1,3 @@
-#![allow(dead_code)] // TODO: remover dps
 use crate::*;
 use std::collections::HashMap;
 
@@ -30,7 +29,6 @@ struct Memory {
 }
 
 struct Register {
-    number: i32,
     reserved: bool,
     available: bool,
 }
@@ -704,7 +702,6 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
             available = false;
         }
         available_reg.push(Register {
-            number: i,
             reserved,
             available,
         });
