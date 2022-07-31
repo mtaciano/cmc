@@ -9,15 +9,14 @@ As etapas atualmente implementadas são:
 - [x] Lexer
 - [x] Parser
 - [x] Analyser
+- [x] Gerador de código intermediário (Alguns bugs existem)
 
 Etapas parcialmente implementadas:
 
-- [ ] Gerador de código intermediário
+- [x] Gerador de código assembly (Alguns bugs existem)
+- [x] Gerador de código de máquina (processador de arquitetura própria)
 
 Etapas faltando:
-
-- [ ] Gerador de código assembly
-- [ ] Gerador de código de máquina (processador de arquitetura própria)
 
 ## Contribuição
 
