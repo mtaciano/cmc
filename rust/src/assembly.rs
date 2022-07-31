@@ -415,6 +415,16 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         arg2: param,
                         arg3: "--".to_string(),
                     };
+                } else if q.arg2 == "input" {
+                    println!("{:?}", q);
+                    let dest =
+                        format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
+                    asm = RustAsm {
+                        cmd: "IN".to_string(),
+                        arg1: dest,
+                        arg2: "--".to_string(),
+                        arg3: "--".to_string(),
+                    };
                 } else {
                     asm = RustAsm {
                         cmd: q.cmd.to_owned().to_lowercase(),
@@ -422,13 +432,12 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         arg2: q.arg2.to_owned().to_lowercase(),
                         arg3: q.arg3.to_owned().to_lowercase(),
                     };
-
                     for _ in 0..=q.arg3.parse::<i32>().unwrap() {
                         vec.push(noop.clone());
                     }
                 }
                 vec.push(asm);
-                if q.arg2 != "output" {
+                if q.arg2 != "output" && q.arg2 != "input" {
                     vec.push(noop);
                 }
             }
@@ -808,6 +817,14 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         // HACK: não sei melhorar dentro de f()
                         remove_reg(&old, &mut register_map, &mut available_reg);
                     }
+                }
+                "IN" => {
+                    let register = vec[i].arg1[2..].parse::<usize>().unwrap();
+                    let available = find_available_reg(&available_reg)
+                        .unwrap_or_else(|| panic!("register overflow"));
+                    available_reg[available].available = false;
+                    register_map.insert(register, available);
+                    vec[i].arg1 = format!("$r{}", available);
                 }
                 "JN" | "JZ" | "JP" => {
                     let old = vec[i].arg2.clone();

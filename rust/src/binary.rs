@@ -405,6 +405,18 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let bin = RustBin { inner };
                 vec.push(bin);
             }
+            "IN" => {
+                let mut inner = 0;
+                inner |= OpCode::IN;
+
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                    panic!("overflow");
+                }
+                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
+
+                let bin = RustBin { inner };
+                vec.push(bin);
+            }
             _ => (),
         }
     }

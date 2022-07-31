@@ -1,0 +1,8 @@
+/* FUNCIONA */
+
+void main(void)
+{
+  int y;
+  y = input();
+  output(y);
+}
