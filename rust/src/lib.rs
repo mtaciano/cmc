@@ -108,4 +108,6 @@ pub extern "C" fn make_output(quad: Quad) {
         writeln!(&mut file, "{:032b}", bin.inner)
             .expect("Erro escrevendo binário em arquivo.");
     }
+
+    println!("\nArquivo out_bin.txt criado.");
 }
