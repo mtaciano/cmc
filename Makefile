@@ -6,6 +6,8 @@ CC-FLAGS = -g
 BISON = bison
 LEX = flex
 RS = cargo
+RS-FLAGS = --release
+TARGET = target/release
 
 BIN = compilador
 BIN-FLAGS = -pthread -ldl
@@ -39,11 +41,15 @@ cmin.tab.o: cmin.y globals.h
 	$(CC) $(CC-FLAGS) -c cmin.tab.c
 
 librust.a: rust/src/lib.rs rust/Cargo.toml rust/wrapper.h rust/src/assembly.rs rust/src/binary.rs code.h globals.h
-	cd rust && $(RS) build --release
-	cd rust && mv target/release/librust.a ../librust.a
+	cd rust && $(RS) build $(RS-FLAGS)
+	cd rust && mv $(TARGET)/librust.a ../librust.a
 
 bindings:
 	cd rust && cbindgen --config cbindgen.toml --crate rust --output ../rust.h
+
+debug: RS-FLAGS =
+debug: TARGET = target/debug
+debug: $(BIN)
 
 # Só rodar se a pasta existir
 cpu:
@@ -57,4 +63,5 @@ clean:
 	-rm -f *.yy.c
 	-rm -f out_bin.txt
 	-rm -r rust/target/release/*
+	-rm -r rust/target/debug/*
 	-rm -f $(OBJS)
