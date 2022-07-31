@@ -1,10 +1,13 @@
-int vet[10];
+/* FUNCIONA */
 
 void main(void)
 {
 	int y;
+	int vet[10];
+
 	y = 1;
 
 	vet[y+1] = 2;
-	/* output(vec[y]); */
+	y = y + 1;
+	output(vet[y]);
 }

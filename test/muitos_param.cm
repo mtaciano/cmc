@@ -1,0 +1,14 @@
+/* FUNCIONA */
+
+int soma(int x, int y, int z) {
+    return x + y + z;
+}
+
+void main(void) {
+    int x;
+    int y;
+    x = soma(1, 2, 3);
+    y = soma(3, 2, 1);
+    x = x + y;
+    output(x); /* 12 */
+}
