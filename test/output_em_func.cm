@@ -1,0 +1,11 @@
+int func(int x)
+{
+	output(x);
+}
+
+void main(void)
+{
+    int x;
+    x = 111;
+    func(x)
+}
