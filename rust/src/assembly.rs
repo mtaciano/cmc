@@ -1,3 +1,4 @@
+#![allow(dead_code)] // TODO: remover dps
 use crate::*;
 use std::collections::HashMap;
 
@@ -28,16 +29,51 @@ struct Memory {
     size: i32,
 }
 
+struct Register {
+    number: i32,
+    reserved: bool,
+    available: bool,
+}
+
+#[inline(always)]
+fn find_available_reg(registers: &Vec<Register>) -> Option<usize> {
+    for i in 0..32 {
+        if registers[i].reserved == false && registers[i].available {
+            return Some(i);
+        }
+    }
+
+    None
+}
+
+#[inline(always)]
+fn map_reg(reg: &mut String, reg_map: &HashMap<usize, usize>) {
+    let source = reg[2..].parse::<usize>().unwrap();
+    let dest = reg_map.get(&source).unwrap();
+
+    *reg = format!("$r{}", dest);
+}
+
+#[inline(always)]
+fn remove_reg(
+    reg: &String,
+    reg_map: &mut HashMap<usize, usize>,
+    available: &mut Vec<Register>,
+) {
+    let source = reg[2..].parse::<usize>().unwrap();
+    let dest = reg_map.get(&source).unwrap();
+    available[*dest].available = true;
+    reg_map.remove_entry(&source);
+}
+
 fn link_return(vec: &mut Vec<RustAsm>, temp: String, start: usize) {
     for i in start..vec.len() {
         if vec[i].cmd == "ret" {
             let source = vec[i].arg1.clone();
             let source = format!("$r{}", source[2..].parse::<i32>().unwrap());
-            let dest = temp.clone();
-            let dest = format!("$r{}", dest[2..].parse::<i32>().unwrap());
             let asm = RustAsm {
                 cmd: "MOVE".to_string(),
-                arg1: dest,
+                arg1: "$r_ret".to_string(),
                 arg2: source,
                 arg3: "--".to_string(),
             };
@@ -72,6 +108,8 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
     let mut iff = Vec::new();
     let mut mem_free = 0;
 
+    let mut output_param = Vec::new();
+
     let noop = RustAsm {
         cmd: "NOP".to_string(),
         arg1: "--".to_string(),
@@ -80,7 +118,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
     };
     vec.push(noop); // J main
 
-    for q in quad.iter() {
+    for (i, q) in quad.iter().enumerate() {
         match q.cmd.as_str() {
             "ALLOC" => {
                 let var_size = 1;
@@ -98,39 +136,39 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 variables.insert(k, v);
             }
-            "ARG" => {
-                // TODO: de algum modo linkar o arg com o lugar da memoria real
-                // ou seja, a variavel mandada em param
-                let var_size = 1;
+            // "ARG" => {
+            //     // TODO: de algum modo linkar o arg com o lugar da memoria real
+            //     // ou seja, a variavel mandada em param
+            //     let var_size = 1;
 
-                let k = Variable {
-                    name: q.arg2.to_owned().to_lowercase(),
-                    // scope: q.arg2.to_owned(),
-                    scope: "--".to_string().to_lowercase(),
-                };
-                let v = Memory {
-                    mem_location: mem_free,
-                    size: var_size,
-                };
-                mem_free += var_size;
+            //     let k = Variable {
+            //         name: q.arg2.to_owned().to_lowercase(),
+            //         // scope: q.arg2.to_owned(),
+            //         scope: "--".to_string().to_lowercase(),
+            //     };
+            //     let v = Memory {
+            //         mem_location: mem_free,
+            //         size: var_size,
+            //     };
+            //     mem_free += var_size;
 
-                variables.insert(k, v);
-            }
-            "ARRLOC" => {
-                let var_size = q.arg3.parse().unwrap();
+            //     variables.insert(k, v);
+            // }
+            // "ARRLOC" => {
+            //     let var_size = q.arg3.parse().unwrap();
 
-                let k = Variable {
-                    name: q.arg1.to_owned(),
-                    scope: q.arg2.to_owned(),
-                };
-                let v = Memory {
-                    mem_location: mem_free,
-                    size: var_size,
-                };
-                mem_free += var_size;
+            //     let k = Variable {
+            //         name: q.arg1.to_owned(),
+            //         scope: q.arg2.to_owned(),
+            //     };
+            //     let v = Memory {
+            //         mem_location: mem_free,
+            //         size: var_size,
+            //     };
+            //     mem_free += var_size;
 
-                variables.insert(k, v);
-            }
+            //     variables.insert(k, v);
+            // }
             "ASSIGN" => {
                 let command;
                 let value;
@@ -232,6 +270,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 iff.push(comparison);
                 vec.push(asm);
+                vec.push(noop.clone());
                 vec.push(noop);
             }
             "GREAT" => {
@@ -255,6 +294,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 iff.push(comparison);
                 vec.push(asm);
+                vec.push(noop.clone());
                 vec.push(noop);
             }
             "LEQ" => {
@@ -278,8 +318,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 iff.push(comparison);
                 vec.push(asm);
-                vec.push(noop.clone());
-                vec.push(noop)
+                vec.push(noop);
             }
             "GRTEQ" => {
                 let asm = RustAsm {
@@ -302,7 +341,6 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 iff.push(comparison);
                 vec.push(asm);
-                vec.push(noop.clone());
                 vec.push(noop)
             }
             "NOTEQ" => {
@@ -326,7 +364,6 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 iff.push(comparison);
                 vec.push(asm);
-                vec.push(noop.clone());
                 vec.push(noop);
             }
             "EQUAL" => {
@@ -350,6 +387,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 iff.push(comparison);
                 vec.push(asm);
+                vec.push(noop.clone());
                 vec.push(noop);
             }
             "HALT" => {
@@ -363,22 +401,38 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(asm);
             }
             "CALL" => {
-                let asm = RustAsm {
-                    cmd: q.cmd.to_owned().to_lowercase(),
-                    arg1: q.arg1.to_owned().to_lowercase(),
-                    arg2: q.arg2.to_owned().to_lowercase(),
-                    arg3: q.arg3.to_owned().to_lowercase(),
-                };
+                let asm;
                 let noop = RustAsm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
                     arg3: "--".to_string(),
                 };
-                for _ in 0..=q.arg3.parse::<i32>().unwrap() {
-                    vec.push(noop.clone());
+                if q.arg2 == "output" {
+                    let mut param: String = output_param.pop().unwrap();
+                    param = format!("$r{}", param[2..].parse::<i32>().unwrap());
+                    asm = RustAsm {
+                        cmd: "OUT".to_string(),
+                        arg1: "--".to_string(),
+                        arg2: param,
+                        arg3: "--".to_string(),
+                    };
+                } else {
+                    asm = RustAsm {
+                        cmd: q.cmd.to_owned().to_lowercase(),
+                        arg1: q.arg1.to_owned().to_lowercase(),
+                        arg2: q.arg2.to_owned().to_lowercase(),
+                        arg3: q.arg3.to_owned().to_lowercase(),
+                    };
+
+                    for _ in 0..=q.arg3.parse::<i32>().unwrap() {
+                        vec.push(noop.clone());
+                    }
                 }
                 vec.push(asm);
+                if q.arg2 != "output" {
+                    vec.push(noop);
+                }
             }
             "RET" => {
                 let asm = RustAsm {
@@ -396,6 +450,19 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 vec.push(noop.clone());
                 vec.push(asm);
+            }
+            "PARAM" => {
+                if quad[i + 1].arg2 == "output" {
+                    output_param.push(q.arg1.clone());
+                } else {
+                    let asm = RustAsm {
+                        cmd: q.cmd.to_owned().to_lowercase(),
+                        arg1: q.arg1.to_owned().to_lowercase(),
+                        arg2: q.arg2.to_owned().to_lowercase(),
+                        arg3: q.arg3.to_owned().to_lowercase(),
+                    };
+                    vec.push(asm);
+                }
             }
             _ => {
                 let asm = RustAsm {
@@ -445,12 +512,20 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
             for f in function_limits.iter() {
                 if f.0 == scope {
                     start = f.1;
+                    break;
                 }
             }
             let jmp = RustAsm {
                 cmd: "JI".to_string(),
                 arg1: start.to_string(),
                 arg2: "--".to_string(),
+                arg3: "--".to_string(),
+            };
+            let mv = RustAsm {
+                cmd: "MOVE".to_string(),
+                arg1: format!("$r{}", temp[2..].parse::<i32>().unwrap())
+                    .to_owned(),
+                arg2: "$r_ret".to_string(),
                 arg3: "--".to_string(),
             };
 
@@ -465,6 +540,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
             };
             let _ = std::mem::replace(&mut vec[i - 1], load);
             let _ = std::mem::replace(&mut vec[i], jmp);
+            let _ = std::mem::replace(&mut vec[i + 1], mv);
             link_return(&mut vec, temp, start);
         }
     }
@@ -548,28 +624,24 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 match comparison.comp {
                     Comparison::LT => {
                         command = "JN".to_string();
-                        loads.push((load, i - 1));
+                        let jmp = RustAsm {
+                            cmd: "JZ".to_string(),
+                            arg1: "$r_lab".to_string(),
+                            arg2: format!(
+                                "$r{}",
+                                v.arg1[2..].parse::<i32>().unwrap()
+                            ),
+                            arg3: "--".to_string(),
+                        };
+                        loads.push((jmp, i - 1));
+                        loads.push((load, i - 2));
                     }
                     Comparison::LE => {
                         command = "JN".to_string();
-                        let jmp = RustAsm {
-                            cmd: "JZ".to_string(),
-                            arg1: "$r_lab".to_string(),
-                            arg2: format!(
-                                "$r{}",
-                                v.arg1[2..].parse::<i32>().unwrap()
-                            ),
-                            arg3: "--".to_string(),
-                        };
-                        loads.push((jmp, i - 1));
-                        loads.push((load, i - 2));
+                        loads.push((load, i - 1));
                     }
                     Comparison::GT => {
                         command = "JN".to_string();
-                        loads.push((load, i - 1));
-                    }
-                    Comparison::GE => {
-                        command = "JN".to_string();
                         let jmp = RustAsm {
                             cmd: "JZ".to_string(),
                             arg1: "$r_lab".to_string(),
@@ -582,11 +654,11 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         loads.push((jmp, i - 1));
                         loads.push((load, i - 2));
                     }
-                    Comparison::EQ => {
-                        command = "JZ".to_string();
+                    Comparison::GE => {
+                        command = "JN".to_string();
                         loads.push((load, i - 1));
                     }
-                    Comparison::NE => {
+                    Comparison::EQ => {
                         command = "JN".to_string();
                         let jmp = RustAsm {
                             cmd: "JP".to_string(),
@@ -599,6 +671,10 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         };
                         loads.push((jmp, i - 1));
                         loads.push((load, i - 2));
+                    }
+                    Comparison::NE => {
+                        command = "JZ".to_string();
+                        loads.push((load, i - 1));
                     }
                 }
 
@@ -616,6 +692,135 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
     for (load, i) in loads {
         let _ = std::mem::replace(&mut vec[i], load);
+    }
+
+    let mut register_map: HashMap<usize, usize> = HashMap::new();
+    let mut available_reg = Vec::with_capacity(32);
+    for i in 0..32 {
+        let mut reserved = false;
+        if i >= 28 {
+            reserved = true;
+        }
+        available_reg.push(Register {
+            number: i,
+            reserved,
+            available: true,
+        });
+    }
+
+    let refactor = true;
+    if refactor {
+        let mut start = 0;
+        for (fun, i, _, _) in function_limits.iter() {
+            if fun == "main" {
+                start = *i;
+                break;
+            }
+        }
+        for i in 0..vec.len() {
+            match vec[i].cmd.as_str() {
+                "LOAD" | "LOADI" => {
+                    if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_lab" {
+                        let register =
+                            vec[i].arg1[2..].parse::<usize>().unwrap();
+                        if !register_map.contains_key(&register) {
+                            let available = find_available_reg(&available_reg)
+                                .unwrap_or_else(|| panic!("register overflow"));
+                            available_reg[available].available = false;
+                            register_map.insert(register, available);
+                            vec[i].arg1 = format!("$r{}", available);
+                        } else {
+                            let dest = register_map.get(&register).unwrap();
+                            vec[i].arg1 = format!("$r{}", dest);
+                        }
+                    }
+                }
+                "STORE" => {
+                    let old = vec[i].arg1.clone();
+                    map_reg(&mut vec[i].arg1, &register_map);
+                    if i > start {
+                        // HACK: não sei melhorar dentro de f()
+                        remove_reg(&old, &mut register_map, &mut available_reg);
+                    }
+                }
+                "ADD" | "SUB" | "MULT" | "DIV" => {
+                    let register = vec[i].arg1[2..].parse::<usize>().unwrap();
+                    let available = find_available_reg(&available_reg)
+                        .unwrap_or_else(|| panic!("register overflow"));
+                    available_reg[available].available = false;
+                    register_map.insert(register, available);
+                    vec[i].arg1 = format!("$r{}", available);
+
+                    let old2 = vec[i].arg2.clone();
+                    map_reg(&mut vec[i].arg2, &register_map);
+                    if i > start {
+                        // HACK: não sei melhorar dentro de f()
+                        remove_reg(
+                            &old2,
+                            &mut register_map,
+                            &mut available_reg,
+                        );
+                    }
+
+                    let old3 = vec[i].arg3.clone();
+                    map_reg(&mut vec[i].arg3, &register_map);
+                    if i > start {
+                        // HACK: não sei melhorar dentro de f()
+                        remove_reg(
+                            &old3,
+                            &mut register_map,
+                            &mut available_reg,
+                        );
+                    }
+                }
+                "MOVE" => {
+                    if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_ret" {
+                        if register_map.contains_key(
+                            &vec[i].arg1[2..].parse::<usize>().unwrap(),
+                        ) {
+                            map_reg(&mut vec[i].arg1, &register_map);
+                        } else {
+                            let register =
+                                vec[i].arg1[2..].parse::<usize>().unwrap();
+                            let available = find_available_reg(&available_reg)
+                                .unwrap_or_else(|| panic!("register overflow"));
+                            available_reg[available].available = false;
+                            register_map.insert(register, available);
+                            vec[i].arg1 = format!("$r{}", available);
+                        }
+                    }
+                    if vec[i].arg2 != "$r_ret" {
+                        let old = vec[i].arg2.clone();
+                        map_reg(&mut vec[i].arg2, &register_map);
+                        if i > start {
+                            // HACK: não sei melhorar dentro de f()
+                            remove_reg(
+                                &old,
+                                &mut register_map,
+                                &mut available_reg,
+                            );
+                        }
+                    }
+                }
+                "OUT" => {
+                    let old = vec[i].arg2.clone();
+                    map_reg(&mut vec[i].arg2, &register_map);
+                    if i > start {
+                        // HACK: não sei melhorar dentro de f()
+                        remove_reg(&old, &mut register_map, &mut available_reg);
+                    }
+                }
+                "JN" | "JZ" | "JP" => {
+                    let old = vec[i].arg2.clone();
+                    map_reg(&mut vec[i].arg2, &register_map);
+                    let jump = &vec[i + 1].cmd;
+                    if jump != "JN" && jump != "JZ" && jump != "JP" {
+                        remove_reg(&old, &mut register_map, &mut available_reg);
+                    }
+                }
+                _ => (),
+            }
+        }
     }
 
     // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
