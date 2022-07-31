@@ -4,13 +4,8 @@ const NOP: u32 = 0b00000 << 27;
 const HLT: u32 = 0b00001 << 27;
 const IN: u32 = 0b00010 << 27; // TODO: fazer
 const OUT: u32 = 0b00011 << 27;
-const AND: u32 = 0b00100 << 27;
-const ANDI: u32 = 0b00101 << 27;
-const OR: u32 = 0b00110 << 27;
-const ORI: u32 = 0b00111 << 27;
 const MULT: u32 = 0b01000 << 27;
 const DIV: u32 = 0b01001 << 27;
-const NOT: u32 = 0b01010 << 27;
 const ADD: u32 = 0b01011 << 27;
 const ADDI: u32 = 0b01100 << 27;
 const SUB: u32 = 0b01101 << 27;
@@ -22,10 +17,24 @@ const LOADI: u32 = 0b10010 << 27;
 const J: u32 = 0b10011 << 27;
 const JI: u32 = 0b10100 << 27;
 const JZ: u32 = 0b10101 << 27;
-const JZI: u32 = 0b10110 << 27; // TODO: trocar ou JZI ou JNI para JP
 const JN: u32 = 0b10111 << 27;
-const JNI: u32 = 0b11000 << 27; // TODO: trocar ou JZI ou JNI para JP
 const JP: u32 = 0b11001 << 27;
+
+// TODO: implementar futuramente
+#[allow(dead_code)]
+const NOT: u32 = 0b01010 << 27;
+#[allow(dead_code)]
+const JZI: u32 = 0b10110 << 27; // TODO: trocar ou JZI ou JNI para JP
+#[allow(dead_code)]
+const JNI: u32 = 0b11000 << 27; // TODO: trocar ou JZI ou JNI para JP
+#[allow(dead_code)]
+const AND: u32 = 0b00100 << 27;
+#[allow(dead_code)]
+const ANDI: u32 = 0b00101 << 27;
+#[allow(dead_code)]
+const OR: u32 = 0b00110 << 27;
+#[allow(dead_code)]
+const ORI: u32 = 0b00111 << 27;
 
 // $r_call == REG31
 // $r_jmp  == REG30
