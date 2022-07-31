@@ -16,13 +16,13 @@ struct IfComp {
     temp: String,
 }
 
-#[derive(Debug, Eq, Hash, PartialEq)]
+#[derive(Debug, Eq, Hash, PartialEq, Clone)]
 struct Variable {
     name: String,
     scope: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Memory {
     mem_location: i32,
     size: i32,
@@ -64,7 +64,7 @@ fn remove_reg(
     reg_map.remove_entry(&source);
 }
 
-fn link_return(vec: &mut Vec<RustAsm>, temp: String, start: usize) {
+fn link_return(vec: &mut Vec<RustAsm>, start: usize) {
     for i in start..vec.len() {
         if vec[i].cmd == "ret" {
             let source = vec[i].arg1.clone();
@@ -108,6 +108,8 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
     let mut output_param = Vec::new();
 
+    let mut fun_args: HashMap<&str, Vec<(Variable, Memory)>> = HashMap::new();
+
     let noop = RustAsm {
         cmd: "NOP".to_string(),
         arg1: "--".to_string(),
@@ -116,15 +118,45 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
     };
     vec.push(noop); // J main
 
+    let mut quad_func_limits = Vec::new();
+    let mut quad_finish;
+    let mut quad_start = 0;
+    let mut quad_name = Vec::new();
+    let mut quad_ret_type = Vec::new();
+    for (i, value) in quad
+        .iter()
+        .enumerate()
+        .filter(|&(_, q)| q.cmd.eq("FUN") || q.cmd.eq("END"))
+    {
+        if value.cmd == "END" {
+            quad_finish = i;
+            quad_func_limits.push((
+                quad_name.pop().unwrap(),
+                quad_start,
+                quad_finish,
+                quad_ret_type.pop().unwrap(),
+            ));
+        } else {
+            quad_start = i;
+            quad_name.push(value.arg2.to_owned());
+            quad_ret_type.push(value.arg1.to_owned());
+        }
+    }
+
     for (i, q) in quad.iter().enumerate() {
+        let mut scope = "main";
+        for (current, start, finish, _) in quad_func_limits.iter() {
+            if i >= *start && i <= *finish {
+                scope = current;
+            }
+        }
         match q.cmd.as_str() {
             "ALLOC" => {
                 let var_size = 1;
 
                 let k = Variable {
                     name: q.arg1.to_owned(),
-                    // scope: q.arg2.to_owned(),
-                    scope: "--".to_string(),
+                    scope: q.arg2.to_owned(),
                 };
                 let v = Memory {
                     mem_location: mem_free,
@@ -134,39 +166,104 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
                 variables.insert(k, v);
             }
-            // "ARG" => {
-            //     // TODO: de algum modo linkar o arg com o lugar da memoria real
-            //     // ou seja, a variavel mandada em param
-            //     let var_size = 1;
+            "ARG" => {
+                let var_size = 1;
 
-            //     let k = Variable {
-            //         name: q.arg2.to_owned().to_lowercase(),
-            //         // scope: q.arg2.to_owned(),
-            //         scope: "--".to_string().to_lowercase(),
-            //     };
-            //     let v = Memory {
-            //         mem_location: mem_free,
-            //         size: var_size,
-            //     };
-            //     mem_free += var_size;
+                let k = Variable {
+                    name: q.arg2.to_owned().to_lowercase(),
+                    scope: scope.to_owned(),
+                };
+                let v = Memory {
+                    mem_location: mem_free,
+                    size: var_size,
+                };
+                mem_free += var_size;
 
-            //     variables.insert(k, v);
-            // }
-            // "ARRLOC" => {
-            //     let var_size = q.arg3.parse().unwrap();
+                let clone_k = k.clone();
+                fun_args
+                    .entry(scope)
+                    .and_modify(|value| value.push((clone_k.clone(), v)))
+                    .or_insert(vec![(clone_k, v)]);
 
-            //     let k = Variable {
-            //         name: q.arg1.to_owned(),
-            //         scope: q.arg2.to_owned(),
-            //     };
-            //     let v = Memory {
-            //         mem_location: mem_free,
-            //         size: var_size,
-            //     };
-            //     mem_free += var_size;
+                variables.insert(k, v);
+            }
+            "ARRLOC" => {
+                let var_size = q.arg3.parse().unwrap();
 
-            //     variables.insert(k, v);
-            // }
+                let k = Variable {
+                    name: q.arg1.to_owned(),
+                    scope: q.arg2.to_owned(),
+                };
+                let v = Memory {
+                    mem_location: mem_free,
+                    size: var_size,
+                };
+                mem_free += var_size;
+
+                variables.insert(k, v);
+            }
+            "ARRLOAD" => {
+                let command;
+                let value;
+
+                command = "LOADR".to_string();
+                value = variables
+                    .get(&Variable {
+                        name: q.arg2.to_owned(),
+                        scope: scope.to_owned(),
+                    })
+                    .unwrap()
+                    .mem_location;
+
+                let dest = q.arg3.to_owned();
+                let reg = RustAsm {
+                    cmd: "ADDI".to_string(),
+                    arg1: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
+                    arg2: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
+                    arg3: value.to_string(),
+                };
+
+                let asm = RustAsm {
+                    cmd: command,
+                    arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
+                    arg2: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
+                    arg3: "--".to_string(),
+                };
+
+                vec.push(reg);
+                vec.push(asm);
+            }
+            "ARRSTR" => {
+                let command;
+                // let value;
+
+                command = "STORER".to_string();
+                // value = variables
+                //     .get(&Variable {
+                //         name: q.arg1.to_owned(),
+                //         scope: scope.to_owned(),
+                //     })
+                //     .unwrap()
+                //     .mem_location;
+
+                let dest = q.arg3.to_owned();
+                // let reg = RustAsm {
+                //     cmd: "ADDI".to_string(),
+                //     arg1: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
+                //     arg2: value.to_string(),
+                //     arg3: "--".to_string(),
+                // };
+
+                let asm = RustAsm {
+                    cmd: command,
+                    arg1: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
+                    arg2: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
+                    arg3: "--".to_string(),
+                };
+
+                // vec.push(reg);
+                vec.push(asm);
+            }
             "ASSIGN" => {
                 let command;
                 let value;
@@ -205,7 +302,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         value = variables
                             .get(&Variable {
                                 name: q.arg2.to_owned(),
-                                scope: "--".to_string(),
+                                scope: scope.to_owned(),
                             })
                             .unwrap()
                             .mem_location;
@@ -224,7 +321,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 let mem = variables
                     .get(&Variable {
                         name: q.arg1.to_owned(),
-                        scope: "--".to_owned(),
+                        scope: scope.to_owned(),
                     })
                     .unwrap()
                     .mem_location;
@@ -432,9 +529,11 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         arg2: q.arg2.to_owned().to_lowercase(),
                         arg3: q.arg3.to_owned().to_lowercase(),
                     };
-                    for _ in 0..=q.arg3.parse::<i32>().unwrap() {
-                        vec.push(noop.clone());
-                    }
+                    vec.push(noop.clone());
+
+                    // for _ in 0..=q.arg3.parse::<i32>().unwrap() {
+                    //     vec.push(noop.clone());
+                    // }
                 }
                 vec.push(asm);
                 if q.arg2 != "output" && q.arg2 != "input" {
@@ -486,6 +585,42 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
     iff.reverse();
 
+    for i in 0..vec.len() {
+        if vec[i].cmd == "call" {
+            let scope = vec[i].arg2.as_str();
+            let param_num = vec[i].arg3.parse::<usize>().unwrap();
+            let mut param_count = 0;
+            let mut j = i;
+            let params = fun_args.get(scope).unwrap();
+            for p in params.iter().rev() {
+                if param_count >= param_num {
+                    break;
+                }
+                while j > 0 {
+                    if param_count >= param_num {
+                        break;
+                    }
+                    if vec[j].cmd == "param" {
+                        param_count += 1;
+                        let temp = vec[j].arg1.clone();
+                        let loc = p.1.mem_location;
+                        let asm = RustAsm {
+                            cmd: "STORE".to_string(),
+                            arg1: temp,
+                            arg2: loc.to_string(),
+                            arg3: "--".to_string(),
+                        };
+
+                        let _ = std::mem::replace(&mut vec[j], asm);
+                        break;
+                    }
+
+                    j -= 1;
+                }
+            }
+        }
+    }
+
     let mut function_limits = Vec::<(String, usize, usize, String)>::new();
     let mut start = 0;
     let mut finish;
@@ -536,9 +671,6 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 arg3: "--".to_string(),
             };
 
-            for j in (0..vec[i].arg3.parse::<usize>().unwrap()).rev() {
-                // pegar argumentos
-            }
             let load = RustAsm {
                 cmd: "LOADI".to_string(),
                 arg1: "$r_call".to_string(),
@@ -548,7 +680,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
             let _ = std::mem::replace(&mut vec[i - 1], load);
             let _ = std::mem::replace(&mut vec[i], jmp);
             let _ = std::mem::replace(&mut vec[i + 1], mv);
-            link_return(&mut vec, temp, start);
+            link_return(&mut vec, start);
         }
     }
 
@@ -743,12 +875,46 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         }
                     }
                 }
+                "LOADR" => {
+                    let register = vec[i].arg1[2..].parse::<usize>().unwrap();
+                    if !register_map.contains_key(&register) {
+                        let available = find_available_reg(&available_reg)
+                            .unwrap_or_else(|| panic!("register overflow"));
+                        available_reg[available].available = false;
+                        register_map.insert(register, available);
+                        vec[i].arg1 = format!("$r{}", available);
+                        map_reg(&mut vec[i].arg2, &register_map);
+                    }
+                }
                 "STORE" => {
                     let old = vec[i].arg1.clone();
                     map_reg(&mut vec[i].arg1, &register_map);
                     if i > start {
                         // HACK: não sei melhorar dentro de f()
                         remove_reg(&old, &mut register_map, &mut available_reg);
+                    }
+                }
+                "STORER" => {
+                    let old1 = vec[i].arg1.clone();
+                    map_reg(&mut vec[i].arg1, &register_map);
+                    if i > start {
+                        // HACK: não sei melhorar dentro de f()
+                        remove_reg(
+                            &old1,
+                            &mut register_map,
+                            &mut available_reg,
+                        );
+                    }
+
+                    let old2 = vec[i].arg2.clone();
+                    map_reg(&mut vec[i].arg2, &register_map);
+                    if i > start {
+                        // HACK: não sei melhorar dentro de f()
+                        remove_reg(
+                            &old2,
+                            &mut register_map,
+                            &mut available_reg,
+                        );
                     }
                 }
                 "ADD" | "SUB" | "MULT" | "DIV" => {
@@ -780,6 +946,10 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                             &mut available_reg,
                         );
                     }
+                }
+                "ADDI" => {
+                    map_reg(&mut vec[i].arg1, &register_map);
+                    map_reg(&mut vec[i].arg2, &register_map);
                 }
                 "MOVE" => {
                     if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_ret" {

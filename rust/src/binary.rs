@@ -22,6 +22,8 @@ impl OpCode {
     const JZ: u32 = 0b10101 << 27;
     const JN: u32 = 0b10111 << 27;
     const JP: u32 = 0b11001 << 27;
+    const STORER: u32 = 0b11010 << 27; // RS RD
+    const LOADR: u32 = 0b11011 << 27; // RD RS
 
     // TODO: implementar futuramente
     // const NOT: u32 = 0b01010 << 27;
@@ -126,6 +128,40 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 }
 
                 inner |= reg << 22;
+                let bin = RustBin { inner };
+                vec.push(bin);
+            }
+            "STORER" => {
+                let mut inner = 0;
+                inner |= OpCode::STORER;
+
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                    panic!("overflow");
+                }
+                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
+
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                    panic!("overflow");
+                }
+                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
+
+                let bin = RustBin { inner };
+                vec.push(bin);
+            }
+            "LOADR" => {
+                let mut inner = 0;
+                inner |= OpCode::LOADR;
+
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                    panic!("overflow");
+                }
+                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
+
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                    panic!("overflow");
+                }
+                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
+
                 let bin = RustBin { inner };
                 vec.push(bin);
             }
@@ -304,9 +340,13 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 vec.push(bin);
             }
             "ADDI" => {
-                // TODO: ver se usa em algum lugar
                 let mut inner = 0;
                 inner |= OpCode::ADDI;
+
+                if a.arg3.parse::<u32>().unwrap() >= (1 << 17) {
+                    panic!("overflow");
+                }
+                inner |= a.arg3.parse::<u32>().unwrap();
 
                 if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
                     panic!("overflow");
@@ -317,11 +357,6 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 17) {
-                    panic!("overflow");
-                }
-                inner |= a.arg3[2..].parse::<u32>().unwrap();
 
                 let bin = RustBin { inner };
                 vec.push(bin);
