@@ -51,6 +51,10 @@ extern FILE *source;  /* source code text file */
 extern FILE *listing; /* listing output text file */
 extern FILE *code;    /* code text file for TM simulator */
 
+extern int TraceCode;
+
+extern int Error;
+
 extern int lineno; /* source line number for listing */
 
 /**************************************************/

@@ -1,0 +1,10 @@
+int vet[10];
+
+void main(void)
+{
+	int y;
+	y = 1;
+
+	vet[y+1] = 2;
+	/* output(vec[y]); */
+}

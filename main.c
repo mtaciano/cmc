@@ -6,6 +6,7 @@
 // TODO: refatorar as partes ruins dos códigos
 // TODO: refatorar comentários
 #include "globals.h"
+#include "rust.h"
 
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
 #define NO_PARSE FALSE
@@ -88,9 +89,11 @@ main(int argc, char *argv[]) {
   if (!Error) {
     if (TraceCode)
       fprintf(listing, "\nGerando código intermediário\n\n");
-    make_code(syntaxTree);
+    Quad q = make_code(syntaxTree);
     if (TraceCode)
       fprintf(listing, "\nGeração do código intermediário concluída.\n");
+
+    make_output(q);
   }
 #endif
 #endif

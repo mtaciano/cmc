@@ -1,0 +1,13 @@
+int retum (void) {
+    return 1;
+}
+
+int maisum (int x) {
+    return x + 1;
+}
+
+void main(void)
+{
+	int x;
+    x = maisum(retum());
+}

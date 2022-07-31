@@ -1,5 +1,7 @@
 /* Um programa para ordenação por seleção de uma matriz com 10 elementos */
+
 int x[10];
+
 int minloc(int a[], int low, int high) {
     int i;
     int x;
@@ -16,6 +18,7 @@ int minloc(int a[], int low, int high) {
     }
     return k;
 }
+
 void sort(int a[], int low, int high) {
     int i;
     int k;
@@ -29,6 +32,7 @@ void sort(int a[], int low, int high) {
         i = i + 1;
     }
 }
+
 void main(void) {
     int i;
     i = 0;
