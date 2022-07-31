@@ -1,0 +1,12 @@
+/* FUNCIONA */
+
+int retum (void) {
+    return 1;
+}
+
+void main(void)
+{
+    int x;
+    x = 10;
+    output(x + retum());
+}

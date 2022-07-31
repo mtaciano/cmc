@@ -1,25 +1,23 @@
+/* FUNCIONA */
+
 void main(void)
 {
-	int x;
-	x = 1;
+  int x;
+  x = 0;
 
-	while (x < 10) {
-    x = x + 1;
+	while (x < 4) {
+    x = x + 2;
   }
 
-  while (x > 20) {
-    x = x + 1;
+  while (9 >= x) {
+    x = x + 5;
   }
 
-  while (x <= 20) {
-    x = x + 1;
+  while (x <= 24) {
+    x = x + 10;
   }
 
-  while (x >= 20) {
-    x = x + 1;
-  }
-
-  while (x != 20) {
+  while (x != 35) {
     x = x + 1;
   }
 
