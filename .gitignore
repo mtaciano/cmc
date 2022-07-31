@@ -15,3 +15,4 @@ rust/target
 *.gv
 compilador
 out_bin.txt
+ideia.txt
