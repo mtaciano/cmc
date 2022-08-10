@@ -1,13 +1,21 @@
-int fat(int x) {
-    if (x == 0) {
-        return 1;
-    } else {
-        return x * fat(x - 1);
+int fat(int n) {
+    int num;
+    int i;
+
+    i = n;
+
+    num = 1;
+    while (i >= 1) {
+        num = num * i;
+        i = i - 1;
     }
+
+    return num;
 }
 
 void main(void) {
     int x;
-    x = 4;
-    output (fat(x)) ;
+
+    x = input();
+    output(fat(x));
 }

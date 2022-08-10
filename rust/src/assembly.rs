@@ -106,6 +106,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
     let mut iff = Vec::new();
     let mut mem_free = 0;
 
+    let debug = false;
     let mut output_param = Vec::new();
 
     let mut fun_args: HashMap<&str, Vec<(Variable, Memory)>> = HashMap::new();
@@ -513,7 +514,9 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         arg3: "--".to_string(),
                     };
                 } else if q.arg2 == "input" {
-                    println!("{:?}", q);
+                    if debug {
+                        println!("{:?}", q);
+                    }
                     let dest =
                         format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
                     asm = RustAsm {
@@ -606,7 +609,10 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         let loc = p.1.mem_location;
                         let asm = RustAsm {
                             cmd: "STORE".to_string(),
-                            arg1: temp,
+                            arg1: format!(
+                                "$r{}",
+                                temp[2..].parse::<i32>().unwrap()
+                            ),
                             arg2: loc.to_string(),
                             arg3: "--".to_string(),
                         };
@@ -1018,7 +1024,9 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 "{:<3} | {:>6}, {:>6}, {:>6}, {:>6} |\n",
                 "--", "CMD", "ARG1", "ARG2", "ARG3"
             );
-            println!("{:?}", &function_limits);
+            if debug {
+                println!("{:?}", &function_limits);
+            }
             for (i, asm) in vec.iter().enumerate() {
                 if asm.cmd.chars().any(|c| c.is_lowercase()) {
                     println!(
@@ -1032,12 +1040,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     );
                 }
             }
-            for (var, loc) in variables.iter() {
-                println!("");
-                println!(
+            if debug {
+                for (var, loc) in variables.iter() {
+                    println!("");
+                    println!(
                     "var.name: {}, var.scope: {} -> loc.mem: {}, loc.size: {}",
-                    var.name, var.scope, loc.mem_location, loc.size
-                );
+                    var.name, var.scope, loc.mem_location, loc.size);
+                }
             }
             println!("\nGeração do código assembly concluída.");
         }

@@ -135,12 +135,12 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::STORER;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
@@ -152,12 +152,12 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::LOADR;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
@@ -172,7 +172,7 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 if a.arg1 == "$r_ret" {
                     reg = 28;
                 } else {
-                    if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                    if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                         panic!("overflow");
                     }
                     reg = a.arg1[2..].parse::<u32>().unwrap();
@@ -182,7 +182,7 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 if a.arg2 == "$r_ret" {
                     reg = 28;
                 } else {
-                    if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                    if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                         panic!("overflow");
                     }
                     reg = a.arg2[2..].parse::<u32>().unwrap();
@@ -233,7 +233,7 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 }
                 inner |= reg << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
@@ -260,7 +260,7 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 }
                 inner |= reg << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
@@ -287,7 +287,7 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 }
                 inner |= reg << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
@@ -299,17 +299,17 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::ADD;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
 
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
@@ -321,17 +321,17 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::SUB;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
 
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
@@ -348,12 +348,12 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 }
                 inner |= a.arg3.parse::<u32>().unwrap();
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
@@ -366,17 +366,17 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::SUBI;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
 
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
@@ -388,17 +388,17 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::MULT;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
 
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
@@ -410,17 +410,17 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::DIV;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
 
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
@@ -432,7 +432,7 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::OUT;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
@@ -444,7 +444,7 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
                 let mut inner = 0;
                 inner |= OpCode::IN;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 6) {
+                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
                     panic!("overflow");
                 }
                 inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;

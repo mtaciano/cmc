@@ -1,5 +1,3 @@
-/* FUNCIONA */
-
 void main(void)
 {
 	int x;

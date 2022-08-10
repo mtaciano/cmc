@@ -364,6 +364,7 @@ static void read_tree_node(TreeNode *t) {
                 strcpy(offset, stack_temp[stack_temp_last - 1]);
                 strcpy(name, t->attr.name);
                 insert_quad("ARRLOAD", temp, name, offset);
+                t_num++;
                 push(stack_temp, temp, &stack_temp_last);
             }
         }
@@ -399,7 +400,7 @@ static void read_tree_node(TreeNode *t) {
             pop(stack_temp, &stack_temp_last);
             if (is_arr_asn) {
                 char *offset = malloc(50 * sizeof offset);
-                strcpy(offset, stack_temp[stack_temp_last - 2]);
+                strcpy(offset, stack_temp[stack_temp_last - 1]);
                 pop(stack_temp, &stack_temp_last);
                 insert_quad("ASSIGN", t2, t1, "--");
                 insert_quad("ARRSTR", t->child[0]->attr.name, t2, offset);

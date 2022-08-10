@@ -1,5 +1,3 @@
-/* FUNCIONA */
-
 void main(void)
 {
 	int y;
@@ -9,5 +7,6 @@ void main(void)
 
 	vet[y+1] = 2;
 	y = y + 1;
+
 	output(vet[y]);
 }
