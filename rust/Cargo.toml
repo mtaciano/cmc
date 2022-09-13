@@ -1,13 +1,13 @@
 [package]
 name = "rust"
-version = "0.1.0"
+version = "0.8.0"
 edition = "2021"
 
 [profile.release]
-# strip = true
+strip = "debuginfo"
+panic = "abort"
 lto = true
 codegen-units = 1
-opt-level = "z"
 
 [lib]
 crate-type = ["staticlib"]
