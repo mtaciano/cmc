@@ -17,6 +17,13 @@ Etapas parcialmente implementadas:
 - [x] Gerador de código de máquina (processador de arquitetura própria)
 
 Etapas faltando:
+XXX
+
+## Dependências
+- Cargo (rustup)
+- Clang
+- Bison
+- Flex
 
 ## Contribuição
 
