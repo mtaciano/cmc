@@ -1,4 +1,5 @@
 use crate::*;
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 enum Comparison {
@@ -34,14 +35,8 @@ struct Register {
 }
 
 #[inline(always)]
-fn find_available_reg(registers: &Vec<Register>) -> Option<usize> {
-    for i in 0..32 {
-        if registers[i].reserved == false && registers[i].available {
-            return Some(i);
-        }
-    }
-
-    None
+fn find_available_reg(registers: &[Register]) -> Option<usize> {
+    (0..32).find(|&i| !registers[i].reserved && registers[i].available)
 }
 
 #[inline(always)]
@@ -54,9 +49,9 @@ fn map_reg(reg: &mut String, reg_map: &HashMap<usize, usize>) {
 
 #[inline(always)]
 fn remove_reg(
-    reg: &String,
+    reg: &str,
     reg_map: &mut HashMap<usize, usize>,
-    available: &mut Vec<Register>,
+    available: &mut [Register],
 ) {
     let source = reg[2..].parse::<usize>().unwrap();
     let dest = reg_map.get(&source).unwrap();
@@ -184,7 +179,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 fun_args
                     .entry(scope)
                     .and_modify(|value| value.push((clone_k.clone(), v)))
-                    .or_insert(vec![(clone_k, v)]);
+                    .or_insert_with(|| vec![(clone_k, v)]);
 
                 variables.insert(k, v);
             }
@@ -204,11 +199,8 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 variables.insert(k, v);
             }
             "ARRLOAD" => {
-                let command;
-                let value;
-
-                command = "LOADR".to_string();
-                value = variables
+                let command = "LOADR".to_string();
+                let value = variables
                     .get(&Variable {
                         name: q.arg2.to_owned(),
                         scope: scope.to_owned(),
@@ -235,11 +227,8 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(asm);
             }
             "ARRSTR" => {
-                let command;
-                // let value;
-
-                command = "STORER".to_string();
-                // value = variables
+                let command = "STORER".to_string();
+                // let value = variables
                 //     .get(&Variable {
                 //         name: q.arg1.to_owned(),
                 //         scope: scope.to_owned(),
@@ -726,18 +715,15 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
     let mut labels: HashMap<String, usize> = HashMap::new();
     for (i, v) in vec.iter_mut().enumerate() {
-        match v.cmd.as_str() {
-            "lab" => {
-                let noop = RustAsm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                };
-                let label = std::mem::replace(v, noop);
-                labels.insert(label.arg1, i);
-            }
-            _ => (),
+        if v.cmd.as_str() == "lab" {
+            let noop = RustAsm {
+                cmd: "NOP".to_string(),
+                arg1: "--".to_string(),
+                arg2: "--".to_string(),
+                arg3: "--".to_string(),
+            };
+            let label = std::mem::replace(v, noop);
+            labels.insert(label.arg1, i);
         }
     }
 
@@ -869,11 +855,11 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_lab" {
                         let register =
                             vec[i].arg1[2..].parse::<usize>().unwrap();
-                        if !register_map.contains_key(&register) {
+                        if let Entry::Vacant(e) = register_map.entry(register) {
                             let available = find_available_reg(&available_reg)
                                 .unwrap_or_else(|| panic!("register overflow"));
                             available_reg[available].available = false;
-                            register_map.insert(register, available);
+                            e.insert(available);
                             vec[i].arg1 = format!("$r{}", available);
                         } else {
                             let dest = register_map.get(&register).unwrap();
@@ -883,11 +869,11 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 }
                 "LOADR" => {
                     let register = vec[i].arg1[2..].parse::<usize>().unwrap();
-                    if !register_map.contains_key(&register) {
+                    if let Entry::Vacant(e) = register_map.entry(register) {
                         let available = find_available_reg(&available_reg)
                             .unwrap_or_else(|| panic!("register overflow"));
                         available_reg[available].available = false;
-                        register_map.insert(register, available);
+                        e.insert(available);
                         vec[i].arg1 = format!("$r{}", available);
                         map_reg(&mut vec[i].arg2, &register_map);
                     }
@@ -1042,7 +1028,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
             }
             if debug {
                 for (var, loc) in variables.iter() {
-                    println!("");
+                    println!();
                     println!(
                     "var.name: {}, var.scope: {} -> loc.mem: {}, loc.size: {}",
                     var.name, var.scope, loc.mem_location, loc.size);

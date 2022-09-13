@@ -6,7 +6,7 @@ use std::path::PathBuf;
 fn main() {
     let path = env::current_dir().unwrap().pop();
     // Diz para o cargo olhar por bibliotecas nestes caminho
-    println!("cargo:rustc-link-search={}", path.to_string());
+    println!("cargo:rustc-link-search={}", path);
 
     // Tell cargo to tell rustc to link the system bzip2
     // shared library.
