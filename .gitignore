@@ -8,11 +8,12 @@ compile_commands.json
 rust/target
 *.o
 *.a
+*.so
 *.tab.c
 *.tab.h
 *.yy.c
 *.code-workspace
 *.gv
-compilador
+cmc
 out_bin.txt
 ideia.txt

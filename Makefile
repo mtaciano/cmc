@@ -1,21 +1,35 @@
 # Makefile para o compilador C-
 # Miguel Silva Taciano e Gabriel Bianchi e Silva
 
-CC = gcc
-CC-FLAGS = -g
-BISON = bison
-LEX = flex
-RS = cargo
-RS-FLAGS = --release
-TARGET = target/release
+CC = clang
+CC-FLAGS = -Wall -Wextra -pedantic
 
-BIN = compilador
-BIN-FLAGS = -pthread -ldl
+BISON = bison
+
+LEX = flex
+
+RS = cargo
+RS-FLAGS =
+TARGET = target/debug
+
+# C Minus Compiler
+BIN = cmc
+BIN-FLAGS = -static
 
 OBJS = cmin.tab.o lex.yy.o main.o util.o symtab.o analyze.o code.o librust.a
 
 $(BIN): $(OBJS)
-	$(CC) $(OBJS) $(BIN-FLAGS) -o $(BIN)
+	$(CC) $(OBJS) $(CC-FLAGS) $(BIN-FLAGS) -o $(BIN)
+
+release: CC-FLAGS += -O3
+release: RS-FLAGS += --release
+release: TARGET = target/release
+release: $(BIN)
+release:
+	strip -p --strip-all $(BIN)
+
+debug: CC-FLAGS += -g
+debug: $(BIN)
 
 main.o: main.c globals.h util.h scan.h analyze.h
 	$(CC) $(CC-FLAGS) -c main.c
@@ -46,10 +60,6 @@ librust.a: rust/src/lib.rs rust/Cargo.toml rust/wrapper.h rust/src/assembly.rs r
 
 bindings:
 	cd rust && cbindgen --config cbindgen.toml --crate rust --output ../rust.h
-
-debug: RS-FLAGS =
-debug: TARGET = target/debug
-debug: $(BIN)
 
 # Só rodar se a pasta existir
 cpu:
