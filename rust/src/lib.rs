@@ -3,7 +3,9 @@
 #![allow(non_snake_case)]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-use std::{ffi::CStr, fs::OpenOptions, io::Write};
+use std::ffi::CStr;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 mod assembly;
 mod binary;
