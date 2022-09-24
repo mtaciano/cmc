@@ -1,4 +1,4 @@
-// Funções utilitarias para o compilador de C-
+/* Funções utilitarias para o compilador de C- */
 
 #ifndef _UTIL_H_
 #define _UTIL_H_
@@ -6,31 +6,31 @@
 /* Função printToken printa um token
  * e seu lexema para o arquivo listing
  */
-void printToken(TokenType, const char *);
+void print_token(TokenType token, const char *token_string);
 
-/* Função newStmtNode cria um novo nó do tipo statement
+/* Função new_StmtNode cria um novo nó do tipo statement
  * para a contrução da árvore sintática
  */
-TreeNode *newStmtNode(StmtKind);
+TreeNode *new_StmtNode(StmtKind kind);
 
-/* Função newExpNode cria um novo nó do tipo expressão
+/* Função new_ExpNode cria um novo nó do tipo expressão
  * para a contrução da árvore sintática
  */
-TreeNode *newExpNode(ExpKind);
+TreeNode *new_ExpNode(ExpKind kind);
 
-/* Função newDeclNode cria um novo nó do tipo declaração
+/* Função new_DeclNode cria um novo nó do tipo declaração
  * para a contrução da árvore sintática
  */
-TreeNode *newDeclNode(DeclKind);
+TreeNode *new_DeclNode(DeclKind kind);
 
-/* Função copyString aloca e cria uma nova
+/* Função copy_string aloca e cria uma nova
  * cópia de uma string existente
  */
-char *copyString(char *);
+char *copy_string(char *s);
 
-/* Função printTree printa a árvore sintática para o
+/* Função print_tree printa a árvore sintática para o
  * arquivo listing usando indentação para indicar sub-árvores
  */
-void printTree(TreeNode *);
+void print_tree(TreeNode *tree);
 
 #endif

@@ -1,4 +1,4 @@
-// Funções do scanner da linguagem C-
+/* Funções do scanner da linguagem C- */
 
 #ifndef _SCAN_H_
 #define _SCAN_H_

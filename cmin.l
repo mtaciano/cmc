@@ -59,20 +59,24 @@ whitespace   [ \t]+
 
 %%
 
-TokenType getToken(void)
-{ static int firstTime = TRUE;
+TokenType getToken(void) {
+  static int firstTime = TRUE;
   TokenType currentToken;
-  if (firstTime)
-  { firstTime = FALSE;
+
+  if (firstTime) {
+    firstTime = FALSE;
     lineno++;
     yyin = source;
     yyout = listing;
   }
+
   currentToken = yylex();
-  strncpy(tokenString,yytext,MAXTOKENLEN);
+  strncpy(tokenString, yytext, MAXTOKENLEN);
+
   if (TraceScan) {
-    fprintf(listing,"\t%d: ",lineno);
-    printToken(currentToken,tokenString);
+    fprintf(listing, "\t%d: ", lineno);
+    print_token(currentToken, tokenString);
   }
+
   return currentToken;
 }

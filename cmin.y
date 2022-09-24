@@ -7,8 +7,7 @@
 #include "util.h"
 #include "scan.h"
 // TODO: muito provavelmente parse.h não é necessário em nenhum lugar
-//   @t! portanto remover ele dos arquivos (main.c também possui ele)
-// #include "parse.h"
+// TODO: portanto remover ele dos arquivos (main.c também possui ele)
 
 #define YYSTYPE TreeNode *
 static int savedNumber;
@@ -51,7 +50,7 @@ declaracao : var_declaracao { $$ = $1; }
             ;
 
 id : ID
-     { savedName = copyString(tokenString);
+     { savedName = copy_string(tokenString);
        savedLineNo = lineno;
      }
    ;
@@ -63,13 +62,13 @@ num : NUM
     ;
 
 var_declaracao : tipo_especificador id SEMI
-                  { $$ = newDeclNode(VarK);
+                  { $$ = new_DeclNode(VarK);
                     $$->child[0] = $1;
                     $$->lineno = lineno;
                     $$->attr.name = savedName;
                   }
                 | tipo_especificador id LBRACKET num RBRACKET SEMI
-                  { $$ = newDeclNode(ArrVarK);
+                  { $$ = new_DeclNode(ArrVarK);
                     $$->child[0] = $1;
                     $$->lineno = lineno;
                     $$->type = IntegerArray;
@@ -79,17 +78,17 @@ var_declaracao : tipo_especificador id SEMI
                 ;
 
 tipo_especificador : INT
-                 { $$ = newExpNode(TypeK);
+                 { $$ = new_ExpNode(TypeK);
                    $$->type = Integer;
                  }
                | VOID
-                 { $$ = newExpNode(TypeK);
+                 { $$ = new_ExpNode(TypeK);
                    $$->type = Void;
                  }
                ;
 
 fun_declaracao : tipo_especificador id {
-                   $$ = newDeclNode(FunK);
+                   $$ = new_DeclNode(FunK);
                    $$->lineno = lineno;
                    $$->attr.name = savedName;
                  }
@@ -103,7 +102,7 @@ fun_declaracao : tipo_especificador id {
 
 params : param_lista { $$ = $1; }
        | VOID
-         { $$ = newDeclNode(ParamK);
+         { $$ = new_DeclNode(ParamK);
            $$->type = Void;
          }
        ;
@@ -122,19 +121,19 @@ param_lista : param_lista COMMA param
            ;
 
 param : tipo_especificador id
-        { $$ = newDeclNode(ParamK);
+        { $$ = new_DeclNode(ParamK);
           $$->child[0] = $1;
           $$->attr.name = savedName;
         }
       | tipo_especificador id LBRACKET RBRACKET
-        { $$ = newDeclNode(ArrParamK);
+        { $$ = new_DeclNode(ArrParamK);
           $$->child[0] = $1;
-          $$->attr.name = copyString(savedName);
+          $$->attr.name = copy_string(savedName);
         }
       ;
 
 composto_decl : LBRACE local_declaracoes param_lista RBRACE
-                { $$ = newStmtNode(CompoundK);
+                { $$ = new_StmtNode(CompoundK);
                   $$->child[0] = $2;
                   $$->child[1] = $3;
                 }
@@ -178,12 +177,12 @@ expressao_decl : expressao SEMI { $$ = $1; }
                 ;
 
 selecao_decl : IF LPAREN expressao RPAREN param
-                 { $$ = newStmtNode(IfK);
+                 { $$ = new_StmtNode(IfK);
                    $$->child[0] = $3;
                    $$->child[1] = $5;
                  }
                | IF LPAREN expressao RPAREN param ELSE param
-                 { $$ = newStmtNode(IfK);
+                 { $$ = new_StmtNode(IfK);
                    $$->child[0] = $3;
                    $$->child[1] = $5;
                    $$->child[2] = $7;
@@ -191,24 +190,24 @@ selecao_decl : IF LPAREN expressao RPAREN param
                ;
 
 iteracao_decl : WHILE LPAREN expressao RPAREN param
-                 { $$ = newStmtNode(WhileK);
+                 { $$ = new_StmtNode(WhileK);
                    $$->child[0] = $3;
                    $$->child[1] = $5;
                  }
                ;
 
 retorno_decl : RETURN SEMI
-              { $$ = newStmtNode(ReturnK);
+              { $$ = new_StmtNode(ReturnK);
                 $$->type = Void;
               }
             | RETURN expressao SEMI
-              { $$ = newStmtNode(ReturnK);
+              { $$ = new_StmtNode(ReturnK);
                 $$->child[0] = $2;
               }
             ;
 
 expressao : var ASSIGN expressao
-             { $$ = newStmtNode(AssignK);
+             { $$ = new_StmtNode(AssignK);
                $$->child[0] = $1;
                $$->child[1] = $3;
              }
@@ -216,11 +215,11 @@ expressao : var ASSIGN expressao
            ;
 
 var : id
-      { $$ = newExpNode(IdK);
+      { $$ = new_ExpNode(IdK);
         $$->attr.name = savedName;
       }
     | id {
-        $$ = newExpNode(ArrIdK);
+        $$ = new_ExpNode(ArrIdK);
         $$->attr.name = savedName;
       } LBRACKET expressao RBRACKET
       {
@@ -230,7 +229,7 @@ var : id
     ;
 
 simples_expressao : soma_expressao relacional soma_expressao
-                    { $$ = newExpNode(CalcK);
+                    { $$ = new_ExpNode(CalcK);
                       $$->child[0] = $1;
                       $$->child[1] = $2;
                       $$->child[2] = $3;
@@ -239,33 +238,33 @@ simples_expressao : soma_expressao relacional soma_expressao
                   ;
 
 relacional : LT
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = LT;
         }
       | LE
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = LE;
         }
       | GT
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = GT;
         }
       | GE
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = GE;
         }
       | EQ
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = EQ;
         }
       | NE
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = NE;
         }
       ;
 
 soma_expressao : soma_expressao soma termo
-                      { $$ = newExpNode(CalcK);
+                      { $$ = new_ExpNode(CalcK);
                         $$->child[0] = $1;
                         $$->child[1] = $2;
                         $$->child[2] = $3;
@@ -274,17 +273,17 @@ soma_expressao : soma_expressao soma termo
                     ;
 
 soma : PLUS
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = PLUS;
         }
       | MINUS
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = MINUS;
         }
       ;
 
 termo : termo mult fator
-       { $$ = newExpNode(CalcK);
+       { $$ = new_ExpNode(CalcK);
          $$->child[0] = $1;
          $$->child[1] = $2;
          $$->child[2] = $3;
@@ -293,11 +292,11 @@ termo : termo mult fator
      ;
 
 mult : TIMES
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = TIMES;
         }
       | OVER
-        { $$ = newExpNode(OpK);
+        { $$ = new_ExpNode(OpK);
           $$->attr.op = OVER;
         }
       ;
@@ -306,14 +305,14 @@ fator : LPAREN expressao RPAREN { $$ = $2; }
        | var { $$ = $1; }
        | ativacao { $$ = $1; }
        | num
-         { $$ = newExpNode(ConstK);
+         { $$ = new_ExpNode(ConstK);
            $$->type = Integer;
            $$->attr.val = atoi(tokenString);
          };
        ;
 
 ativacao : id {
-         $$ = newExpNode(CallK);
+         $$ = new_ExpNode(CallK);
          $$->attr.name = savedName;
          } LPAREN args RPAREN {
            $$ = $2;
@@ -340,23 +339,24 @@ arg_lista : arg_lista COMMA expressao
 
 %%
 
-int yyerror(char * message) {
+int yyerror(__attribute__ ((unused)) char * message) {
   if(Error) {
     return 0;
   }
-  fprintf(listing,"ERRO SINTATICO: %s LINHA: %d\n", tokenString, lineno);
+  fprintf(listing,"ERRO SINTÁTICO: %s LINHA: %d\n", tokenString, lineno);
   Error = TRUE;
+
   return 0;
 }
 
-/* yylex ativacaos getToken to make Yacc/Bison output
+/* yylex returns getToken to make Yacc/Bison output
  * compatible with ealier versions of the TINY scanner
  */
-static int yylex(void)
-{ return getToken(); }
+static int yylex(void) { return getToken(); }
 
-TreeNode * parse(void)
-{ yyparse();
+TreeNode * parse(void) {
+  yyparse();
+
   return savedTree;
 }
 

@@ -1,5 +1,6 @@
-// Ponto de entrada para o compilador
-// Responsável por chamar todos os componentes dele
+/* Ponto de entrada para o compilador
+ * Responsável por chamar todos os componentes dele
+ */
 
 // TODO: atualizar os comentários, NO_PARSE, NO_ANALYZE e NO_CODE
 // TODO: garantir que todos os arquivos estejam padronizados
@@ -46,58 +47,58 @@ int TraceCode = TRUE;
 
 int Error = FALSE;
 
-main(int argc, char *argv[]) {
-  TreeNode *syntaxTree;
-  char pgm[120]; /* source code file name */
-  if (argc != 2) {
-    fprintf(stderr, "uso: %s <nome_arquivo>\n", argv[0]);
-    exit(1);
-  }
-  strcpy(pgm, argv[1]);
-  if (strchr(pgm, '.') == NULL)
-    strcat(pgm, ".cm");
-  source = fopen(pgm, "r");
-  if (source == NULL) {
-    fprintf(stderr, "Arquivo %s não encontrado\n", pgm);
-    exit(1);
-  }
-  listing = stdout; /* send listing to screen */
-  fprintf(listing, "\nCOMPILAÇÃO DO C-: %s\n\n", pgm);
-#if NO_PARSE
-  while (getToken() != ENDFILE)
-    ;
-#else
-  syntaxTree = parse();
-  if (!Error) {
-    if (TraceParse) {
-      fprintf(listing, "\nArvore sintática:\n\n");
-      printTree(syntaxTree);
+int main(int argc, char *argv[]) {
+    TreeNode *syntaxTree;
+    char pgm[120]; /* source code file name */
+    if (argc != 2) {
+        fprintf(stderr, "uso: %s <nome_arquivo>\n", argv[0]);
+        exit(1);
     }
-  }
+    strcpy(pgm, argv[1]);
+    if (strchr(pgm, '.') == NULL)
+        strcat(pgm, ".cm");
+    source = fopen(pgm, "r");
+    if (source == NULL) {
+        fprintf(stderr, "Arquivo %s não encontrado\n", pgm);
+        exit(1);
+    }
+    listing = stdout; /* send listing to screen */
+    fprintf(listing, "\nCOMPILAÇÃO DO C-: %s\n\n", pgm);
+#if NO_PARSE
+    while (getToken() != ENDFILE)
+        ;
+#else
+    syntaxTree = parse();
+    if (!Error) {
+        if (TraceParse) {
+            fprintf(listing, "\nArvore sintática:\n\n");
+            print_tree(syntaxTree);
+        }
+    }
 #if !NO_ANALYZE
-  if (!Error) {
-    if (TraceAnalyze)
-      fprintf(listing, "\nMontando tabela de símbolos...\n");
-    buildSymtab(syntaxTree);
-    if (TraceAnalyze)
-      fprintf(listing, "\nVerificando tipos...\n");
-    typeCheck(syntaxTree);
-    if (TraceAnalyze)
-      fprintf(listing, "\nVerificação concluída.\n");
-  }
+    if (!Error) {
+        if (TraceAnalyze)
+            fprintf(listing, "\nMontando tabela de símbolos...\n");
+        buildSymtab(syntaxTree);
+        if (TraceAnalyze)
+            fprintf(listing, "\nVerificando tipos...\n");
+        typeCheck(syntaxTree);
+        if (TraceAnalyze)
+            fprintf(listing, "\nVerificação concluída.\n");
+    }
 #if !NO_CODE
-  if (!Error) {
-    if (TraceCode)
-      fprintf(listing, "\nGerando código intermediário\n\n");
-    Quad q = make_code(syntaxTree);
-    if (TraceCode)
-      fprintf(listing, "\nGeração do código intermediário concluída.\n");
+    if (!Error) {
+        if (TraceCode)
+            fprintf(listing, "\nGerando código intermediário\n\n");
+        Quad q = make_code(syntaxTree);
+        if (TraceCode)
+            fprintf(listing, "\nGeração do código intermediário concluída.\n");
 
-    make_output(q);
-  }
+        make_output(q);
+    }
 #endif
 #endif
 #endif
-  fclose(source);
-  return 0;
+    fclose(source);
+    return 0;
 }

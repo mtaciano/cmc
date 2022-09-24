@@ -1,4 +1,4 @@
-// Parser para linguagem C-
+/* Parser para linguagem C- */
 
 #ifndef _PARSE_H_
 #define _PARSE_H_

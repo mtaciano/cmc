@@ -1,12 +1,11 @@
-// Código intermediário
-// TODO: tratar while
-// TODO: tratar array
+/* Código intermediário */
+// TODO: desistir, impossível melhorar isso
 
 #include "globals.h"
 #include "code.h"
 
 // TODO: `STACK_SIZE` é um limite arbitrário, logo se possível mudar
-//   @t! para uma implementação sem limite, provavelmente através de realloc
+// TODO:  para uma implementação sem limite, provavelmente através de realloc
 #define STACK_SIZE 50
 
 /* Quadrupla final */
@@ -17,7 +16,7 @@ static int t_num = 0;
 static int l_num = 0;
 
 // TODO: talvez seja melhor abstrair o conceito de `stack` para um struct
-//   @t! possivelmente implementar esse struct melhore a clareza do código
+// TODO: possivelmente implementar esse struct melhore a clareza do código
 /* Ordem de LOAD */
 static char stack_load[STACK_SIZE][50];
 static int stack_load_last = 0;
@@ -68,12 +67,13 @@ void pop(char stack[STACK_SIZE][50], int *stack_size) {
 
 /* Função insert_quad insere quadruplas na variável quad */
 static void insert_quad(char *cmd, char *arg1, char *arg2, char *arg3) {
-    Quad new_quad = (Quad)malloc(sizeof(struct QuadRec));
+    Quad new_quad = malloc(sizeof(*new_quad));
     new_quad->command = cmd;
     new_quad->arg1 = arg1;
     new_quad->arg2 = arg2;
     new_quad->arg3 = arg3;
     new_quad->next = NULL;
+
     if (quad == NULL) {
         quad = new_quad;
     } else {
@@ -212,7 +212,7 @@ static void read_tree_node(TreeNode *t) {
         case IdK: {
             if (is_call || !is_fun) {
                 char *temp = (char *)malloc(50 * sizeof(char));
-                char *c = (char *)malloc(50 * sizeof(char));
+                // char *c = (char *)malloc(50 * sizeof(char));
                 snprintf(temp, 50, "$t%d", t_num);
                 push(stack_temp, temp, &stack_temp_last);
                 t_num++;
@@ -240,7 +240,7 @@ static void read_tree_node(TreeNode *t) {
         switch (t->kind.decl) {
         case VarK: {
             char *name;
-            char *scope;
+            // char *scope;
             name = t->attr.name;
             insert_quad("ALLOC", name, t->scope, "--");
             break;
@@ -248,7 +248,7 @@ static void read_tree_node(TreeNode *t) {
         case FunK: {
             char *name;
             char *temp = (char *)malloc(50 * sizeof(char));
-            char *c = (char *)malloc(50 * sizeof(char));
+            // char *c = (char *)malloc(50 * sizeof(char));
             is_fun = TRUE;
             temp = type_to_string(t->child[0]);
             name = t->attr.name;
@@ -257,7 +257,7 @@ static void read_tree_node(TreeNode *t) {
         }
         case ArrVarK: {
             char *name;
-            char *scope;
+            // char *scope;
             char *size = malloc(50 * sizeof size);
             name = t->attr.arr.name;
             snprintf(size, 50, "%d", t->attr.arr.size);
@@ -550,6 +550,9 @@ static void read_tree_node(TreeNode *t) {
         default:
             break;
         }
+        break;
+    }
+    case DeclK: {
         break;
     }
     }

@@ -1,5 +1,6 @@
-// Tipos globais
-// Protótipos usados por todo o código
+/* Tipos globais
+ * Protótipos usados por todo o código
+ */
 
 // TODO: comentar o código
 #ifndef _GLOBALS_H_
@@ -74,33 +75,33 @@ typedef enum { Void, Integer, IntegerArray } ExpType;
 struct ScopeListRec;
 
 typedef struct ArrayAttribute {
-  TokenType type;
-  char *name;
-  int size;
+    TokenType type;
+    char *name;
+    int size;
 } ArrAttr;
 
 typedef struct treeNode {
-  struct treeNode *child[MAXCHILDREN];
-  struct treeNode *sibling;
-  int lineno;
-  NodeKind nodekind;
+    struct treeNode *child[MAXCHILDREN];
+    struct treeNode *sibling;
+    int lineno;
+    NodeKind nodekind;
 
-  union {
-    StmtKind stmt;
-    ExpKind exp;
-    DeclKind decl;
-  } kind;
+    union {
+        StmtKind stmt;
+        ExpKind exp;
+        DeclKind decl;
+    } kind;
 
-  union {
-    TokenType op;
-    TokenType type;
-    int val;
-    char *name;
-    ArrAttr arr;
-  } attr;
+    union {
+        TokenType op;
+        TokenType type;
+        int val;
+        char *name;
+        ArrAttr arr;
+    } attr;
 
-  char *scope;
-  ExpType type; /* for type checking of exps */
+    char *scope;
+    ExpType type; /* for type checking of exps */
 } TreeNode;
 
 /**************************************************/
