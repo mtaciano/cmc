@@ -11,44 +11,44 @@ char tokenString[MAXTOKENLEN+1];
 extern int yylex(void);
 %}
 
-digito       [0-9]
-NUM          {digito}+
-letra        [a-zA-Z]
-ID           {letra}+
+digit       [0-9]
+NUM          {digit}+
+letter        [a-zA-Z]
+ID           {letter}+
 newline      \n
 whitespace   [ \t]+
 
 %%
 
-"if"            {return IF;}
-"int"           {return INT;}
-"else"          {return ELSE;}
-"return"        {return RETURN;}
-"void"          {return VOID;}
-"while"         {return WHILE;}
-"=="            {return EQ;}
-"="             {return ASSIGN;}
-"<"             {return LT;}
-"<="            {return LE;}
-">="            {return GE;}
-">"             {return GT;}
-"+"             {return PLUS;}
-"-"             {return MINUS;}
-"*"             {return TIMES;}
-"/"             {return OVER;}
-"!="            {return NE;}
-"("             {return LPAREN;}
-")"             {return RPAREN;}
-"["             {return LBRACKET;}
-"]"             {return RBRACKET;}
-"{"             {return LBRACE;}
-"}"             {return RBRACE;}
-";"             {return SEMI;}
-","             {return COMMA;}
-{NUM}           {return NUM;}
-{ID}            {return ID;}
-{newline}       {lineno++;}
-{whitespace}    {/* continue; */}
+"if"            { return IF; }
+"int"           { return INT; }
+"else"          { return ELSE; }
+"return"        { return RETURN; }
+"void"          { return VOID; }
+"while"         { return WHILE; }
+"=="            { return EQ; }
+"="             { return ASSIGN; }
+"<"             { return LT; }
+"<="            { return LE; }
+">="            { return GE; }
+">"             { return GT; }
+"+"             { return PLUS; }
+"-"             { return MINUS; }
+"*"             { return TIMES; }
+"/"             { return OVER; }
+"!="            { return NE; }
+"("             { return LPAREN; }
+")"             { return RPAREN; }
+"["             { return LBRACKET; }
+"]"             { return RBRACKET; }
+"{"             { return LBRACE; }
+"}"             { return RBRACE; }
+";"             { return SEMI; }
+","             { return COMMA; }
+{NUM}           { return NUM; }
+{ID}            { return ID; }
+{newline}       { lineno++; }
+{whitespace}    { /* continue; */ }
 "/*"            {
                   char c;
                   while (1) {
@@ -59,7 +59,7 @@ whitespace   [ \t]+
                     if (c == '/') break;
                   }
                 }
-.               {return ERROR;}
+.               { return ERROR; }
 
 %%
 

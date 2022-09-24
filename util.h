@@ -3,6 +3,8 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#include "globals.h"
+
 /* Função printToken printa um token
  * e seu lexema para o arquivo listing
  */

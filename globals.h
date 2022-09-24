@@ -2,31 +2,24 @@
  * Protótipos usados por todo o código
  */
 
-// TODO: comentar o código
 #ifndef _GLOBALS_H_
 #define _GLOBALS_H_
 
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* Yacc/Bison generates internally its own values
- * for the tokens. Other files can access these values
- * by including the tab.h file generated using the
- * Yacc/Bison option -d ("generate header")
- *
- * The YYPARSER flag prevents inclusion of the tab.h
- * into the Yacc/Bison output itself
- */
-
+/* A flag YYPARSER impede a inclusão do arquivo *.tab.h nele mesmo */
 #ifndef YYPARSER
 
-/* the name of the following file may change */
+/* Yacc/Bison gera seus próprios valores para os tokens.
+ * Caso outros arquivos queiram acessar tais valores, eles precisam incluir
+ * o arquivo *.tab.h gerado durante a compilação
+ */
 #include "parse.tab.h"
 
-/* ENDFILE is implicitly defined by Yacc/Bison,
- * and not included in the tab.h file
+/* ENDFILE é implicitamente definido pelo Yacc/Bison,
+ * e não é incluído no arquivo *.tab.h
  */
 #define ENDFILE 0
 
@@ -40,39 +33,32 @@
 #define TRUE 1
 #endif
 
-/* MAXRESERVED = the number of reserved words */
+/* MAXRESERVED é o número de palavras reservadas */
 #define MAXRESERVED 6
 
-/* Yacc/Bison generates its own integer values
- * for tokens
- */
+/* Yacc/Bison gera seus próprios valores int para os tokens */
 typedef int TokenType;
 
-extern FILE *source;  /* source code text file */
-extern FILE *listing; /* listing output text file */
-extern FILE *code;    /* code text file for TM simulator */
+extern FILE *source;  /* arquivo de _input_ */
+extern FILE *listing; /* arquivo de _output_ para debug */
 
-extern int TraceCode;
-
-extern int Error;
-
-extern int lineno; /* source line number for listing */
+extern int lineno; /* Número da linha */
 
 /**************************************************/
-/***********   Syntax tree for parsing ************/
+/*************   Árvore sintática   ***************/
 /**************************************************/
 
+/* Tipo do nó */
 typedef enum { StmtK, ExpK, DeclK } NodeKind;
 typedef enum { IfK, WhileK, AssignK, CompoundK, ReturnK } StmtKind;
 typedef enum { OpK, ConstK, IdK, TypeK, ArrIdK, CallK, CalcK } ExpKind;
 typedef enum { VarK, FunK, ArrVarK, ArrParamK, ParamK } DeclKind;
 
-/* ExpType is used for type checking */
+/* Tipo da variável ou função */
 typedef enum { Void, Integer, IntegerArray } ExpType;
 
+/* Número máximo de filhos de um nó */
 #define MAXCHILDREN 3
-
-struct ScopeListRec;
 
 typedef struct ArrayAttribute {
     TokenType type;
@@ -101,41 +87,39 @@ typedef struct treeNode {
     } attr;
 
     char *scope;
-    ExpType type; /* for type checking of exps */
+    ExpType type;
 } TreeNode;
 
 /**************************************************/
-/***********   Flags for tracing       ************/
+/**************   Flags para Debug   **************/
 /**************************************************/
 
-/* EchoSource = TRUE causes the source program to
- * be echoed to the listing file with line numbers
- * during parsing
+/* EchoSource faz com que o arquivo de entrada seja printado
+ * junto as suas linhas
  */
 extern int EchoSource;
 
-/* TraceScan = TRUE causes token information to be
- * printed to the listing file as each token is
- * recognized by the scanner
+/* TraceScan faz com que informações adicionais sejam printadas
+ * durante a fase de _scan_
  */
 extern int TraceScan;
 
-/* TraceParse = TRUE causes the syntax tree to be
- * printed to the listing file in linearized form
- * (using indents for children)
+/* TraceParse faz com que informações adicionais sejam printadas
+ * durante a fase de _parse_
  */
 extern int TraceParse;
 
-/* TraceAnalyze = TRUE causes symbol table inserts
- * and lookups to be reported to the listing file
+/* TraceAnalyze faz com que informações adicionais sejam printadas
+ * durante a fase de análise sintática
  */
 extern int TraceAnalyze;
 
-/* TraceCode = TRUE causes comments to be written
- * to the TM code file as code is generated
+/* TraceCode faz com que informações adicionais sejam printadas
+ * durante a fase de geração do código intermediário
  */
 extern int TraceCode;
 
-/* Error = TRUE prevents further passes if an error occurs */
+/* Error faz com que a compilação pare */
 extern int Error;
+
 #endif

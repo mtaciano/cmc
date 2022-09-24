@@ -2,24 +2,19 @@
  * Responsável por chamar todos os componentes dele
  */
 
-// TODO: atualizar os comentários, NO_PARSE, NO_ANALYZE e NO_CODE
-// TODO: garantir que todos os arquivos estejam padronizados
-// TODO: refatorar as partes ruins dos códigos
-// TODO: refatorar comentários
 #include "globals.h"
 #include "rust.h"
+#include "util.h"
 
-/* set NO_PARSE to TRUE to get a scanner-only compiler */
+/* Mude NO_PARSE para TRUE para ter um compilador _scanner-only_ */
 #define NO_PARSE FALSE
-/* set NO_ANALYZE to TRUE to get a parser-only compiler */
+
+/* Mude NO_ANALYZE para TRUE para ter um compilador _parser-only_ */
 #define NO_ANALYZE FALSE
 
-/* set NO_CODE to TRUE to get a compiler that does not
- * generate code
- */
+/* Mude NO_CODE para TRUE para ter um compilador que não gera _output_ */
 #define NO_CODE FALSE
 
-#include "util.h"
 #if NO_PARSE
 #include "scan.h"
 #else
@@ -32,43 +27,54 @@
 #endif
 #endif
 
-/* allocate global variables */
+/* Variáveis globais */
 int lineno = 0;
 FILE *source;
 FILE *listing;
-FILE *code;
 
-/* allocate and set tracing flags */
+/* Flags para debug */
 int EchoSource = FALSE;
 int TraceScan = TRUE;
 int TraceParse = TRUE;
 int TraceAnalyze = TRUE;
 int TraceCode = TRUE;
 
+/* Flag de erro de compilação */
 int Error = FALSE;
 
+/* Função principal */
 int main(int argc, char *argv[]) {
     TreeNode *syntaxTree;
-    char pgm[120]; /* source code file name */
+    char pgm[120]; /* Nome do arquivo de entrada */
+
     if (argc != 2) {
         fprintf(stderr, "uso: %s <nome_arquivo>\n", argv[0]);
-        exit(1);
+        exit(-1);
     }
+
     strcpy(pgm, argv[1]);
-    if (strchr(pgm, '.') == NULL)
+
+    if (strchr(pgm, '.') == NULL) {
+        // Caso o arquivo não tenha extensão, adicionar `.cm`
         strcat(pgm, ".cm");
+    }
+
     source = fopen(pgm, "r");
+
     if (source == NULL) {
         fprintf(stderr, "Arquivo %s não encontrado\n", pgm);
         exit(1);
     }
-    listing = stdout; /* send listing to screen */
+
+    listing = stdout; /* Manda o texto para STDOUT */
     fprintf(listing, "\nCOMPILAÇÃO DO C-: %s\n\n", pgm);
+
 #if NO_PARSE
     while (getToken() != ENDFILE)
         ;
 #else
     syntaxTree = parse();
+
     if (!Error) {
         if (TraceParse) {
             fprintf(listing, "\nArvore sintática:\n\n");
@@ -77,22 +83,33 @@ int main(int argc, char *argv[]) {
     }
 #if !NO_ANALYZE
     if (!Error) {
-        if (TraceAnalyze)
+        if (TraceAnalyze) {
             fprintf(listing, "\nMontando tabela de símbolos...\n");
-        buildSymtab(syntaxTree);
-        if (TraceAnalyze)
+        }
+
+        build_symbol_table(syntaxTree);
+
+        if (TraceAnalyze) {
             fprintf(listing, "\nVerificando tipos...\n");
-        typeCheck(syntaxTree);
-        if (TraceAnalyze)
+        }
+
+        type_check(syntaxTree);
+
+        if (TraceAnalyze) {
             fprintf(listing, "\nVerificação concluída.\n");
+        }
     }
 #if !NO_CODE
     if (!Error) {
-        if (TraceCode)
+        if (TraceCode) {
             fprintf(listing, "\nGerando código intermediário\n\n");
+        }
+
         Quad q = make_code(syntaxTree);
-        if (TraceCode)
+
+        if (TraceCode) {
             fprintf(listing, "\nGeração do código intermediário concluída.\n");
+        }
 
         make_output(q);
     }
@@ -100,5 +117,6 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
     fclose(source);
+
     return 0;
 }

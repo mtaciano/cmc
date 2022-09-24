@@ -6,7 +6,7 @@
 
 // TODO: `STACK_SIZE` é um limite arbitrário, logo se possível mudar
 // TODO:  para uma implementação sem limite, provavelmente através de realloc
-#define STACK_SIZE 50
+#define STACK_SIZE 256
 
 /* Quadrupla final */
 static Quad quad;

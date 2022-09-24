@@ -3,7 +3,9 @@
 #ifndef _CODE_H_
 #define _CODE_H_
 
-/* Struct de Quadruplas */
+#include "globals.h"
+
+/* Struct de Quádruplas */
 typedef struct QuadRec {
     char *command;
     char *arg1;
@@ -12,8 +14,7 @@ typedef struct QuadRec {
     struct QuadRec *next;
 } * Quad;
 
-/* make_code é responsável por gerar o código intermediário */
-#include "globals.h"
+/* Função make_code é responsável por gerar o código intermediário */
 Quad make_code(TreeNode *t);
 
 #endif

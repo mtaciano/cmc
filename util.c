@@ -1,7 +1,7 @@
 /* Implementação das funções utilitárias */
 
-#include "globals.h"
 #include "util.h"
+#include "globals.h"
 
 /* Printando os tokens e lexemas */
 void print_token(TokenType token, const char *token_string) {
@@ -96,6 +96,7 @@ void print_token(TokenType token, const char *token_string) {
         break;
     default: /* não deve acontecer normalmente */
         fprintf(listing, "Token desconhecido: %d\n", token);
+        break;
     }
 }
 
@@ -104,11 +105,11 @@ void print_token(TokenType token, const char *token_string) {
  */
 TreeNode *new_StmtNode(StmtKind kind) {
     TreeNode *t = malloc(sizeof(*t));
-    int i;
+
     if (t == NULL)
         fprintf(listing, "Sem memória na linha %d\n", lineno);
     else {
-        for (i = 0; i < MAXCHILDREN; i++) {
+        for (int i = 0; i < MAXCHILDREN; i++) {
             t->child[i] = NULL;
         }
         t->sibling = NULL;
@@ -125,11 +126,11 @@ TreeNode *new_StmtNode(StmtKind kind) {
  */
 TreeNode *new_ExpNode(ExpKind kind) {
     TreeNode *t = malloc(sizeof(*t));
-    int i;
+
     if (t == NULL)
         fprintf(listing, "Erro de falta de memória na linha %d\n", lineno);
     else {
-        for (i = 0; i < MAXCHILDREN; i++) {
+        for (int i = 0; i < MAXCHILDREN; i++) {
             t->child[i] = NULL;
         }
         t->sibling = NULL;
@@ -147,11 +148,11 @@ TreeNode *new_ExpNode(ExpKind kind) {
  */
 TreeNode *new_DeclNode(DeclKind kind) {
     TreeNode *t = malloc(sizeof(*t));
-    int i;
+
     if (t == NULL) {
         fprintf(listing, "Erro de falta de momória na linha %d\n", lineno);
     } else {
-        for (i = 0; i < MAXCHILDREN; i++) {
+        for (int i = 0; i < MAXCHILDREN; i++) {
             t->child[i] = NULL;
         }
         t->sibling = NULL;
@@ -189,19 +190,18 @@ char *copy_string(char *s) {
  */
 static int indentno = 0;
 
-/* macros para aumentar/diminuir a indentação */
+/* Macros para aumentar/diminuir a indentação */
 #define INDENT indentno += 2
 #define UNINDENT indentno -= 2
 
-/* print_spaces indenta printando espaços */
+/* Função print_spaces indenta printando espaços */
 static void print_spaces(void) {
-    int i;
-    for (i = 0; i < indentno; i++) {
+    for (int i = 0; i < indentno; i++) {
         fprintf(listing, " ");
     }
 }
 
-/* print_types printa os tipos de funções e variáveis */
+/* Função print_types printa os tipos de funções e variáveis */
 void print_types(TreeNode *tree) {
     if (tree->child[0] != NULL) {
         switch (tree->child[0]->type) {
@@ -238,7 +238,6 @@ void print_types(TreeNode *tree) {
  * arquivo listing usando indentação para indicar sub-árvores
  */
 void print_tree(TreeNode *tree) {
-    int i;
     INDENT;
     while (tree != NULL) {
         print_spaces();
@@ -333,11 +332,16 @@ void print_tree(TreeNode *tree) {
                 fprintf(listing, "Declaração desconhecida\n");
                 break;
             }
-        } else
+        } else {
             fprintf(listing, "Tipo de nó desconhecido\n");
-        for (i = 0; i < MAXCHILDREN; i++)
-            if (tree->child[i] != NULL)
+        }
+
+        for (int i = 0; i < MAXCHILDREN; i++) {
+            if (tree->child[i] != NULL) {
                 print_tree(tree->child[i]);
+            }
+        }
+
         tree = tree->sibling;
     }
     UNINDENT;

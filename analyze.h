@@ -1,16 +1,18 @@
-// Funções para o analisador semântico
+/* Funções para o analisador semântico */
 
 #ifndef _ANALYZE_H_
 #define _ANALYZE_H_
 
-/* Função buildSymtab constrói uma tabela de símbolos
+#include "globals.h"
+
+/* Função build_symbol_table constrói uma tabela de símbolos
  * por travessia em pré-ordem da árvore síntatica
  */
-void buildSymtab(TreeNode *);
+void build_symbol_table(TreeNode *syntax_tree);
 
-/* Função typeCheck realiza verificação de tipos
+/* Função type_check realiza verificação de tipos
  * através de uma travessia em pós-ordem da árvore síntatica
  */
-void typeCheck(TreeNode *);
+void type_check(TreeNode *syntax_tree);
 
 #endif

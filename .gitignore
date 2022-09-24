@@ -1,11 +1,11 @@
 # Configurações
-.vscode
-.ccls-cache
+.vscode/
+.ccls-cache/
 compile_commands.json
-.cache
+.cache/
 
 # Compilação
-rust/target
+rust/target/
 *.o
 *.a
 *.so
@@ -16,4 +16,3 @@ rust/target
 *.gv
 cmc
 out_bin.txt
-ideia.txt

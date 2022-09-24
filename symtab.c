@@ -1,9 +1,9 @@
 /* Implementação da tabela de símbolos */
 
+#include "symtab.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "symtab.h"
 
 /* SIZE é o tamanho da tabela hash */
 #define SIZE 211
@@ -17,7 +17,7 @@ static int hash(char *key) {
     int i = 0;
     while (key[i] != '\0') {
         temp = ((temp << SHIFT) + key[i]) % SIZE;
-        ++i;
+        i++;
     }
     return temp;
 }
@@ -120,6 +120,7 @@ int st_lookup(char *name) {
     while ((l != NULL) && (strcmp(name, l->name) != 0)) {
         l = l->next;
     }
+
     if (l == NULL) {
         return -1;
     } else {
@@ -146,10 +147,10 @@ int st_lookup_scope(char *name, char *scope) {
     return -1;
 }
 
-/* Função st_lookup_max_linha retorna o número da linha de
+/* Função st_lookup_max_line retorna o número da linha de
  * uma função, e -1 se não encontrar
  */
-int st_lookup_max_linha(char *var_or_fun, char *scope) {
+int st_lookup_max_line(char *var_or_fun, char *scope) {
     int linhaMax = -1;
 
     for (int i = 0; i < SIZE; i++) {
@@ -175,13 +176,12 @@ int st_lookup_max_linha(char *var_or_fun, char *scope) {
  * para o arquivo listing
  */
 void print_symbol_table(FILE *listing) {
-    int i;
-
     fprintf(listing,
             "NOME VARIÁVEL  LOCALIZAÇÃO  ESCOPO  TIPO_ID  TIPO_DADO  LINHAS\n");
     fprintf(listing,
             "-------------  -----------  ------  -------  ---------  ------\n");
-    for (i = 0; i < SIZE; ++i) {
+
+    for (int i = 0; i < SIZE; ++i) {
         if (hash_table[i] != NULL) {
             BucketList l = hash_table[i];
             while (l != NULL) {

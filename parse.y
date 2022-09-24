@@ -8,13 +8,13 @@
 #include "scan.h"
 #include "parse.h"
 
-#define YYSTYPE TreeNode *
+#define YYSTYPE TreeNode*
 static int savedNumber;
-static char * savedName;
+static char *savedName;
 static int savedLineNo;
-static TreeNode * savedTree; /* arvore sintática para retornos */
+static TreeNode *savedTree; /* arvore sintática para retornos */
 static int yylex(void); /* evitar conflitos (deixar que funciona) */
-int yyerror(char* message); /* evitar conflitos (deixar que funciona) */
+int yyerror(char *message); /* evitar conflitos (deixar que funciona) */
 
 %}
 
@@ -390,10 +390,12 @@ arg_lista : arg_lista COMMA expressao
 
 %%
 
-int yyerror(__attribute__ ((unused)) char * message) {
+int yyerror(char *message) {
+  (void)message;
   if(Error) {
     return 0;
   }
+
   fprintf(listing,"ERRO SINTÁTICO: %s LINHA: %d\n", tokenString, lineno);
   Error = TRUE;
 
@@ -402,7 +404,7 @@ int yyerror(__attribute__ ((unused)) char * message) {
 
 static int yylex(void) { return getToken(); }
 
-TreeNode * parse(void) {
+TreeNode *parse(void) {
   yyparse();
 
   return savedTree;

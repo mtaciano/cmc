@@ -3,6 +3,8 @@
 #ifndef _SYMTAB_H_
 #define _SYMTAB_H_
 
+#include "globals.h"
+
 /* Função st_insert coloca as linhas,
  * posições de memória e os escopos na tabela de símbolos
  */
@@ -19,10 +21,10 @@ int st_lookup(char *name);
  */
 int st_lookup_scope(char *name, char *scope);
 
-/* Função st_lookup_max_linha retorna o número da linha de
+/* Função st_lookup_max_line retorna o número da linha de
  * uma função, e -1 se não encontrar
  */
-int st_lookup_max_linha(char *var_or_fun, char *scope);
+int st_lookup_max_line(char *var_or_fun, char *scope);
 
 /* Função print_symbol_table printa de modo formatado
  * os conteúdos da tabela de símbolos
