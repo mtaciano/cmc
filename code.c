@@ -247,10 +247,9 @@ static void read_tree_node(TreeNode *t) {
         }
         case FunK: {
             char *name;
-            char *temp = (char *)malloc(50 * sizeof(char));
+            char *temp = type_to_string(t->child[0]);
             // char *c = (char *)malloc(50 * sizeof(char));
             is_fun = TRUE;
-            temp = type_to_string(t->child[0]);
             name = t->attr.name;
             insert_quad("FUN", temp, name, "--");
             break;

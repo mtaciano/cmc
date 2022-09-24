@@ -106,9 +106,9 @@ void print_token(TokenType token, const char *token_string) {
 TreeNode *new_StmtNode(StmtKind kind) {
     TreeNode *t = malloc(sizeof(*t));
 
-    if (t == NULL)
+    if (t == NULL) {
         fprintf(listing, "Sem memória na linha %d\n", lineno);
-    else {
+    } else {
         for (int i = 0; i < MAXCHILDREN; i++) {
             t->child[i] = NULL;
         }
@@ -127,9 +127,9 @@ TreeNode *new_StmtNode(StmtKind kind) {
 TreeNode *new_ExpNode(ExpKind kind) {
     TreeNode *t = malloc(sizeof(*t));
 
-    if (t == NULL)
+    if (t == NULL) {
         fprintf(listing, "Erro de falta de memória na linha %d\n", lineno);
-    else {
+    } else {
         for (int i = 0; i < MAXCHILDREN; i++) {
             t->child[i] = NULL;
         }

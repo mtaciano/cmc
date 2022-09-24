@@ -17,9 +17,58 @@ static int location = 0;
 static int fn_has_return = FALSE;
 
 /* Componentes da pilha */
-// TODO: melhorar isso, talvez implementar um stack struct no globals.h
-static int topo_pilha = 0;
-static char scope_stack[STACK_SIZE][STRING_SIZE];
+typedef struct {
+    int max_size;
+    int last;
+    char **items;
+} * CharStack;
+
+/* Função cs_init inicia a pilha com um tamanho máximo de `size` */
+CharStack cs_init() {
+    int size = 256;
+
+    CharStack new = malloc(sizeof(*new));
+    new->max_size = size;
+    new->last = -1;
+    new->items = malloc(size * sizeof(**new->items));
+
+    return new;
+}
+
+/* Função cs_push coloca a string na pilha */
+void cs_push(CharStack stack, char *item) {
+    if (stack->last >= stack->max_size) { // Redimencionar
+        stack->max_size *= 2;
+        stack->items =
+            realloc(stack->items, stack->max_size * sizeof(**stack->items));
+    }
+
+    stack->last += 1;
+    stack->items[stack->last] = malloc(sizeof(item));
+    strcpy(stack->items[stack->last], item);
+}
+
+/* Função cs_pop remove a string da pilha, retornando seu valor */
+char *cs_pop(CharStack stack) {
+    char *item = stack->items[stack->last];
+
+    stack->items[stack->last] = NULL;
+    stack->last -= 1;
+
+    return item;
+}
+
+/* Função cs_drop remove a memória usada pela pilha */
+void cs_drop(CharStack stack) {
+    for (int i = 0; i <= stack->last; i++) {
+        free(stack->items[i]);
+    }
+
+    free(stack->items);
+    free(stack);
+}
+
+static CharStack scopes;
 
 /* Função symbol_error imprime um erro durante a tabela de símbolos,
  * tal erro também é um erro semântico
@@ -59,14 +108,13 @@ static void find_return(TreeNode *t) {
 /* Função give_scope recursivamente cria escopo para os nós */
 static void give_scope(TreeNode *t) {
     if (t != NULL) {
-        t->scope = malloc(STRING_SIZE * sizeof(*t->scope));
+        t->scope = malloc(sizeof(scopes->items[scopes->last]));
 
         if (t->nodekind == DeclK && t->kind.decl == FunK) {
-            strcpy(t->scope, scope_stack[topo_pilha]);
-            topo_pilha++;
-            strcpy(scope_stack[topo_pilha], t->attr.name);
+            strcpy(t->scope, scopes->items[scopes->last]);
+            cs_push(scopes, t->attr.name);
         } else {
-            strcpy(t->scope, scope_stack[topo_pilha]);
+            strcpy(t->scope, scopes->items[scopes->last]);
         }
     }
 }
@@ -75,54 +123,54 @@ static void give_scope(TreeNode *t) {
 static void pop_stack(TreeNode *t) {
     if (t != NULL) {
         if (t->nodekind == DeclK && t->kind.decl == FunK) {
-            strcpy(scope_stack[topo_pilha], "\0");
-            topo_pilha--;
+            char *item = cs_pop(scopes);
+            free(item);
         }
     }
 }
 
 static void insert_input(void) {
-    TreeNode *fun = new_DeclNode(FunK);
-    fun->type = Integer;
+    // TreeNode *fun = new_DeclNode(FunK);
+    // fun->type = Integer;
 
-    TreeNode *type = new_ExpNode(TypeK);
-    type->attr.type = INT;
+    // TreeNode *type = new_ExpNode(TypeK);
+    // type->attr.type = INT;
 
-    TreeNode *compound_stmt = new_StmtNode(CompoundK);
-    compound_stmt->child[0] = NULL;
-    compound_stmt->child[1] = NULL;
+    // TreeNode *compound_stmt = new_StmtNode(CompoundK);
+    // compound_stmt->child[0] = NULL;
+    // compound_stmt->child[1] = NULL;
 
-    fun->lineno = 0;
-    fun->attr.name = "input";
-    fun->child[0] = type;
-    fun->child[1] = NULL;
-    fun->child[2] = compound_stmt;
+    // fun->lineno = 0;
+    // fun->attr.name = "input";
+    // fun->child[0] = type;
+    // fun->child[1] = NULL;
+    // fun->child[2] = compound_stmt;
 
     /* Coloca o input na tabela de símbolos */
     st_insert("input", "fun", "int", "global", 0, location++);
 }
 
 static void insert_output(void) {
-    TreeNode *fun = new_DeclNode(FunK);
-    fun->type = Void;
+    // TreeNode *fun = new_DeclNode(FunK);
+    // fun->type = Void;
 
-    TreeNode *type = new_DeclNode(FunK);
-    type->attr.type = VOID;
+    // TreeNode *type = new_DeclNode(FunK);
+    // type->attr.type = VOID;
 
-    TreeNode *params = new_DeclNode(ParamK);
-    params->attr.name = "x";
-    params->child[0] = new_ExpNode(TypeK);
-    params->child[0]->attr.type = INT;
+    // TreeNode *params = new_DeclNode(ParamK);
+    // params->attr.name = "x";
+    // params->child[0] = new_ExpNode(TypeK);
+    // params->child[0]->attr.type = INT;
 
-    TreeNode *compound_stmt = new_StmtNode(CompoundK);
-    compound_stmt->child[0] = NULL;
-    compound_stmt->child[1] = NULL;
+    // TreeNode *compound_stmt = new_StmtNode(CompoundK);
+    // compound_stmt->child[0] = NULL;
+    // compound_stmt->child[1] = NULL;
 
-    fun->lineno = 0;
-    fun->attr.name = "output";
-    fun->child[0] = type;
-    fun->child[1] = params;
-    fun->child[2] = compound_stmt;
+    // fun->lineno = 0;
+    // fun->attr.name = "output";
+    // fun->child[0] = type;
+    // fun->child[1] = params;
+    // fun->child[2] = compound_stmt;
 
     /* Coloca o output na tabela de símbolos */
     st_insert("output", "fun", "void", "global", 0, location++);
@@ -292,19 +340,21 @@ static void insert_node(TreeNode *t) {
         case ParamK:
             if (t->attr.name != NULL) {
                 // Verifica se o parâmetro existe ou é void
-                if (t->child[0]->type == Void) {
-                    symbol_error(t, "Parâmetro não pode ser do tipo void");
-                    break;
-                }
-                if (st_lookup_scope(t->attr.name, t->scope) != -1) {
-                    symbol_error(t, "Redefinição de parâmetro");
-                    break;
-                }
+                if (t->type != Void) {
+                    if (t->child[0]->type == Void) {
+                        symbol_error(t, "Parâmetro não pode ser do tipo void");
+                        break;
+                    }
+                    if (st_lookup_scope(t->attr.name, t->scope) != -1) {
+                        symbol_error(t, "Redefinição de parâmetro");
+                        break;
+                    }
 
-                var_or_fun = "var";
-                type = "int";
-                st_insert(t->attr.name, var_or_fun, type, t->scope, t->lineno,
-                          location++);
+                    var_or_fun = "var";
+                    type = "int";
+                    st_insert(t->attr.name, var_or_fun, type, t->scope,
+                              t->lineno, location++);
+                }
                 break;
             }
             break;
@@ -326,13 +376,16 @@ void build_symbol_table(TreeNode *syntax_tree) {
     insert_input();
     insert_output();
 
+    scopes = cs_init();
     // O maior escopo que uma variável pode ter é global
-    strcpy(scope_stack[0], "global");
+    cs_push(scopes, "global");
 
     traverse(syntax_tree, give_scope, pop_stack);
     traverse(syntax_tree, insert_node, null_fn);
 
     verify_main();
+
+    cs_drop(scopes);
 
     if (!Error && TraceAnalyze) {
         fprintf(listing, "\nTabela de símbolos:\n\n");
