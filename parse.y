@@ -117,6 +117,7 @@ params : param_lista { $$ = $1; }
        | VOID
          {
             $$ = new_DeclNode(ParamK);
+            $$->attr.name = "void";
             $$->type = Void;
          }
        ;
