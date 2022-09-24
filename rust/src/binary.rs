@@ -1,11 +1,10 @@
 use crate::*;
 
 struct OpCode;
-
 impl OpCode {
     const NOP: u32 = 0b00000 << 27;
     const HLT: u32 = 0b00001 << 27;
-    const IN: u32 = 0b00010 << 27; // TODO: fazer
+    const IN: u32 = 0b00010 << 27;
     const OUT: u32 = 0b00011 << 27;
     const MULT: u32 = 0b01000 << 27;
     const DIV: u32 = 0b01001 << 27;

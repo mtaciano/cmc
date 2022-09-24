@@ -7,6 +7,7 @@ use std::ffi::CStr;
 use std::fs::OpenOptions;
 use std::io::Write;
 
+// Gerador de assembly e binário
 mod assembly;
 mod binary;
 
@@ -23,19 +24,13 @@ impl From<Quad> for RustQuad {
         let q = unsafe { q.as_ref().unwrap() };
 
         // SEGURANÇA: As mesmas regras acima se aplicam
-        RustQuad {
-            cmd: unsafe {
-                CStr::from_ptr(q.command).to_str().unwrap().to_owned()
-            },
-            arg1: unsafe {
-                CStr::from_ptr(q.arg1).to_str().unwrap().to_owned()
-            },
-            arg2: unsafe {
-                CStr::from_ptr(q.arg2).to_str().unwrap().to_owned()
-            },
-            arg3: unsafe {
-                CStr::from_ptr(q.arg3).to_str().unwrap().to_owned()
-            },
+        unsafe {
+            RustQuad {
+                cmd: CStr::from_ptr(q.command).to_str().unwrap().to_owned(),
+                arg1: CStr::from_ptr(q.arg1).to_str().unwrap().to_owned(),
+                arg2: CStr::from_ptr(q.arg2).to_str().unwrap().to_owned(),
+                arg3: CStr::from_ptr(q.arg3).to_str().unwrap().to_owned(),
+            }
         }
     }
 }
@@ -59,7 +54,7 @@ where
             // logo há pelo menos um `q.next`, então o ponteiro é verificado
             // como nulo sempre, além de estar alinhado há que foi criado
             // corretamente durante `make_code()`
-            quad = unsafe { quad.as_ref().unwrap().next };
+            unsafe { quad = quad.as_ref().unwrap().next };
         }
 
         // `vec` não vai mudar de tamanho
@@ -71,7 +66,7 @@ where
 }
 
 #[derive(Debug)]
-struct RustQuad {
+pub(crate) struct RustQuad {
     cmd: String,
     arg1: String,
     arg2: String,
@@ -79,7 +74,7 @@ struct RustQuad {
 }
 
 #[derive(Debug, Clone)]
-struct RustAsm {
+pub(crate) struct RustAsm {
     cmd: String,
     arg1: String,
     arg2: String,
@@ -87,7 +82,7 @@ struct RustAsm {
 }
 
 #[derive(Debug)]
-struct RustBin {
+pub(crate) struct RustBin {
     inner: u32,
 }
 

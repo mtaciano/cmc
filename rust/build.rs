@@ -4,14 +4,6 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    // let path = env::current_dir().unwrap().pop();
-    // Diz para o cargo olhar por bibliotecas nestes caminho
-    // println!("cargo:rustc-link-search={}", path);
-
-    // Tell cargo to tell rustc to link the system bzip2
-    // shared library.
-    // println!("cargo:rustc-link-lib=bz2");
-
     // Diz para o cargo invalidar a crate quando wrapper.h muda
     println!("cargo:rerun-if-changed=wrapper.h");
 
@@ -32,7 +24,7 @@ fn main() {
         // Termina o Builder e gera os bindings
         .generate()
         // Caso aconteça um erro
-        .expect("Não foi possível geraar as bindings!");
+        .expect("Não foi possível gerar as bindings!");
 
     // Mande as bindings para $OUT_DIR/bindings.rs
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
