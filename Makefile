@@ -72,6 +72,5 @@ clean:
 	-rm -f *.tab.h
 	-rm -f *.yy.c
 	-rm -f out_bin.txt
-	-rm -r rust/target/release/*
-	-rm -r rust/target/debug/*
+	-rm -r rust/target/
 	-rm -f $(OBJS)
