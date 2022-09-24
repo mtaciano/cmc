@@ -7,6 +7,7 @@ CC-FLAGS = -Wall -Wextra -pedantic
 
 # Scanner e Parser
 BISON = bison
+BISON-FLAGS = -W --color=always -d
 LEX = flex
 
 # Rust
@@ -34,7 +35,9 @@ release:
 	strip -p --strip-all $(BIN)
 
 # Símbolos de debug
-debug: CC-FLAGS += -g
+debug: CC-FLAGS += -g -fsanitize=address,undefined -fno-omit-frame-pointer
+debug: BISON-FLAGS += -g
+debug: BIN-FLAGS =
 debug: $(BIN)
 
 main.o: main.c globals.h util.h scan.h analyze.h
@@ -57,7 +60,7 @@ scan.yy.o: scan.l scan.h util.h globals.h
 	$(CC) $(CC-FLAGS) -c scan.yy.c
 
 parse.tab.o: parse.y globals.h
-	$(BISON) -W -d parse.y
+	$(BISON) $(BISON-FLAGS) parse.y
 	$(CC) $(CC-FLAGS) -c parse.tab.c
 
 .ONESHELL:
