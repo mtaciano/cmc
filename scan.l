@@ -1,10 +1,14 @@
 /* Especificação C- Lex/Flex */
-/* TODO: possivelmente comentar o código (talvez não seja necessário) */
+%option noyywrap
+%option nounput
+
 %{
 #include "globals.h"
 #include "util.h"
 #include "scan.h"
+
 char tokenString[MAXTOKENLEN+1];
+extern int yylex(void);
 %}
 
 digito       [0-9]
@@ -14,7 +18,6 @@ ID           {letra}+
 newline      \n
 whitespace   [ \t]+
 
-%option noyywrap
 %%
 
 "if"            {return IF;}
@@ -45,8 +48,9 @@ whitespace   [ \t]+
 {NUM}           {return NUM;}
 {ID}            {return ID;}
 {newline}       {lineno++;}
-{whitespace}    {/* skip whitespace */}
-"/*"             { char c;
+{whitespace}    {/* continue; */}
+"/*"            {
+                  char c;
                   while (1) {
                     c = input();
                     if (c == EOF) break;
@@ -59,6 +63,7 @@ whitespace   [ \t]+
 
 %%
 
+/* Função getToken retorna o token atual */
 TokenType getToken(void) {
   static int firstTime = TRUE;
   TokenType currentToken;

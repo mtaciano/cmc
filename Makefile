@@ -1,13 +1,15 @@
 # Makefile para o compilador C-
 # Miguel Silva Taciano e Gabriel Bianchi e Silva
 
+# C/C++
 CC = clang
 CC-FLAGS = -Wall -Wextra -pedantic
 
+# Scanner e Parser
 BISON = bison
-
 LEX = flex
 
+# Rust
 RS = cargo
 RS-FLAGS =
 TARGET = target/debug
@@ -16,11 +18,14 @@ TARGET = target/debug
 BIN = cmc
 BIN-FLAGS = -static
 
-OBJS = cmin.tab.o lex.yy.o main.o util.o symtab.o analyze.o code.o librust.a
+# Componentes do compilador
+OBJS = parse.tab.o scan.yy.o main.o util.o symtab.o analyze.o code.o librust.a
 
+# Executável
 $(BIN): $(OBJS)
 	$(CC) $(OBJS) $(CC-FLAGS) $(BIN-FLAGS) -o $(BIN)
 
+# Otimização de velocidade e tamanho
 release: CC-FLAGS += -O3
 release: RS-FLAGS += --release
 release: TARGET = target/release
@@ -28,6 +33,7 @@ release: $(BIN)
 release:
 	strip -p --strip-all $(BIN)
 
+# Símbolos de debug
 debug: CC-FLAGS += -g
 debug: $(BIN)
 
@@ -46,22 +52,26 @@ symtab.o: symtab.c symtab.h
 analyze.o: analyze.c globals.h symtab.h analyze.h
 	$(CC) $(CC-FLAGS) -c analyze.c
 
-lex.yy.o: cmin.l scan.h util.h globals.h
-	$(LEX) -o lex.yy.c cmin.l
-	$(CC) $(CC-FLAGS) -c lex.yy.c
+scan.yy.o: scan.l scan.h util.h globals.h
+	$(LEX) -o scan.yy.c scan.l
+	$(CC) $(CC-FLAGS) -c scan.yy.c
 
-cmin.tab.o: cmin.y globals.h
-	$(BISON) -d cmin.y
-	$(CC) $(CC-FLAGS) -c cmin.tab.c
+parse.tab.o: parse.y globals.h
+	$(BISON) -W -d parse.y
+	$(CC) $(CC-FLAGS) -c parse.tab.c
 
+.ONESHELL:
 librust.a: rust/src/lib.rs rust/Cargo.toml rust/wrapper.h rust/src/assembly.rs rust/src/binary.rs code.h globals.h
-	cd rust && $(RS) build $(RS-FLAGS)
-	cd rust && mv $(TARGET)/librust.a ../librust.a
+	cd rust
+	$(RS) build $(RS-FLAGS)
+	mv $(TARGET)/librust.a ../librust.a
 
+# Gera a FFI entre C e Rust
 bindings:
 	cd rust && cbindgen --config cbindgen.toml --crate rust --output ../rust.h
 
 # Só rodar se a pasta existir
+# Copia o binário para o processador
 cpu:
 	cp out_bin.txt ../processador/out_bin.txt
 
