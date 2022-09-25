@@ -1,0 +1,16 @@
+void main(void) {
+    int x;
+    x = 1;
+
+    if (x > 5) {
+        if (x > 12) {
+            if (x < 50) {
+                x = 42;
+            } else {
+                x = 999;
+            }
+        }
+    }
+
+    output(x);
+}
