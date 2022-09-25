@@ -2,6 +2,8 @@
  * Responsável por chamar todos os componentes dele
  */
 
+// TODO: talvez usar zig?
+
 #include "globals.h"
 #include "rust.h"
 #include "util.h"
