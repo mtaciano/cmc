@@ -346,3 +346,48 @@ void print_tree(TreeNode *tree) {
     }
     UNINDENT;
 }
+
+/* Função cs_init inicia a pilha com um tamanho máximo de `size` */
+CharStack cs_init() {
+    int size = 256;
+
+    CharStack new = malloc(sizeof(*new));
+    new->max_size = size;
+    new->last = -1;
+    new->items = malloc(size * sizeof(**new->items));
+
+    return new;
+}
+
+/* Função cs_push coloca a string na pilha */
+void cs_push(CharStack stack, char *item) {
+    if (stack->last >= stack->max_size) { // Redimencionar
+        stack->max_size *= 2;
+        stack->items =
+            realloc(stack->items, stack->max_size * sizeof(**stack->items));
+    }
+
+    stack->last += 1;
+    stack->items[stack->last] = malloc(sizeof(item));
+    strcpy(stack->items[stack->last], item);
+}
+
+/* Função cs_pop remove a string da pilha, retornando seu valor */
+char *cs_pop(CharStack stack) {
+    char *item = stack->items[stack->last];
+
+    stack->items[stack->last] = NULL;
+    stack->last -= 1;
+
+    return item;
+}
+
+/* Função cs_drop remove a memória usada pela pilha */
+void cs_drop(CharStack stack) {
+    for (int i = 0; i <= stack->last; i++) {
+        free(stack->items[i]);
+    }
+
+    free(stack->items);
+    free(stack);
+}

@@ -35,4 +35,23 @@ char *copy_string(char *s);
  */
 void print_tree(TreeNode *tree);
 
+/* Componentes da pilha */
+typedef struct {
+    int max_size;
+    int last;
+    char **items;
+} * CharStack;
+
+/* Função cs_init inicia a pilha com um tamanho máximo de `size` */
+CharStack cs_init();
+
+/* Função cs_push coloca a string na pilha */
+void cs_push(CharStack stack, char *item);
+
+/* Função cs_pop remove a string da pilha, retornando seu valor */
+char *cs_pop(CharStack stack);
+
+/* Função cs_drop remove a memória usada pela pilha */
+void cs_drop(CharStack stack);
+
 #endif
