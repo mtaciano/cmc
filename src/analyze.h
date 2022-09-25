@@ -3,7 +3,7 @@
 #ifndef _ANALYZE_H_
 #define _ANALYZE_H_
 
-#include "globals.h"
+#include "common/globals.h"
 
 /* Função build_symbol_table constrói uma tabela de símbolos
  * por travessia em pré-ordem da árvore síntatica

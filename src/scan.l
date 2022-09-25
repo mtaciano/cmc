@@ -3,9 +3,9 @@
 %option nounput
 
 %{
-#include "globals.h"
-#include "util.h"
-#include "scan.h"
+#include "../src/common/globals.h"
+#include "../src/common/util.h"
+#include "../src/scan.h"
 
 char tokenString[MAXTOKENLEN+1];
 extern int yylex(void);

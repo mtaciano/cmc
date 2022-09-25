@@ -3,10 +3,10 @@
 %{
 #define YYPARSER /* diferencia o output do Yacc de outros códigod de output */
 
-#include "globals.h"
-#include "util.h"
-#include "scan.h"
-#include "parse.h"
+#include "../src/common/globals.h"
+#include "../src/common/util.h"
+#include "../src/scan.h"
+#include "../src/parse.h"
 
 #define YYSTYPE TreeNode*
 static int savedNumber;

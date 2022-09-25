@@ -16,7 +16,7 @@
  * Caso outros arquivos queiram acessar tais valores, eles precisam incluir
  * o arquivo *.tab.h gerado durante a compilação
  */
-#include "parse.tab.h"
+#include "../../build/parse.tab.h"
 
 /* ENDFILE é implicitamente definido pelo Yacc/Bison,
  * e não é incluído no arquivo *.tab.h

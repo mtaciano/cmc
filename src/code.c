@@ -1,8 +1,8 @@
 /* Código intermediário */
 // TODO: desistir, impossível melhorar isso
 
-#include "globals.h"
 #include "code.h"
+#include "common/globals.h"
 
 // TODO: `STACK_SIZE` é um limite arbitrário, logo se possível mudar
 // TODO:  para uma implementação sem limite, provavelmente através de realloc
@@ -108,8 +108,8 @@ static void read_tree_node(TreeNode *t) {
     // TODO: melhorar e documentar
 
     // TODO: remover a maioria do código
-    //   @t! transformando read_tree_node em uma função que executa 3 outras
-    //   @t! sendo elas uma pré, uma mid e uma pós nó
+    // TODO: transformando read_tree_node em uma função que executa 3 outras
+    // TODO: sendo elas uma pré, uma mid e uma pós nó
     // TODO: documentar flags
     int is_fun = FALSE;
     int is_asn = FALSE;
@@ -559,7 +559,7 @@ static void read_tree_node(TreeNode *t) {
 
 /* make_code é responsável por gerar o código intermediário */
 /* TODO: transformar os nomes das funções e variáveis
- *   @t! de Camel case para Snake case
+ * TODO: de Camel case para Snake case
  */
 Quad make_code(TreeNode *t) {
 

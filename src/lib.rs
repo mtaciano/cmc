@@ -1,7 +1,9 @@
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+#[allow(non_upper_case_globals)]
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+mod ffi {
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
 use std::ffi::CStr;
 use std::fs::OpenOptions;
@@ -11,10 +13,10 @@ use std::io::Write;
 mod assembly;
 mod binary;
 
-impl From<Quad> for RustQuad {
-    fn from(q: Quad) -> Self {
+impl From<ffi::Quad> for RustQuad {
+    fn from(q: ffi::Quad) -> Self {
         if q.is_null() {
-            panic!();
+            panic!("Quádrupla não existe!");
         }
 
         // SEGURANÇA: Não há como haver uma referência mutável em outro lugar
@@ -36,14 +38,14 @@ impl From<Quad> for RustQuad {
 }
 
 trait FromQuad {
-    fn from_quad(quad: Quad) -> Self;
+    fn from_quad(quad: ffi::Quad) -> Self;
 }
 
 impl<T> FromQuad for Vec<T>
 where
-    T: From<Quad>,
+    T: From<ffi::Quad>,
 {
-    fn from_quad(quad: Quad) -> Vec<T> {
+    fn from_quad(quad: ffi::Quad) -> Vec<T> {
         let mut quad = quad;
         let mut vec = Vec::new();
 
@@ -66,7 +68,7 @@ where
 }
 
 #[derive(Debug)]
-pub(crate) struct RustQuad {
+struct RustQuad {
     cmd: String,
     arg1: String,
     arg2: String,
@@ -74,7 +76,7 @@ pub(crate) struct RustQuad {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct RustAsm {
+struct RustAsm {
     cmd: String,
     arg1: String,
     arg2: String,
@@ -82,12 +84,12 @@ pub(crate) struct RustAsm {
 }
 
 #[derive(Debug)]
-pub(crate) struct RustBin {
+struct RustBin {
     inner: u32,
 }
 
 #[no_mangle]
-pub extern "C" fn make_output(quad: Quad) {
+pub extern "C" fn make_output(quad: ffi::Quad) {
     let quad_vec = Vec::<RustQuad>::from_quad(quad);
 
     let asm_vec = crate::assembly::make_assembly(quad_vec);
@@ -98,7 +100,7 @@ pub extern "C" fn make_output(quad: Quad) {
         .create(true)
         .write(true)
         .truncate(true)
-        .open("out_bin.txt")
+        .open("build/out_bin.txt")
         .expect("Não foi possível criar um arquivo de saída para o binário.");
 
     for bin in bin_vec.iter() {
@@ -108,3 +110,6 @@ pub extern "C" fn make_output(quad: Quad) {
 
     println!("\nArquivo out_bin.txt criado.");
 }
+
+
+// TODO: mover tudo de /rust para ./

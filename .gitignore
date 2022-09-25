@@ -5,14 +5,4 @@ compile_commands.json
 .cache/
 
 # Compilação
-rust/target/
-*.o
-*.a
-*.so
-*.tab.c
-*.tab.h
-*.yy.c
-*.code-workspace
-*.gv
-cmc
-out_bin.txt
+build/

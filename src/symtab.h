@@ -3,7 +3,7 @@
 #ifndef _SYMTAB_H_
 #define _SYMTAB_H_
 
-#include "globals.h"
+#include "common/globals.h"
 
 /* Função st_insert coloca as linhas,
  * posições de memória e os escopos na tabela de símbolos

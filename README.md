@@ -19,6 +19,15 @@ Etapas parcialmente implementadas:
 Etapas faltando:
 XXX
 
+## Instalação
+
+```
+make debug # Gera código para desenvolvimento
+```
+```
+make release # Gera código otimizado
+```
+
 ## Dependências
 - Cargo (rustup)
 - Clang

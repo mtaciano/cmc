@@ -4,9 +4,9 @@
 
 // TODO: talvez usar zig?
 
-#include "globals.h"
+#include "common/globals.h"
+#include "common/util.h"
 #include "rust.h"
-#include "util.h"
 
 /* Mude NO_PARSE para TRUE para ter um compilador _scanner-only_ */
 #define NO_PARSE FALSE

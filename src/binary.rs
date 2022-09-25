@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{ffi::TraceCode, *};
 
 struct OpCode;
 impl OpCode {

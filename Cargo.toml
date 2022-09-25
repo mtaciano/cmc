@@ -1,6 +1,8 @@
+cargo-features = ["profile-rustflags"]
+
 [package]
 name = "rust"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2021"
 
 [profile.release]
@@ -8,6 +10,9 @@ strip = "debuginfo"
 panic = "abort"
 lto = true
 codegen-units = 1
+
+[profile.dev]
+rustflags = ["-Zsanitizer=address"]
 
 [lib]
 crate-type = ["staticlib"]

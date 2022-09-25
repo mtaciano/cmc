@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{ffi::TraceCode, *};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 

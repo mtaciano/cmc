@@ -1,9 +1,9 @@
 /* Analise Semântica da linguagem C- */
 
 #include "analyze.h"
-#include "globals.h"
+#include "common/globals.h"
+#include "common/util.h"
 #include "symtab.h"
-#include "util.h"
 
 #define STACK_SIZE 256
 #define STRING_SIZE 256

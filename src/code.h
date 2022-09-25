@@ -3,7 +3,7 @@
 #ifndef _CODE_H_
 #define _CODE_H_
 
-#include "globals.h"
+#include "common/globals.h"
 
 /* Struct de Quádruplas */
 typedef struct QuadRec {
