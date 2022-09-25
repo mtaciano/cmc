@@ -24,7 +24,7 @@
 #if !NO_ANALYZE
 #include "analyze.h"
 #if !NO_CODE
-#include "code.h"
+#include "intermediate.h"
 #endif
 #endif
 #endif

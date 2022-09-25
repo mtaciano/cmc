@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "code.h"
+#include "intermediate.h"
 
 
 void make_output(Quad quad);

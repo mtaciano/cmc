@@ -31,7 +31,7 @@ BIN = cmc
 BIN-FLAGS = -static
 
 # Componentes do compilador
-OBJS = $(TARGET)/parse.tab.o $(TARGET)/scan.yy.o $(TARGET)/main.o $(TARGET)/util.o $(TARGET)/symtab.o $(TARGET)/analyze.o $(TARGET)/code.o $(TARGET)/librust.a
+OBJS = $(TARGET)/parse.tab.o $(TARGET)/scan.yy.o $(TARGET)/main.o $(TARGET)/util.o $(TARGET)/symtab.o $(TARGET)/analyze.o $(TARGET)/intermediate.o $(TARGET)/librust.a
 
 
 # Otimização de velocidade e tamanho
@@ -72,9 +72,9 @@ $(TARGET)/util.o: $(COMMON)/util.c $(COMMON)/util.h $(COMMON)/globals.h
 	$(CC) $(CC-FLAGS) -c $(COMMON)/util.c -o $(TARGET)/util.o
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
-$(TARGET)/code.o: $(SRC)/code.c $(SRC)/code.h $(COMMON)/globals.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) code.o\n"
-	$(CC) $(CC-FLAGS) -c $(SRC)/code.c -o $(TARGET)/code.o
+$(TARGET)/intermediate.o: $(SRC)/intermediate.c $(SRC)/intermediate.h $(COMMON)/globals.h
+	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) intermediate.o\n"
+	$(CC) $(CC-FLAGS) -c $(SRC)/intermediate.c -o $(TARGET)/intermediate.o
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/symtab.o: $(SRC)/symtab.c $(SRC)/symtab.h
@@ -99,7 +99,7 @@ $(TARGET)/parse.tab.o: $(SRC)/parse.y $(COMMON)/globals.h
 	$(CC) $(CC-FLAGS) -c $(TARGET)/parse.tab.c -o $(TARGET)/parse.tab.o
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
-$(TARGET)/librust.a: $(SRC)/lib.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.rs $(SRC)/binary.rs $(SRC)/code.h $(COMMON)/globals.h
+$(TARGET)/librust.a: $(SRC)/lib.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.rs $(SRC)/binary.rs $(SRC)/intermediate.h $(COMMON)/globals.h
 	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) librust.a\n"
 	$(RS) build $(RS-FLAGS)
 	mv $(RS-TARGET)/librust.a $(TARGET)/librust.a
