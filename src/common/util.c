@@ -92,7 +92,7 @@ void print_token(TokenType token, const char *token_string) {
         break;
     case ERROR:
         fprintf(listing, "ERRO LÉXICO: %s LINHA: %d\n", token_string, lineno);
-        Error = TRUE;
+        g_error = TRUE;
         break;
     default: /* não deve acontecer normalmente */
         fprintf(listing, "Token desconhecido: %d\n", token);
@@ -113,7 +113,7 @@ TreeNode *new_StmtNode(StmtKind kind) {
             t->child[i] = NULL;
         }
         t->sibling = NULL;
-        t->nodekind = StmtK;
+        t->node_kind = StmtK;
         t->kind.stmt = kind;
         t->lineno = lineno;
     }
@@ -134,7 +134,7 @@ TreeNode *new_ExpNode(ExpKind kind) {
             t->child[i] = NULL;
         }
         t->sibling = NULL;
-        t->nodekind = ExpK;
+        t->node_kind = ExpK;
         t->kind.exp = kind;
         t->lineno = lineno;
         t->type = Void;
@@ -156,7 +156,7 @@ TreeNode *new_DeclNode(DeclKind kind) {
             t->child[i] = NULL;
         }
         t->sibling = NULL;
-        t->nodekind = DeclK;
+        t->node_kind = DeclK;
         t->kind.decl = kind;
         t->lineno = lineno;
         t->type = Void;
@@ -243,7 +243,7 @@ void print_tree(TreeNode *tree) {
         print_spaces();
 
         // IfK, WhileK, CompoundK, ReturnK
-        if (tree->nodekind == StmtK) {
+        if (tree->node_kind == StmtK) {
             switch (tree->kind.stmt) {
             case IfK:
                 fprintf(listing, "If\n");
@@ -266,7 +266,7 @@ void print_tree(TreeNode *tree) {
             }
         }
         // OpK, ConstK, AssignK, IdK, TypeK, ArrIdK, CallK, CalcK
-        else if (tree->nodekind == ExpK) {
+        else if (tree->node_kind == ExpK) {
             if (tree->kind.exp != TypeK)
                 switch (tree->kind.exp) {
                 case OpK:
@@ -298,7 +298,7 @@ void print_tree(TreeNode *tree) {
                 }
         }
         // VarK, FunK, ArrVarK, ArrParamK, ParamK
-        else if (tree->nodekind == DeclK) {
+        else if (tree->node_kind == DeclK) {
             switch (tree->kind.decl) {
             case FunK:
                 fprintf(listing, "Declaração de Função:  ");

@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* SIZE é o tamanho da tabela hash */
+/* SIZE é o tamanho da tabela hash
+ * seu ideal é ser um número primo
+ */
 #define SIZE 211
 
 /* SHIFT é a potência de dois usada como multiplicador na tabela hash */
@@ -15,10 +17,12 @@
 static int hash(char *key) {
     int temp = 0;
     int i = 0;
+
     while (key[i] != '\0') {
         temp = ((temp << SHIFT) + key[i]) % SIZE;
         i++;
     }
+
     return temp;
 }
 
@@ -47,11 +51,11 @@ typedef struct BucketListRec {
 
 static BucketList hash_table[SIZE];
 
-/* Função st_insert coloca as linhas,
+/* Função symbol_table_insert coloca as linhas,
  * posicoes de memoria e os escopos na tabela de simbolos
  */
-void st_insert(char *name, char *var_or_fun, char *type, char *scope,
-               int lineno, int loc) {
+void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
+                         int lineno, int loc) {
     int h = hash(name);
     BucketList l = hash_table[h];
 
@@ -110,10 +114,10 @@ void st_insert(char *name, char *var_or_fun, char *type, char *scope,
     }
 }
 
-/* Função st_lookup retorna a primeira linha de
+/* Função symbol_table_lookup retorna a primeira linha de
  * uma variável, e -1 se não encontrar
  */
-int st_lookup(char *name) {
+int symbol_table_lookup(char *name) {
     int h = hash(name);
     BucketList l = hash_table[h];
 
@@ -128,10 +132,10 @@ int st_lookup(char *name) {
     }
 }
 
-/* Função st_lookup_scope retorna a primeira linha de
+/* Função symbol_table_lookup_scope retorna a primeira linha de
  * uma variável, e -1 se não encontrar
  */
-int st_lookup_scope(char *name, char *scope) {
+int symbol_table_lookup_scope(char *name, char *scope) {
     for (int i = 0; i < SIZE; i++) {
         BucketList l = hash_table[i];
 
@@ -147,10 +151,10 @@ int st_lookup_scope(char *name, char *scope) {
     return -1;
 }
 
-/* Função st_lookup_max_line retorna o número da linha de
+/* Função symbol_table_lookup_max_line retorna o número da linha de
  * uma função, e -1 se não encontrar
  */
-int st_lookup_max_line(char *var_or_fun, char *scope) {
+int symbol_table_lookup_max_line(char *var_or_fun, char *scope) {
     int linhaMax = -1;
 
     for (int i = 0; i < SIZE; i++) {
@@ -171,11 +175,11 @@ int st_lookup_max_line(char *var_or_fun, char *scope) {
     return linhaMax;
 }
 
-/* Função print_symbol_table printa de modo formatado
+/* Função symbol_table_print printa de modo formatado
  * os conteúdos da tabela de símbolos
  * para o arquivo listing
  */
-void print_symbol_table(FILE *listing) {
+void symbol_table_print(FILE *listing) {
     fprintf(listing,
             "NOME VARIÁVEL  LOCALIZAÇÃO  ESCOPO  TIPO_ID  TIPO_DADO  LINHAS\n");
     fprintf(listing,

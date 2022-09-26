@@ -7,15 +7,16 @@
 #include "../src/common/util.h"
 #include "../src/scan.h"
 
-char tokenString[MAXTOKENLEN+1];
+char token_string[MAX_TOKEN_LEN + 1];
+
 extern int yylex(void);
 %}
 
-digit       [0-9]
+digit        [0-9]
 NUM          {digit}+
-letter        [a-zA-Z]
+letter       [a-zA-Z]
 ID           {letter}+
-newline      \n
+newline      [\n\r]+
 whitespace   [ \t]+
 
 %%
@@ -50,38 +51,40 @@ whitespace   [ \t]+
 {newline}       { lineno++; }
 {whitespace}    { /* continue; */ }
 "/*"            {
-                  char c;
-                  while (1) {
-                    c = input();
-                    if (c == EOF) break;
-                    if (c == '\n') lineno++;
-                    while ((c = input()) == '*');
-                    if (c == '/') break;
-                  }
+                    char c = '\0';
+                    char previous_c = '\0';
+
+                    while (1) {
+                        c = input();
+                        if (c == EOF) break;
+                        if (c == '\n') lineno++;
+                        if (previous_c == '*' && c == '/') break;
+                        previous_c = c;
+                    }
                 }
 .               { return ERROR; }
 
 %%
 
-/* Função getToken retorna o token atual */
-TokenType getToken(void) {
-  static int firstTime = TRUE;
-  TokenType currentToken;
+/* Função get_token retorna o token atual */
+TokenType get_token(void) {
+    static int first_time = TRUE;
+    TokenType current_token;
 
-  if (firstTime) {
-    firstTime = FALSE;
-    lineno++;
-    yyin = source;
-    yyout = listing;
-  }
+    if (first_time) {
+        first_time = FALSE;
+        lineno++;
+        yyin = source;
+        yyout = listing;
+    }
 
-  currentToken = yylex();
-  strncpy(tokenString, yytext, MAXTOKENLEN);
+    current_token = yylex();
+    strncpy(token_string, yytext, MAX_TOKEN_LEN);
 
-  if (TraceScan) {
-    fprintf(listing, "\t%d: ", lineno);
-    print_token(currentToken, tokenString);
-  }
+    if (g_trace_scan) {
+        fprintf(listing, "\t%d: ", lineno);
+        print_token(current_token, token_string);
+    }
 
-  return currentToken;
+    return current_token;
 }

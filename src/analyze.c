@@ -9,7 +9,7 @@
 #define STRING_SIZE 256
 
 /* Contador da posição na memória */
-static int location = 0;
+static int memloc = 0;
 
 /* Se a funcão precisa de um return,
  * usado para verificar se uma função que precisa de um return não tem um
@@ -24,22 +24,22 @@ static CharStack scopes;
 static void symbol_error(TreeNode *t, char *message) {
     fprintf(listing, "ERRO SEMÂNTICO: %s LINHA: %d\n", message, t->lineno);
 
-    Error = TRUE;
+    g_error = TRUE;
     exit(-1);
 }
 
 /* Função verify_main verifica se a `main` é a ultima declaração de funcão */
 static void verify_main() {
-    int max_lineno = st_lookup_max_line("fun", "global");
-    int max_var_lineno = st_lookup_max_line("var", "global");
-    int main_lineno = st_lookup("main");
+    int max_lineno = symbol_table_lookup_max_line("fun", "global");
+    int max_var_lineno = symbol_table_lookup_max_line("var", "global");
+    int main_lineno = symbol_table_lookup("main");
 
     if (max_lineno > main_lineno || max_var_lineno > main_lineno) {
         int max = max_lineno > max_var_lineno ? max_lineno : max_var_lineno;
         fprintf(listing,
                 "ERRO SEMÂNTICO: declaração depois do main LINHA: %d\n", max);
 
-        Error = TRUE;
+        g_error = TRUE;
         exit(-1);
     }
 }
@@ -47,7 +47,7 @@ static void verify_main() {
 /* Função find_return verifica o nó atual é um `return` */
 static void find_return(TreeNode *t) {
     if (t != NULL) {
-        if (t->nodekind == StmtK && t->kind.stmt == ReturnK) {
+        if (t->node_kind == StmtK && t->kind.stmt == ReturnK) {
             fn_has_return = TRUE;
         }
     }
@@ -58,7 +58,7 @@ static void give_scope(TreeNode *t) {
     if (t != NULL) {
         t->scope = malloc(sizeof(scopes->items[scopes->last]));
 
-        if (t->nodekind == DeclK && t->kind.decl == FunK) {
+        if (t->node_kind == DeclK && t->kind.decl == FunK) {
             strcpy(t->scope, scopes->items[scopes->last]);
             cs_push(scopes, t->attr.name);
         } else {
@@ -70,58 +70,11 @@ static void give_scope(TreeNode *t) {
 /* Função pop_stack remove o ultimo elemento da pilha */
 static void pop_stack(TreeNode *t) {
     if (t != NULL) {
-        if (t->nodekind == DeclK && t->kind.decl == FunK) {
+        if (t->node_kind == DeclK && t->kind.decl == FunK) {
             char *item = cs_pop(scopes);
             free(item);
         }
     }
-}
-
-static void insert_input(void) {
-    // TreeNode *fun = new_DeclNode(FunK);
-    // fun->type = Integer;
-
-    // TreeNode *type = new_ExpNode(TypeK);
-    // type->attr.type = INT;
-
-    // TreeNode *compound_stmt = new_StmtNode(CompoundK);
-    // compound_stmt->child[0] = NULL;
-    // compound_stmt->child[1] = NULL;
-
-    // fun->lineno = 0;
-    // fun->attr.name = "input";
-    // fun->child[0] = type;
-    // fun->child[1] = NULL;
-    // fun->child[2] = compound_stmt;
-
-    /* Coloca o input na tabela de símbolos */
-    st_insert("input", "fun", "int", "global", 0, location++);
-}
-
-static void insert_output(void) {
-    // TreeNode *fun = new_DeclNode(FunK);
-    // fun->type = Void;
-
-    // TreeNode *type = new_DeclNode(FunK);
-    // type->attr.type = VOID;
-
-    // TreeNode *params = new_DeclNode(ParamK);
-    // params->attr.name = "x";
-    // params->child[0] = new_ExpNode(TypeK);
-    // params->child[0]->attr.type = INT;
-
-    // TreeNode *compound_stmt = new_StmtNode(CompoundK);
-    // compound_stmt->child[0] = NULL;
-    // compound_stmt->child[1] = NULL;
-
-    // fun->lineno = 0;
-    // fun->attr.name = "output";
-    // fun->child[0] = type;
-    // fun->child[1] = params;
-    // fun->child[2] = compound_stmt;
-
-    /* Coloca o output na tabela de símbolos */
-    st_insert("output", "fun", "void", "global", 0, location++);
 }
 
 /* Função traverse é uma função genérica que aplica
@@ -158,12 +111,14 @@ static void insert_node(TreeNode *t) {
     char *var_or_fun;
     char *type;
 
-    switch (t->nodekind) {
+    switch (t->node_kind) {
     case StmtK:
         switch (t->kind.stmt) {
         case AssignK:
-            if (st_lookup_scope(t->child[0]->attr.name, t->scope) == -1 &&
-                st_lookup_scope(t->child[0]->attr.name, "global") == -1) {
+            if (symbol_table_lookup_scope(t->child[0]->attr.name, t->scope) ==
+                    -1 &&
+                symbol_table_lookup_scope(t->child[0]->attr.name, "global") ==
+                    -1) {
                 symbol_error(t, "Váriável não declarada");
             }
             break;
@@ -190,14 +145,14 @@ static void insert_node(TreeNode *t) {
                 }
             }
 
-            if (st_lookup(t->attr.name) == -1) {
+            if (symbol_table_lookup(t->attr.name) == -1) {
                 // Não está na tabela, nova definição
-                st_insert(t->attr.name, var_or_fun, type, t->scope, t->lineno,
-                          location++);
+                symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
+                                    t->lineno, memloc++);
             } else
                 // Já na tabela
-                st_insert(t->attr.name, var_or_fun, type, t->scope, t->lineno,
-                          0);
+                symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
+                                    t->lineno, 0);
             break;
         }
         default:
@@ -208,7 +163,7 @@ static void insert_node(TreeNode *t) {
     case DeclK:
         switch (t->kind.decl) {
         case FunK:
-            if (st_lookup(t->attr.name) != -1) {
+            if (symbol_table_lookup(t->attr.name) != -1) {
                 symbol_error(t, "Redefinição de função");
                 break;
             }
@@ -220,10 +175,10 @@ static void insert_node(TreeNode *t) {
                 type = "int";
             }
 
-            if (st_lookup(t->attr.name) == -1) {
+            if (symbol_table_lookup(t->attr.name) == -1) {
                 // Não está na tabela, nova definição
-                st_insert(t->attr.name, var_or_fun, type, t->scope, t->lineno,
-                          location++);
+                symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
+                                    t->lineno, memloc++);
             }
             break;
         case VarK:
@@ -231,7 +186,7 @@ static void insert_node(TreeNode *t) {
             type = "int";
 
             // Verificar se a variável já existe
-            if (st_lookup_scope(t->attr.name, t->scope) != -1) {
+            if (symbol_table_lookup_scope(t->attr.name, t->scope) != -1) {
                 symbol_error(t, "Redefinição de variável");
                 break;
             }
@@ -241,8 +196,8 @@ static void insert_node(TreeNode *t) {
                 break;
             }
 
-            st_insert(t->attr.name, var_or_fun, type, t->scope, t->lineno,
-                      location++);
+            symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
+                                t->lineno, memloc++);
             break;
         case ArrVarK:
             var_or_fun = "var";
@@ -254,13 +209,13 @@ static void insert_node(TreeNode *t) {
             }
 
             // Verificar se a variável  array já foi declarada
-            if (st_lookup_scope(t->attr.arr.name, t->scope) != -1) {
+            if (symbol_table_lookup_scope(t->attr.arr.name, t->scope) != -1) {
                 symbol_error(t, "Variável do tipo array já declarada");
                 break;
             }
 
-            st_insert(t->attr.arr.name, var_or_fun, type, t->scope, t->lineno,
-                      location++);
+            symbol_table_insert(t->attr.arr.name, var_or_fun, type, t->scope,
+                                t->lineno, memloc++);
             break;
         case ArrParamK:
             if (t->attr.name == NULL) {
@@ -277,13 +232,13 @@ static void insert_node(TreeNode *t) {
             }
 
             // Verifica se o array já foi declarado
-            if (st_lookup_scope(t->attr.name, t->scope) != -1) {
+            if (symbol_table_lookup_scope(t->attr.name, t->scope) != -1) {
                 symbol_error(t, "Parâmetro do tipo array já declarado");
                 break;
             }
 
-            st_insert(t->attr.name, var_or_fun, type, t->scope, t->lineno,
-                      location++);
+            symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
+                                t->lineno, memloc++);
             break;
         case ParamK:
             if (t->attr.name != NULL) {
@@ -293,15 +248,16 @@ static void insert_node(TreeNode *t) {
                         symbol_error(t, "Parâmetro não pode ser do tipo void");
                         break;
                     }
-                    if (st_lookup_scope(t->attr.name, t->scope) != -1) {
+                    if (symbol_table_lookup_scope(t->attr.name, t->scope) !=
+                        -1) {
                         symbol_error(t, "Redefinição de parâmetro");
                         break;
                     }
 
                     var_or_fun = "var";
                     type = "int";
-                    st_insert(t->attr.name, var_or_fun, type, t->scope,
-                              t->lineno, location++);
+                    symbol_table_insert(t->attr.name, var_or_fun, type,
+                                        t->scope, t->lineno, memloc++);
                 }
                 break;
             }
@@ -321,8 +277,10 @@ static void insert_node(TreeNode *t) {
  * através de uma passada em pré ordem da árvore sintática
  */
 void build_symbol_table(TreeNode *syntax_tree) {
-    insert_input();
-    insert_output();
+    // Coloca `input()` e `output()` na tabela de símbolos
+    // pois ambos são implícitamente declarados
+    symbol_table_insert("input", "fun", "int", "global", 0, memloc++);
+    symbol_table_insert("output", "fun", "void", "global", 0, memloc++);
 
     scopes = cs_init();
     // O maior escopo que uma variável pode ter é global
@@ -335,20 +293,22 @@ void build_symbol_table(TreeNode *syntax_tree) {
 
     cs_drop(scopes);
 
-    if (!Error && TraceAnalyze) {
+    if (!g_error && g_trace_analyze) {
         fprintf(listing, "\nTabela de símbolos:\n\n");
-        print_symbol_table(listing);
+        symbol_table_print(listing);
     }
 }
 
 /* Função check_node realiza verificação do nó atual */
 static void check_node(TreeNode *t) {
-    switch (t->nodekind) {
+    switch (t->node_kind) {
     case StmtK:
         switch (t->kind.stmt) {
         case AssignK: {
-            if (st_lookup_scope(t->child[0]->attr.name, t->scope) == -1 &&
-                st_lookup_scope(t->child[0]->attr.name, "global") == -1) {
+            if (symbol_table_lookup_scope(t->child[0]->attr.name, t->scope) ==
+                    -1 &&
+                symbol_table_lookup_scope(t->child[0]->attr.name, "global") ==
+                    -1) {
                 symbol_error(t->child[0], "Váriavel não declarada");
             }
             break;
@@ -362,7 +322,7 @@ static void check_node(TreeNode *t) {
         case IdK:
         case ArrIdK:
         case CallK: {
-            if (st_lookup(t->attr.name) == -1) {
+            if (symbol_table_lookup(t->attr.name) == -1) {
                 symbol_error(t, "Símbolo não declarado");
             }
         }

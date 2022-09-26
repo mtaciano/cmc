@@ -14,7 +14,7 @@ typedef struct QuadRec {
     struct QuadRec *next;
 } * Quad;
 
-/* Função make_code é responsável por gerar o código intermediário */
-Quad make_code(TreeNode *t);
+/* Função make_intermediate é responsável por gerar o código intermediário */
+Quad make_intermediate(TreeNode *t);
 
 #endif

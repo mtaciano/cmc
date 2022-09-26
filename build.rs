@@ -14,13 +14,14 @@ fn main() {
         .generate_comments(true)
         .allowlist_recursively(true)
         .allowlist_type("Quad")
-        .allowlist_var("TraceCode")
+        .allowlist_var("g_trace_code")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("Não foi possível gerar as bindings!");
 
     // Mande as bindings para $OUT_DIR/bindings.rs
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Não foi possível escrever as bindings!");

@@ -114,7 +114,7 @@ static void read_tree_node(TreeNode *t) {
     }
 
     // Verifica o nó atual
-    switch (t->nodekind) {
+    switch (t->node_kind) {
     case StmtK: {
         switch (t->kind.stmt) {
         case IfK:
@@ -133,12 +133,12 @@ static void read_tree_node(TreeNode *t) {
 
         case AssignK:
             is_asn = TRUE;
-            if (t->child[0]->nodekind == ExpK &&
+            if (t->child[0]->node_kind == ExpK &&
                 t->child[0]->kind.exp == ArrIdK) {
                 is_arr_asn = TRUE;
             }
 
-            if (t->child[1]->nodekind == ExpK &&
+            if (t->child[1]->node_kind == ExpK &&
                 t->child[1]->kind.exp == ConstK) {
                 is_const_asn = TRUE;
             }
@@ -273,7 +273,7 @@ static void read_tree_node(TreeNode *t) {
     // Verifica os 3 filhos
     for (int i = 0; i < 3; i++) {
         if (t->child[i] != NULL) {
-            if (t->child[i]->nodekind == ExpK &&
+            if (t->child[i]->node_kind == ExpK &&
                 t->child[i]->kind.exp == TypeK) {
                 continue; // É do tipo `Type`, não há necessidade de continuar
             }
@@ -394,7 +394,7 @@ static void read_tree_node(TreeNode *t) {
         }
     }
 
-    if (is_inside_param && !(t->nodekind == ExpK && t->kind.exp == CalcK) &&
+    if (is_inside_param && !(t->node_kind == ExpK && t->kind.exp == CalcK) &&
         t->sibling != NULL) {
         char *temp = cs_pop(temps);
         insert_quad("PARAM", temp, "--", "--");
@@ -406,11 +406,12 @@ static void read_tree_node(TreeNode *t) {
     }
 
     // Adiciona parâmetro no stack
-    if (t->nodekind == DeclK && t->kind.decl == ParamK && t->child[0] != NULL) {
+    if (t->node_kind == DeclK && t->kind.decl == ParamK &&
+        t->child[0] != NULL) {
         cs_push(loads, t->attr.name);
     }
 
-    switch (t->nodekind) {
+    switch (t->node_kind) {
     case ExpK: {
         switch (t->kind.exp) {
         case OpK: {
@@ -471,8 +472,8 @@ static void read_tree_node(TreeNode *t) {
             break;
         case CallK: {
             if (is_inside_param &&
-                !(t->nodekind == ExpK && t->kind.exp == CalcK)) {
-                if (t->nodekind == ExpK && t->kind.exp == CallK) {
+                !(t->node_kind == ExpK && t->kind.exp == CalcK)) {
+                if (t->node_kind == ExpK && t->kind.exp == CallK) {
                     if (nested_call_level <= 0) {
                         is_inside_param = FALSE;
                     }
@@ -529,8 +530,8 @@ static void read_tree_node(TreeNode *t) {
     }
 }
 
-/* make_code é responsável por gerar o código intermediário */
-Quad make_code(TreeNode *t) {
+/* make_intermediate é responsável por gerar o código intermediário */
+Quad make_intermediate(TreeNode *t) {
     loads = cs_init();
     temps = cs_init();
     calcs = cs_init();
@@ -540,7 +541,7 @@ Quad make_code(TreeNode *t) {
     read_tree_node(t);
     insert_quad("HALT", "--", "--", "--");
 
-    if (TraceCode) {
+    if (g_trace_code) {
         print_quad(quad);
     }
 

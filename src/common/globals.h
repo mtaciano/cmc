@@ -70,7 +70,7 @@ typedef struct treeNode {
     struct treeNode *child[MAXCHILDREN];
     struct treeNode *sibling;
     int lineno;
-    NodeKind nodekind;
+    NodeKind node_kind;
 
     union {
         StmtKind stmt;
@@ -94,32 +94,27 @@ typedef struct treeNode {
 /**************   Flags para Debug   **************/
 /**************************************************/
 
-/* EchoSource faz com que o arquivo de entrada seja printado
- * junto as suas linhas
- */
-extern int EchoSource;
-
-/* TraceScan faz com que informações adicionais sejam printadas
+/* g_trace_scan faz com que informações adicionais sejam printadas
  * durante a fase de _scan_
  */
-extern int TraceScan;
+extern int g_trace_scan;
 
-/* TraceParse faz com que informações adicionais sejam printadas
+/* g_trace_parse faz com que informações adicionais sejam printadas
  * durante a fase de _parse_
  */
-extern int TraceParse;
+extern int g_trace_parse;
 
-/* TraceAnalyze faz com que informações adicionais sejam printadas
+/* g_trace_analyze faz com que informações adicionais sejam printadas
  * durante a fase de análise sintática
  */
-extern int TraceAnalyze;
+extern int g_trace_analyze;
 
-/* TraceCode faz com que informações adicionais sejam printadas
+/* g_trace_code faz com que informações adicionais sejam printadas
  * durante a fase de geração do código intermediário
  */
-extern int TraceCode;
+extern int g_trace_code;
 
-/* Error faz com que a compilação pare */
-extern int Error;
+/* g_error faz com que a compilação pare */
+extern int g_error;
 
 #endif
