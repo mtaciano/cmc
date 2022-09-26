@@ -1,0 +1,16 @@
+/* O objetivo desse teste é verificar se é possível
+ * usar uma função dentro de outra, para isso é realizada
+ * uma chamada de função dentro de output
+ */
+
+int retone(void) {
+    /* apenas retorna 1 */
+    return 1;
+}
+
+void main(void) {
+    int x;
+    x = 10;
+
+    output(x + retone());
+}

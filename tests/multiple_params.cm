@@ -1,0 +1,26 @@
+/* O objetivo desse teste é verificar se é possível
+ * chamar funções com múltiplos parâmetros
+ */
+
+int pow(int x, int y) {
+    int i;
+    int result;
+    i = 0;
+    result = x;
+
+    while (i < y) {
+        result = result * x;
+        i = i + 1;
+    }
+
+    return x * y;
+}
+
+void main(void) {
+    int x;
+    x = input();
+
+    x = pow(2, x);
+
+    output(x); /* 2 ^ x */
+}

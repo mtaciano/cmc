@@ -1,0 +1,18 @@
+/* O objetivo desse teste é verificar se é possível
+ * usar a função output dentro de outras funções
+ */
+
+int func(int x) {
+    output(x);
+
+    return x;
+}
+
+void main(void) {
+    int x;
+    x = 111;
+
+    x = func(x);
+
+    output(x);
+}

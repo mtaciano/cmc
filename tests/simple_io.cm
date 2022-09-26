@@ -1,0 +1,10 @@
+/* O objetivo desse teste é verificar se operações de entrada
+ * e saída estão funcionando corretamente
+ */
+
+void main(void) {
+    int y;
+    y = input();
+
+    output(y);
+}

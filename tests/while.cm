@@ -1,4 +1,7 @@
-/* FUNCIONA */
+/* O objetivo desse teste é verificar se é possível
+ * usar uma quantidade arbitrária de `while` dentro de
+ * outros `while`
+ */
 
 void main(void) {
     int x;
@@ -14,5 +17,5 @@ void main(void) {
         x = x + 10;
     }
 
-    output(x);
+    output(x); /* 100? */
 }

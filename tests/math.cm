@@ -1,0 +1,24 @@
+/* O objetivo desse teste é verificar se o compilador resolve
+ * corretamente contas complexas, com diversas operações
+ */
+
+void main(void) {
+    int x;
+    int y;
+    x = 4;
+    y = 2;
+
+    y = ((x * (y - (y - x))) / x) + 8; /* y = 12 */
+    /* (y - x)    = (2 - 4)  = -2 */
+    /* (y - (-2)) = (2 + 2)  =  4 */
+    /* (x * (4))  = (4 * 4)  = 16 */
+    /* ((16) / x) = (16 / 4) =  4 */
+    /* (4) + 8    = 12            */
+
+    x = ((y * 2) - 14) - 8;
+    /* (y * 2)     = (12 * 2) = 24 */
+    /* ((24) - 14) = 10            */
+    /* (10) - 8    = 2             */
+
+    output(x); /* x = 2 */
+}

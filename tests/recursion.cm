@@ -1,0 +1,22 @@
+/* TODO: implementar recusão usando $sp */
+
+/* O objetivo desse teste é verificar se é possível
+ * usar recursão para as funções
+ */
+
+int rec(int x) {
+    if (x >= 15) {
+        return x;
+    } else {
+        return rec(x + 1);
+    }
+}
+
+void main(void) {
+    int y;
+    y = 1;
+
+    rec(y);
+
+    output(y); /* 15 */
+}

@@ -1,6 +1,11 @@
+/* O objetivo desse teste é verificar se é possível
+ * usar uma quantidade arbitrária de `if` dentro de
+ * outros `if`
+ */
+
 void main(void) {
     int x;
-    x = 1;
+    x = 99;
 
     if (x > 5) {
         if (x > 12) {
@@ -12,5 +17,5 @@ void main(void) {
         }
     }
 
-    output(x);
+    output(x); /* 999 */
 }

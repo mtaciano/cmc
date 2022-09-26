@@ -1,0 +1,14 @@
+/* O objetivo desse teste é verificar se o compilador consegue
+ * realizar a compilação de códigos com vetores como variáveis
+ */
+
+void main(void) {
+    int y;
+    int vet[10];
+    y = 1;
+
+    vet[y + 1] = 2;
+    y = y + 1;
+
+    output(vet[y]);
+}

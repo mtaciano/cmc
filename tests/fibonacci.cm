@@ -1,0 +1,38 @@
+/* Um programa para calcular a sequência de fibonacci
+ * e retornar o valor na posição n
+ * e.g. n = 4 -> 0 1 1 2 [3] 5
+ */
+
+int fibonacci(int n) {
+    int i;
+    int a;
+    int b;
+    int tmp;
+
+    i = 2;
+    a = 0;
+    b = 1;
+
+    if (n < 2) {
+        return n;
+    }
+
+    while (i < n) {
+        tmp = b;
+        b = b + a;
+        a = tmp;
+
+        i = i + 1;
+    }
+
+    return a + b;
+}
+
+void main(void) {
+    int num;
+    int res;
+    num = input();
+    res = fibonacci(num);
+
+    output(res);
+}

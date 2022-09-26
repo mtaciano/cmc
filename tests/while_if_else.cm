@@ -1,15 +1,25 @@
-void main(void)
-{
-	int x;
-	x = 1;
+/* O objetivo desse teste é verificar se é possível
+ * usar uma quantidade arbitrária de `while` dentro de
+ * outros `while`
+ */
 
-	while (x < 10) {
-    if (x == 5) {
-      x = 111;
-    } else {
-      x = x + 1;
+void main(void) {
+    int x;
+    x = 1;
+
+    while (x < 100) {
+        if (x > 50) {
+            while (x <= 150) {
+                if (x >= 100) {
+                    x = 999;
+                } else {
+                    x = x + 10;
+                }
+            }
+        }
+
+        x = x + 5;
     }
-  }
 
-  output(x);
+    output(x);
 }
