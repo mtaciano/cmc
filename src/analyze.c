@@ -56,13 +56,12 @@ static void find_return(TreeNode *t) {
 /* Função give_scope recursivamente cria escopo para os nós */
 static void give_scope(TreeNode *t) {
     if (t != NULL) {
-        t->scope = malloc(sizeof(scopes->items[scopes->last]));
+        char *scope = scopes->items[scopes->last];
+        t->scope = malloc(strlen(scope) * sizeof(scope));
+        strcpy(t->scope, scope);
 
         if (t->node_kind == DeclK && t->kind.decl == FunK) {
-            strcpy(t->scope, scopes->items[scopes->last]);
             cs_push(scopes, t->attr.name);
-        } else {
-            strcpy(t->scope, scopes->items[scopes->last]);
         }
     }
 }

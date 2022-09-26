@@ -368,7 +368,7 @@ void cs_push(CharStack stack, char *item) {
     }
 
     stack->last += 1;
-    stack->items[stack->last] = malloc(sizeof(item));
+    stack->items[stack->last] = malloc(strlen(item) * sizeof(item));
     strcpy(stack->items[stack->last], item);
 }
 
