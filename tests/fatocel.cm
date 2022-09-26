@@ -1,0 +1,14 @@
+/* Programa que converte fahrenheit para celcius */
+
+int fatocel(int fahrenheit) {
+    /* 32F == 0C */
+    /* 41F == 5C */
+    return (fahrenheit - 32) * 5 / 9;
+}
+
+void main(void) {
+    int fa;
+    fa = input();
+
+    output(fatocel(fa));
+}
