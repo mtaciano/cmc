@@ -13,6 +13,6 @@
 #include "intermediate.h"
 
 
-void make_output(Quad quad);
+void make_assembly_and_binary(Quad quad);
 
 #endif /* _RUST_H_ */

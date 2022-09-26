@@ -1,4 +1,4 @@
-use crate::{ffi::TraceCode, *};
+use crate::{ffi::g_trace_code, *};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
@@ -34,12 +34,10 @@ struct Register {
     available: bool,
 }
 
-#[inline(always)]
 fn find_available_reg(registers: &[Register]) -> Option<usize> {
     (0..32).find(|&i| !registers[i].reserved && registers[i].available)
 }
 
-#[inline(always)]
 fn map_reg(reg: &mut String, reg_map: &HashMap<usize, usize>) {
     let source = reg[2..].parse::<usize>().unwrap();
     let dest = reg_map.get(&source).unwrap();
@@ -47,7 +45,6 @@ fn map_reg(reg: &mut String, reg_map: &HashMap<usize, usize>) {
     *reg = format!("$r{}", dest);
 }
 
-#[inline(always)]
 fn remove_reg(
     reg: &str,
     reg_map: &mut HashMap<usize, usize>,
@@ -55,16 +52,17 @@ fn remove_reg(
 ) {
     let source = reg[2..].parse::<usize>().unwrap();
     let dest = reg_map.get(&source).unwrap();
+
     available[*dest].available = true;
     reg_map.remove_entry(&source);
 }
 
-fn link_return(vec: &mut Vec<RustAsm>, start: usize) {
+fn link_return(vec: &mut Vec<Asm>, start: usize) {
     for i in start..vec.len() {
         if vec[i].cmd == "ret" {
             let source = vec[i].arg1.clone();
             let source = format!("$r{}", source[2..].parse::<i32>().unwrap());
-            let asm = RustAsm {
+            let asm = Asm {
                 cmd: "MOVE".to_string(),
                 arg1: "$r_ret".to_string(),
                 arg2: source,
@@ -72,7 +70,7 @@ fn link_return(vec: &mut Vec<RustAsm>, start: usize) {
             };
             let _ = std::mem::replace(&mut vec[i - 1], asm);
 
-            let jmp = RustAsm {
+            let jmp = Asm {
                 cmd: "J".to_string(),
                 arg1: "$r_call".to_string(),
                 arg2: "--".to_string(),
@@ -87,15 +85,19 @@ fn link_return(vec: &mut Vec<RustAsm>, start: usize) {
     }
 }
 
-pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
-    // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
+/* Função make_assembly é responsável por criar a representação
+ * assembly a partir de um vetor de quádruplas
+ */
+pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
+    // SEGURANÇA: No momento temos acesso único a variável `g_trace_code`
     // justamente pelo código ser _single-thread_
     unsafe {
-        if TraceCode == 1 {
+        if g_trace_code == 1 {
             // TODO: usar `listing`
             println!("\nGerando código assembly\n");
         }
     }
+
     let mut vec = Vec::new();
     let mut variables: HashMap<Variable, Memory> = HashMap::new();
     let mut iff = Vec::new();
@@ -106,7 +108,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
 
     let mut fun_args: HashMap<&str, Vec<(Variable, Memory)>> = HashMap::new();
 
-    let noop = RustAsm {
+    let noop = Asm {
         cmd: "NOP".to_string(),
         arg1: "--".to_string(),
         arg2: "--".to_string(),
@@ -209,14 +211,14 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     .mem_location;
 
                 let dest = q.arg3.to_owned();
-                let reg = RustAsm {
+                let reg = Asm {
                     cmd: "ADDI".to_string(),
                     arg1: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
                     arg3: value.to_string(),
                 };
 
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: command,
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
@@ -244,7 +246,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 //     arg3: "--".to_string(),
                 // };
 
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: command,
                     arg1: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", dest[2..].parse::<i32>().unwrap()),
@@ -270,7 +272,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         );
                     }
                 };
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: command,
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: value.to_string(),
@@ -298,7 +300,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                             .mem_location;
                     }
                 };
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: command,
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: value.to_string(),
@@ -315,7 +317,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     })
                     .unwrap()
                     .mem_location;
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: "STORE".to_string(),
                     arg1: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg2: mem.to_string(),
@@ -325,7 +327,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(asm);
             }
             "ADD" | "SUB" | "MULT" | "DIV" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: q.cmd.to_owned(),
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
@@ -335,13 +337,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(asm);
             }
             "LESS" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: "SUB".to_string(),
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                 };
-                let noop = RustAsm {
+                let noop = Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -359,13 +361,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(noop);
             }
             "GREAT" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: "SUB".to_string(),
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                 };
-                let noop = RustAsm {
+                let noop = Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -383,13 +385,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(noop);
             }
             "LEQ" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: "SUB".to_string(),
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                 };
-                let noop = RustAsm {
+                let noop = Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -406,13 +408,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(noop);
             }
             "GRTEQ" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: "SUB".to_string(),
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                 };
-                let noop = RustAsm {
+                let noop = Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -429,13 +431,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(noop)
             }
             "NOTEQ" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: "SUB".to_string(),
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                 };
-                let noop = RustAsm {
+                let noop = Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -452,13 +454,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(noop);
             }
             "EQUAL" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: "SUB".to_string(),
                     arg1: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                 };
-                let noop = RustAsm {
+                let noop = Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -476,7 +478,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 vec.push(noop);
             }
             "HALT" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: "HLT".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -487,7 +489,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
             }
             "CALL" => {
                 let asm;
-                let noop = RustAsm {
+                let noop = Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -496,7 +498,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 if q.arg2 == "output" {
                     let mut param: String = output_param.pop().unwrap();
                     param = format!("$r{}", param[2..].parse::<i32>().unwrap());
-                    asm = RustAsm {
+                    asm = Asm {
                         cmd: "OUT".to_string(),
                         arg1: "--".to_string(),
                         arg2: param,
@@ -508,14 +510,14 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     }
                     let dest =
                         format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
-                    asm = RustAsm {
+                    asm = Asm {
                         cmd: "IN".to_string(),
                         arg1: dest,
                         arg2: "--".to_string(),
                         arg3: "--".to_string(),
                     };
                 } else {
-                    asm = RustAsm {
+                    asm = Asm {
                         cmd: q.cmd.to_owned().to_lowercase(),
                         arg1: q.arg1.to_owned().to_lowercase(),
                         arg2: q.arg2.to_owned().to_lowercase(),
@@ -533,13 +535,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 }
             }
             "RET" => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: q.cmd.to_owned().to_lowercase(),
                     arg1: q.arg1.to_owned().to_lowercase(),
                     arg2: q.arg2.to_owned().to_lowercase(),
                     arg3: q.arg3.to_owned().to_lowercase(),
                 };
-                let noop = RustAsm {
+                let noop = Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
@@ -553,7 +555,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 if quad[i + 1].arg2 == "output" {
                     output_param.push(q.arg1.clone());
                 } else {
-                    let asm = RustAsm {
+                    let asm = Asm {
                         cmd: q.cmd.to_owned().to_lowercase(),
                         arg1: q.arg1.to_owned().to_lowercase(),
                         arg2: q.arg2.to_owned().to_lowercase(),
@@ -563,7 +565,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 }
             }
             _ => {
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: q.cmd.to_owned().to_lowercase(),
                     arg1: q.arg1.to_owned().to_lowercase(),
                     arg2: q.arg2.to_owned().to_lowercase(),
@@ -596,7 +598,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                         param_count += 1;
                         let temp = vec[j].arg1.clone();
                         let loc = p.1.mem_location;
-                        let asm = RustAsm {
+                        let asm = Asm {
                             cmd: "STORE".to_string(),
                             arg1: format!(
                                 "$r{}",
@@ -652,13 +654,13 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     break;
                 }
             }
-            let jmp = RustAsm {
+            let jmp = Asm {
                 cmd: "JI".to_string(),
                 arg1: start.to_string(),
                 arg2: "--".to_string(),
                 arg3: "--".to_string(),
             };
-            let mv = RustAsm {
+            let mv = Asm {
                 cmd: "MOVE".to_string(),
                 arg1: format!("$r{}", temp[2..].parse::<i32>().unwrap())
                     .to_owned(),
@@ -666,7 +668,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 arg3: "--".to_string(),
             };
 
-            let load = RustAsm {
+            let load = Asm {
                 cmd: "LOADI".to_string(),
                 arg1: "$r_call".to_string(),
                 arg2: (i + 1).to_string(),
@@ -680,14 +682,14 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
     }
 
     for function in function_limits.iter() {
-        let noop = RustAsm {
+        let noop = Asm {
             cmd: "NOP".to_string(),
             arg1: "--".to_string(),
             arg2: "--".to_string(),
             arg3: "--".to_string(),
         };
         if function.0 == "main" {
-            let jmp = RustAsm {
+            let jmp = Asm {
                 cmd: "JI".to_string(),
                 arg1: function.1.to_string(),
                 arg2: "--".to_string(),
@@ -697,7 +699,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
             let _ = std::mem::replace(&mut vec[function.1], noop.clone());
             let _ = std::mem::replace(&mut vec[function.2], noop);
         } else {
-            let ret = RustAsm {
+            let ret = Asm {
                 cmd: "J".to_string(),
                 arg1: "$r_jmp".to_string(),
                 arg2: "--".to_string(),
@@ -716,7 +718,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
     let mut labels: HashMap<String, usize> = HashMap::new();
     for (i, v) in vec.iter_mut().enumerate() {
         if v.cmd.as_str() == "lab" {
-            let noop = RustAsm {
+            let noop = Asm {
                 cmd: "NOP".to_string(),
                 arg1: "--".to_string(),
                 arg2: "--".to_string(),
@@ -733,7 +735,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
         match v.cmd.as_str() {
             "goto" => {
                 let location = labels.get(&v.arg1).unwrap();
-                let jmp = RustAsm {
+                let jmp = Asm {
                     cmd: "JI".to_string(),
                     arg1: location.to_string(),
                     arg2: "--".to_string(),
@@ -744,7 +746,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
             }
             "iff" => {
                 let location = labels.get(&v.arg2).unwrap();
-                let load = RustAsm {
+                let load = Asm {
                     cmd: "LOADI".to_string(),
                     arg1: "$r_lab".to_string(),
                     arg2: location.to_string(),
@@ -755,7 +757,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                 match comparison.comp {
                     Comparison::LT => {
                         command = "JN".to_string();
-                        let jmp = RustAsm {
+                        let jmp = Asm {
                             cmd: "JZ".to_string(),
                             arg1: "$r_lab".to_string(),
                             arg2: format!(
@@ -773,7 +775,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     }
                     Comparison::GT => {
                         command = "JN".to_string();
-                        let jmp = RustAsm {
+                        let jmp = Asm {
                             cmd: "JZ".to_string(),
                             arg1: "$r_lab".to_string(),
                             arg2: format!(
@@ -791,7 +793,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     }
                     Comparison::EQ => {
                         command = "JN".to_string();
-                        let jmp = RustAsm {
+                        let jmp = Asm {
                             cmd: "JP".to_string(),
                             arg1: "$r_lab".to_string(),
                             arg2: format!(
@@ -809,7 +811,7 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
                     }
                 }
 
-                let asm = RustAsm {
+                let asm = Asm {
                     cmd: command,
                     arg1: "$r_lab".to_string(),
                     arg2: format!("$r{}", v.arg1[2..].parse::<i32>().unwrap()),
@@ -1001,10 +1003,11 @@ pub(crate) fn make_assembly(quad: Vec<RustQuad>) -> Vec<RustAsm> {
         }
     }
 
-    // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
+    // SEGURANÇA: No momento temos acesso único a variável `g_trace_code`
     // justamente pelo código ser _single-thread_
     unsafe {
-        if TraceCode == 1 {
+        if g_trace_code == 1 {
+            // TODO: mudar para uma função (print_assembly)
             // TODO: usar `listing`
             println!(
                 "{:<3} | {:>6}, {:>6}, {:>6}, {:>6} |\n",

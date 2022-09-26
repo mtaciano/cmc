@@ -1,28 +1,28 @@
-use crate::{ffi::TraceCode, *};
+use crate::{ffi::g_trace_code, *};
 
-struct OpCode;
-impl OpCode {
-    const NOP: u32 = 0b00000 << 27;
-    const HLT: u32 = 0b00001 << 27;
-    const IN: u32 = 0b00010 << 27;
-    const OUT: u32 = 0b00011 << 27;
-    const MULT: u32 = 0b01000 << 27;
-    const DIV: u32 = 0b01001 << 27;
-    const ADD: u32 = 0b01011 << 27;
-    const ADDI: u32 = 0b01100 << 27;
-    const SUB: u32 = 0b01101 << 27;
-    const SUBI: u32 = 0b01110 << 27;
-    const STORE: u32 = 0b01111 << 27;
-    const MOVE: u32 = 0b10000 << 27;
-    const LOAD: u32 = 0b10001 << 27;
-    const LOADI: u32 = 0b10010 << 27;
-    const J: u32 = 0b10011 << 27;
-    const JI: u32 = 0b10100 << 27;
-    const JZ: u32 = 0b10101 << 27;
-    const JN: u32 = 0b10111 << 27;
-    const JP: u32 = 0b11001 << 27;
-    const STORER: u32 = 0b11010 << 27; // RS RD
-    const LOADR: u32 = 0b11011 << 27; // RD RS
+// Todos os opcodes do processador e funções auxiliares
+mod op_codes {
+    pub(super) const NOP: u32 = 0b00000 << 27;
+    pub(super) const HLT: u32 = 0b00001 << 27;
+    pub(super) const IN: u32 = 0b00010 << 27;
+    pub(super) const OUT: u32 = 0b00011 << 27;
+    pub(super) const MULT: u32 = 0b01000 << 27;
+    pub(super) const DIV: u32 = 0b01001 << 27;
+    pub(super) const ADD: u32 = 0b01011 << 27;
+    pub(super) const ADDI: u32 = 0b01100 << 27;
+    pub(super) const SUB: u32 = 0b01101 << 27;
+    pub(super) const SUBI: u32 = 0b01110 << 27;
+    pub(super) const STORE: u32 = 0b01111 << 27;
+    pub(super) const MOVE: u32 = 0b10000 << 27;
+    pub(super) const LOAD: u32 = 0b10001 << 27;
+    pub(super) const LOADI: u32 = 0b10010 << 27;
+    pub(super) const J: u32 = 0b10011 << 27;
+    pub(super) const JI: u32 = 0b10100 << 27;
+    pub(super) const JZ: u32 = 0b10101 << 27;
+    pub(super) const JN: u32 = 0b10111 << 27;
+    pub(super) const JP: u32 = 0b11001 << 27;
+    pub(super) const STORER: u32 = 0b11010 << 27; // RS RD
+    pub(super) const LOADR: u32 = 0b11011 << 27; // RD RS
 
     // TODO: implementar futuramente
     // const NOT: u32 = 0b01010 << 27;
@@ -32,17 +32,92 @@ impl OpCode {
     // const ANDI: u32 = 0b00101 << 27;
     // const OR: u32 = 0b00110 << 27;
     // const ORI: u32 = 0b00111 << 27;
+
+    // TODO: provavelmente dá pra fazer um macro ou algo parecido
+    pub(super) fn from_str(str: &str) -> u32 {
+        match str {
+            "NOP" => NOP,
+            "HLT" => HLT,
+            "IN" => IN,
+            "OUT" => OUT,
+            "MULT" => MULT,
+            "DIV" => DIV,
+            "ADD" => ADD,
+            "ADDI" => ADDI,
+            "SUB" => SUB,
+            "SUBI" => SUBI,
+            "STORE" => STORE,
+            "LOAD" => LOAD,
+            "MOVE" => MOVE,
+            "LOADI" => LOADI,
+            "J" => J,
+            "JI" => JI,
+            "JZ" => JZ,
+            "JN" => JN,
+            "JP" => JP,
+            "STORER" => STORER,
+            "LOADR" => LOADR,
+            _ => panic!("opcode não conhecido!"),
+        }
+    }
 }
 
-// $r_call == REG31
-// $r_jmp  == REG30
-// $r_lab  == REG29
-// $r_ret  == REG28
-pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
-    // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
+/* Função parse_register é responsável por verificar
+ * a validade de um registrador, e caso ele seja válido
+ * ela retorna seu valor em `u32`
+ */
+fn parse_register(reg: &str) -> u32 {
+    // Verificar se é um registrador reservado
+    if reg.eq("$r_call") {
+        return 31;
+    } else if reg.eq("$r_jmp") {
+        return 30;
+    } else if reg.eq("$r_lab") {
+        return 29;
+    } else if reg.eq("$r_ret") {
+        return 28;
+    }
+
+    // Não é reservado
+    let number = match reg[2..].parse::<u32>() {
+        Ok(num) => num,
+        Err(_) => {
+            panic!("Registrador não reservado, mas com caracteres inválidos!");
+        }
+    };
+
+    if number <= 32 {
+        number
+    } else {
+        panic!("Tamanho inválido de registrador.");
+    }
+}
+
+/* Função parse_imediate é responsável por verificar
+ * a validade de um imediato, e caso ele seja válido
+ * ela retorna seu valor em `u32`
+ */
+fn parse_imediate(im: &str, size: i32) -> u32 {
+    match im.parse::<u32>() {
+        Ok(num) => {
+            if num >= (1 << size) {
+                panic!("Imediato causa overflow!");
+            }
+
+            num
+        }
+        Err(_) => panic!("Imediato possui caracteres inválidos!"),
+    }
+}
+
+/* Função make_binary é responsável por criar a representação
+ * binária a partir de um vetor de instruções assembly
+ */
+pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
+    // SEGURANÇA: No momento temos acesso único a variável `g_trace_code`
     // justamente pelo código ser _single-thread_
     unsafe {
-        if TraceCode == 1 {
+        if g_trace_code == 1 {
             // TODO: usar `listing`
             println!("\nGerando binário\n");
         }
@@ -50,415 +125,119 @@ pub(crate) fn make_binary(bin: Vec<RustAsm>) -> Vec<RustBin> {
 
     let mut vec = Vec::new();
 
-    for a in bin.iter().filter(|&a| !a.cmd.eq(&a.cmd.to_lowercase())) {
-        match a.cmd.as_str() {
-            "NOP" => {
-                let bin = RustBin { inner: OpCode::NOP };
-                vec.push(bin);
+    for inst in bin.iter() {
+        match inst.cmd.as_str() {
+            "NOP" | "HLT" => {
+                vec.push(Bin {
+                    inner: op_codes::from_str(&inst.cmd),
+                });
             }
-            "HLT" => {
-                let bin = RustBin { inner: OpCode::HLT };
-                vec.push(bin);
-            }
-            "JI" => {
-                let mut inner = 0;
-                inner |= OpCode::JI;
-                if a.arg1.parse::<u32>().unwrap() >= (1 << 22) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1.parse::<u32>().unwrap();
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "LOAD" => {
-                let mut inner = 0;
-                inner |= OpCode::LOAD;
-                if a.arg2.parse::<u32>().unwrap() >= (1 << 22) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2.parse::<u32>().unwrap();
+            "LOAD" | "LOADI" | "STORE" => {
+                // OPCODE RD IM22 (Endereço)
+                let mut inner = op_codes::from_str(&inst.cmd);
 
-                let reg = a.arg1[2..].parse::<u32>().unwrap();
-                if reg >= (1 << 6) {
-                    panic!("overflow");
-                }
+                inner |= parse_imediate(&inst.arg2, 22);
 
-                inner |= reg << 22;
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "LOADI" => {
-                let mut inner = 0;
-                inner |= OpCode::LOADI;
-                if a.arg2.parse::<u32>().unwrap() >= (1 << 22) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2.parse::<u32>().unwrap();
-
-                let reg;
-                if a.arg1 == "$r_call" {
-                    reg = 31;
-                } else if a.arg1 == "$r_jmp" {
-                    reg = 30;
-                } else if a.arg1 == "$r_lab" {
-                    reg = 29;
-                } else {
-                    reg = a.arg1[2..].parse::<u32>().unwrap();
-                }
-                if reg >= (1 << 6) {
-                    panic!("overflow");
-                }
+                let reg = parse_register(&inst.arg1);
                 inner |= reg << 22;
 
-                let bin = RustBin { inner };
-                vec.push(bin);
+                vec.push(Bin { inner });
             }
-            "STORE" => {
-                let mut inner = 0;
-                inner |= OpCode::STORE;
-                if a.arg2.parse::<u32>().unwrap() >= (1 << 22) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2.parse::<u32>().unwrap();
+            "STORER" | "LOADR" | "MOVE" => {
+                let mut inner = op_codes::from_str(&inst.cmd);
 
-                let reg = a.arg1[2..].parse::<u32>().unwrap();
-                if reg >= (1 << 6) {
-                    panic!("overflow");
-                }
+                let rs = parse_register(&inst.arg1);
+                inner |= rs << 22;
 
-                inner |= reg << 22;
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "STORER" => {
-                let mut inner = 0;
-                inner |= OpCode::STORER;
+                let rd = parse_register(&inst.arg2);
+                inner |= rd << 17;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "LOADR" => {
-                let mut inner = 0;
-                inner |= OpCode::LOADR;
-
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "MOVE" => {
-                let mut inner = 0;
-                inner |= OpCode::MOVE;
-                let mut reg;
-                if a.arg1 == "$r_ret" {
-                    reg = 28;
-                } else {
-                    if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                        panic!("overflow");
-                    }
-                    reg = a.arg1[2..].parse::<u32>().unwrap();
-                }
-                inner |= reg << 22;
-
-                if a.arg2 == "$r_ret" {
-                    reg = 28;
-                } else {
-                    if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                        panic!("overflow");
-                    }
-                    reg = a.arg2[2..].parse::<u32>().unwrap();
-                }
-                inner |= reg << 17;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
+                vec.push(Bin { inner });
             }
             "J" => {
-                let mut inner = 0;
-                inner |= OpCode::J;
+                let mut inner = op_codes::J;
 
-                let reg;
-                if a.arg1 == "$r_call" {
-                    reg = 31;
-                } else if a.arg1 == "$r_jmp" {
-                    reg = 30;
-                } else if a.arg1 == "$r_lab" {
-                    reg = 29;
-                } else {
-                    reg = a.arg1[2..].parse::<u32>().unwrap();
-                }
-                if reg >= (1 << 6) {
-                    panic!("overflow");
-                }
+                let reg = parse_register(&inst.arg1);
                 inner |= reg << 22;
 
-                let bin = RustBin { inner };
+                vec.push(Bin { inner });
+            }
+            "JZ" | "JN" | "JP" => {
+                let mut inner = op_codes::from_str(&inst.cmd);
+
+                let rs = parse_register(&inst.arg1);
+                inner |= rs << 22;
+
+                let rd = parse_register(&inst.arg2);
+                inner |= rd << 17;
+
+                vec.push(Bin { inner });
+            }
+            "JI" => {
+                // TODO: ver oq fazer com isso
+                let mut inner = op_codes::JI;
+
+                if inst.arg1.parse::<u32>().unwrap() >= (1 << 22) {
+                    panic!("overflow");
+                }
+
+                inner |= inst.arg1.parse::<u32>().unwrap();
+
+                let bin = Bin { inner };
+
                 vec.push(bin);
             }
-            "JZ" => {
-                let mut inner = 0;
-                inner |= OpCode::JZ;
+            "ADD" | "SUB" | "MULT" | "DIV" => {
+                let mut inner = op_codes::from_str(&inst.cmd);
 
-                let reg;
-                if a.arg1 == "$r_call" {
-                    reg = 31;
-                } else if a.arg1 == "$r_jmp" {
-                    reg = 30;
-                } else if a.arg1 == "$r_lab" {
-                    reg = 29;
-                } else {
-                    reg = a.arg1[2..].parse::<u32>().unwrap();
-                }
-                if reg >= (1 << 6) {
-                    panic!("overflow");
-                }
-                inner |= reg << 22;
+                let rs = parse_register(&inst.arg1);
+                inner |= rs << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
+                let rd = parse_register(&inst.arg2);
+                inner |= rd << 17;
 
-                let bin = RustBin { inner };
-                vec.push(bin);
+                let rt = parse_register(&inst.arg3);
+                inner |= rt << 12;
+
+                vec.push(Bin { inner });
             }
-            "JN" => {
-                let mut inner = 0;
-                inner |= OpCode::JN;
+            "ADDI" | "SUBI" => {
+                let mut inner = op_codes::from_str(&inst.cmd);
 
-                let reg;
-                if a.arg1 == "$r_call" {
-                    reg = 31;
-                } else if a.arg1 == "$r_jmp" {
-                    reg = 30;
-                } else if a.arg1 == "$r_lab" {
-                    reg = 29;
-                } else {
-                    reg = a.arg1[2..].parse::<u32>().unwrap();
-                }
-                if reg >= (1 << 6) {
-                    panic!("overflow");
-                }
-                inner |= reg << 22;
+                let rs = parse_register(&inst.arg1);
+                inner |= rs << 22;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
+                let rd = parse_register(&inst.arg2);
+                inner |= rd << 17;
 
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "JP" => {
-                let mut inner = 0;
-                inner |= OpCode::JP;
+                inner |= parse_imediate(&inst.arg3, 17);
 
-                let reg;
-                if a.arg1 == "$r_call" {
-                    reg = 31;
-                } else if a.arg1 == "$r_jmp" {
-                    reg = 30;
-                } else if a.arg1 == "$r_lab" {
-                    reg = 29;
-                } else {
-                    reg = a.arg1[2..].parse::<u32>().unwrap();
-                }
-                if reg >= (1 << 6) {
-                    panic!("overflow");
-                }
-                inner |= reg << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "ADD" => {
-                let mut inner = 0;
-                inner |= OpCode::ADD;
-
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "SUB" => {
-                let mut inner = 0;
-                inner |= OpCode::SUB;
-
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "ADDI" => {
-                let mut inner = 0;
-                inner |= OpCode::ADDI;
-
-                if a.arg3.parse::<u32>().unwrap() >= (1 << 17) {
-                    panic!("overflow");
-                }
-                inner |= a.arg3.parse::<u32>().unwrap();
-
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "SUBI" => {
-                // TODO: ver se usa em algum lugar
-                let mut inner = 0;
-                inner |= OpCode::SUBI;
-
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "MULT" => {
-                let mut inner = 0;
-                inner |= OpCode::MULT;
-
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
-            }
-            "DIV" => {
-                let mut inner = 0;
-                inner |= OpCode::DIV;
-
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
-
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
-
-                if a.arg3[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg3[2..].parse::<u32>().unwrap() << 12;
-
-                let bin = RustBin { inner };
-                vec.push(bin);
+                vec.push(Bin { inner });
             }
             "OUT" => {
-                let mut inner = 0;
-                inner |= OpCode::OUT;
+                let mut inner = op_codes::OUT;
 
-                if a.arg2[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg2[2..].parse::<u32>().unwrap() << 17;
+                let rd = parse_register(&inst.arg2);
+                inner |= rd << 17;
 
-                let bin = RustBin { inner };
-                vec.push(bin);
+                vec.push(Bin { inner });
             }
             "IN" => {
-                let mut inner = 0;
-                inner |= OpCode::IN;
+                let mut inner = op_codes::IN;
 
-                if a.arg1[2..].parse::<u32>().unwrap() >= (1 << 5) {
-                    panic!("overflow");
-                }
-                inner |= a.arg1[2..].parse::<u32>().unwrap() << 22;
+                let rs = parse_register(&inst.arg1);
+                inner |= rs << 22;
 
-                let bin = RustBin { inner };
-                vec.push(bin);
+                vec.push(Bin { inner });
             }
-            _ => (),
+            _ => panic!("Valor de assembly não conhecido!"),
         }
     }
 
-    // SEGURANÇA: No momento temos acesso único a variável `TraceCode`
+    // SEGURANÇA: No momento temos acesso único a variável `g_trace_code`
     // justamente pelo código ser _single-thread_
     unsafe {
-        if TraceCode == 1 {
+        if g_trace_code == 1 {
             // TODO: usar `listing`
             for bin in vec.iter() {
                 let bits = format!("{:032b}", bin.inner);

@@ -2,6 +2,7 @@
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 mod ffi {
+    // Declarações para ligação entre C e Rust
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
@@ -13,9 +14,10 @@ use std::io::Write;
 mod assembly;
 mod binary;
 
-impl From<ffi::Quad> for RustQuad {
-    fn from(q: ffi::Quad) -> Self {
-        if q.is_null() {
+// Conversor de quádrupla única de C para Rust
+impl From<ffi::Quad> for Quad {
+    fn from(quad: ffi::Quad) -> Self {
+        if quad.is_null() {
             panic!("Quádrupla não existe!");
         }
 
@@ -23,11 +25,11 @@ impl From<ffi::Quad> for RustQuad {
         // portanto é seguro obter uma referência da quadrupla original.
         // Além disso o ponteiro sempre está alinhado, por ter sido criado
         // durante `make_code()` no arquvio `code.c`
-        let q = unsafe { q.as_ref().unwrap() };
+        let q = unsafe { quad.as_ref().unwrap() };
 
         // SEGURANÇA: As mesmas regras acima se aplicam
         unsafe {
-            RustQuad {
+            Quad {
                 cmd: CStr::from_ptr(q.command).to_str().unwrap().to_owned(),
                 arg1: CStr::from_ptr(q.arg1).to_str().unwrap().to_owned(),
                 arg2: CStr::from_ptr(q.arg2).to_str().unwrap().to_owned(),
@@ -37,6 +39,7 @@ impl From<ffi::Quad> for RustQuad {
     }
 }
 
+// Conversor de lista encadeada para vetor de quádruplas
 trait FromQuad {
     fn from_quad(quad: ffi::Quad) -> Self;
 }
@@ -45,8 +48,7 @@ impl<T> FromQuad for Vec<T>
 where
     T: From<ffi::Quad>,
 {
-    fn from_quad(quad: ffi::Quad) -> Vec<T> {
-        let mut quad = quad;
+    fn from_quad(mut quad: ffi::Quad) -> Vec<T> {
         let mut vec = Vec::new();
 
         while !quad.is_null() {
@@ -54,9 +56,9 @@ where
 
             // SEGURANÇA: Há pelo menos um elemento para quadruplas,
             // logo há pelo menos um `q.next`, então o ponteiro é verificado
-            // como nulo sempre, além de estar alinhado há que foi criado
-            // corretamente durante `make_code()`
-            unsafe { quad = quad.as_ref().unwrap().next };
+            // como nulo sempre, além de estar alinhado já que foi criado
+            // corretamente durante `make_intermediate()`
+            unsafe { quad = quad.as_ref().unwrap().next; };
         }
 
         // `vec` não vai mudar de tamanho
@@ -67,34 +69,35 @@ where
     }
 }
 
+// Struct de quádruplas
 #[derive(Debug)]
-struct RustQuad {
+struct Quad {
     cmd: String,
     arg1: String,
     arg2: String,
     arg3: String,
 }
 
+// Struct para o Assembly
 #[derive(Debug, Clone)]
-struct RustAsm {
+struct Asm {
     cmd: String,
     arg1: String,
     arg2: String,
     arg3: String,
 }
 
+// Struct para o Binário
 #[derive(Debug)]
-struct RustBin {
+struct Bin {
     inner: u32,
 }
 
 #[no_mangle]
-pub extern "C" fn make_output(quad: ffi::Quad) {
-    let quad_vec = Vec::<RustQuad>::from_quad(quad);
-
-    let asm_vec = crate::assembly::make_assembly(quad_vec);
-
-    let bin_vec = crate::binary::make_binary(asm_vec);
+pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
+    let quads = Vec::<Quad>::from_quad(quad);
+    let asm = crate::assembly::make_assembly(quads);
+    let bin = crate::binary::make_binary(asm);
 
     let mut file = OpenOptions::new()
         .create(true)
@@ -103,13 +106,10 @@ pub extern "C" fn make_output(quad: ffi::Quad) {
         .open("build/out_bin.txt")
         .expect("Não foi possível criar um arquivo de saída para o binário.");
 
-    for bin in bin_vec.iter() {
+    for bin in bin.iter() {
         writeln!(&mut file, "{:032b}", bin.inner)
             .expect("Erro escrevendo binário em arquivo.");
     }
 
     println!("\nArquivo out_bin.txt criado.");
 }
-
-
-// TODO: mover tudo de /rust para ./
