@@ -1,0 +1,15 @@
+int cubevolume(int sidea, int sideb, int sidec) {
+    /* placeholder */
+    return sidea * sideb * sidec;
+}
+
+void main(void) {
+    int x;
+    int y;
+    int z;
+    x = 10;
+    y = 5;
+    z = 2;
+
+    output(cubevolume(x, y, z));
+}

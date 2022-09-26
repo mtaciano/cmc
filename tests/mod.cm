@@ -1,0 +1,29 @@
+/* Um programa para calcular o módulo
+   de um número a por b (a % b) */
+
+int mod(int a, int b) {
+    int div;
+    div = 1;
+
+    while (div * b <= a) {
+        div = div + 1;
+    }
+    div = div - 1;
+
+    /* a mod b */
+    return a - (div * b);
+}
+
+void main(void) {
+    int x;
+    int res;
+    x = input();
+
+    res = mod(x, 2);
+
+    if (res == 0) {
+        output(1234);
+    } else {
+        output(4321);
+    }
+}

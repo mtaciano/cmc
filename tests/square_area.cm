@@ -1,0 +1,14 @@
+int squarearea(int sidea, int sideb) {
+    /* placeholder */
+    return sidea * sideb;
+}
+
+void main(void) {
+    int x;
+    int y;
+    int z;
+    x = 10;
+    y = 5;
+
+    output(squarearea(x, y));
+}

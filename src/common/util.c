@@ -282,7 +282,7 @@ void print_tree(TreeNode *tree) {
                 case TypeK:
                     break;
                 case ArrIdK:
-                    fprintf(listing, "ArrId: %s\n", tree->attr.arr.name);
+                    fprintf(listing, "ArrId: %s\n", tree->attr.name);
                     break;
                 case CallK:
                     fprintf(listing, "Chamada de Função: %s\n",
