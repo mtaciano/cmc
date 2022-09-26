@@ -58,7 +58,7 @@ $(BIN): $(OBJS)
 	@printf "$(BOLD)$(GREEN)Compilando:$(NC)$(NORMAL) $(BIN)\n"
 	$(CC) $(OBJS) $(CC-FLAGS) $(BIN-FLAGS) -o $(TARGET)/$(BIN)
 	ln -sf $(TARGET)/$(BIN) $(BIN)
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
 # Objetos
@@ -111,7 +111,15 @@ $(TARGET)/librust.a: $(SRC)/lib.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.r
 bindings:
 	@printf "$(BOLD)$(GREEN)Gerando bindings:$(NC)$(NORMAL)\n"
 	cbindgen --config cbindgen.toml --output $(SRC)/rust.h
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
+
+
+# Copia o binário de saída para o processador
+.PHONY: cpu
+cpu:
+	@printf "$(BOLD)$(GREEN)Copiando binário:$(NC)$(NORMAL) out_bin.txt\n"
+	cp $(TARGET)/out_bin.txt ../processador/out_bin.txt
+	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
 # Limpa a saída
@@ -120,4 +128,4 @@ clean:
 	@printf "$(BOLD)$(GREEN)Removendo arquivos:$(NC)$(NORMAL)\n"
 	-rm -rf $(TARGET)/*
 	-rm -f $(BIN)
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
