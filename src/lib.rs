@@ -58,7 +58,9 @@ where
             // logo há pelo menos um `q.next`, então o ponteiro é verificado
             // como nulo sempre, além de estar alinhado já que foi criado
             // corretamente durante `make_intermediate()`
-            unsafe { quad = quad.as_ref().unwrap().next; };
+            unsafe {
+                quad = quad.as_ref().unwrap().next;
+            };
         }
 
         // `vec` não vai mudar de tamanho
@@ -99,7 +101,8 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
     let asm = crate::assembly::make_assembly(quads);
     let bin = crate::binary::make_binary(asm);
 
-    let mut file = OpenOptions::new()
+    println!("\nCriando arquivo out_bin.txt");
+    let mut binary_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
@@ -107,9 +110,26 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
         .expect("Não foi possível criar um arquivo de saída para o binário.");
 
     for bin in bin.iter() {
-        writeln!(&mut file, "{:032b}", bin.inner)
+        writeln!(&mut binary_file, "{:032b}", bin.inner)
             .expect("Erro escrevendo binário em arquivo.");
     }
-
     println!("\nArquivo out_bin.txt criado.");
+
+    println!("\nCriando arquivo out_verilog.txt");
+    let mut verilog_file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("build/out_verilog.txt")
+        .expect("Não foi possível criar um arquivo de saída para o binário.");
+
+    for (i, bin) in bin.iter().enumerate() {
+        writeln!(
+            &mut verilog_file,
+            "memoriaI[{}] = 32'b{:032b};",
+            i, bin.inner
+        )
+        .expect("Erro escrevendo binário em arquivo.");
+    }
+    println!("\nArquivo out_verilog.txt criado.");
 }
