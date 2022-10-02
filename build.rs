@@ -2,12 +2,12 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    // Diz para o cargo invalidar a crate quando wrapper.h muda
+    // Diz para o cargo recompilar caso algo em `wrapper.h` mude
     println!("cargo:rerun-if-changed=src/wrapper.h");
 
     // O bindgen::Builder é o ponto de entrada
     // para bindgen, e deixa construir opções para
-    // os bindings resultantes.
+    // as bindings resultantes.
     let bindings = bindgen::Builder::default()
         .header("src/wrapper.h")
         .rust_target(bindgen::RustTarget::Nightly)
