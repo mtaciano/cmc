@@ -354,7 +354,7 @@ CharStack cs_init() {
     CharStack new = malloc(sizeof(*new));
     new->max_size = size;
     new->last = -1;
-    new->items = malloc(size * sizeof(**new->items));
+    new->items = malloc(size * sizeof(*new->items));
 
     return new;
 }
