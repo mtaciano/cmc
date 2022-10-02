@@ -1,7 +1,7 @@
 /* Especificação C- Yacc/Bison */
 
 %{
-#define YYPARSER /* diferencia o output do Yacc de outros códigos de output */
+#define YYPARSER /* Diferencia o output do Yacc de outros códigos de output */
 
 #include "../src/common/globals.h"
 #include "../src/common/util.h"
@@ -13,10 +13,10 @@
 static int saved_number;
 static char *saved_name;
 static int saved_lineno;
-static TreeNode *saved_tree; /* arvore sintática para retornos */
+static TreeNode *saved_tree; /* Árvore sintática para retornos */
 
-static int yylex(void); /* evitar conflitos (deixar que funciona) */
-int yyerror(char *message); /* evitar conflitos (deixar que funciona) */
+static int yylex(void); /* Evitar conflitos */
+int yyerror(char *message); /* Evitar conflitos */
 %}
 
 /* TODO: resolver os problemas de shift/reduce */
@@ -420,10 +420,10 @@ int yyerror(char *message) {
     return -1;
 }
 
-/* Função yylex retorna o próximo token */
+/* Função `yylex` retorna o próximo token */
 static int yylex(void) { return get_token(); }
 
-/* Função parse constrói a árvore sintática */
+/* Função `parse` constrói a árvore sintática */
 TreeNode *parse(void) {
     yyparse();
 

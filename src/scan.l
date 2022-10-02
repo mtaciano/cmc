@@ -66,7 +66,7 @@ whitespace   [ \t]+
 
 %%
 
-/* Função get_token retorna o token atual */
+/* Função `get_token` retorna o token atual */
 TokenType get_token(void) {
     static int first_time = TRUE;
     TokenType current_token;

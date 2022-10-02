@@ -5,14 +5,14 @@
 
 #include "common/globals.h"
 
-/* Função build_symbol_table constrói uma tabela de símbolos
+/* Função `build_symbol_table` constrói uma tabela de símbolos
  * por travessia em pré-ordem da árvore síntatica
  */
 void build_symbol_table(TreeNode *syntax_tree);
 
-/* Função type_check realiza verificação de tipos
+/* Função `type_check realiza` verificação de tipos
  * através de uma travessia em pós-ordem da árvore síntatica
  */
 void type_check(TreeNode *syntax_tree);
 
-#endif
+#endif /* _ANALYZE_H_ */

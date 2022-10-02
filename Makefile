@@ -99,7 +99,7 @@ $(TARGET)/parse.tab.o: $(SRC)/parse.y $(COMMON)/globals.h
 	$(CC) $(CC-FLAGS) -c $(TARGET)/parse.tab.c -o $(TARGET)/parse.tab.o
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
-$(TARGET)/librust.a: $(SRC)/lib.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.rs $(SRC)/binary.rs $(SRC)/intermediate.h $(COMMON)/globals.h
+$(TARGET)/librust.a: $(SRC)/rust.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.rs $(SRC)/binary.rs $(SRC)/intermediate.h $(COMMON)/globals.h
 	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) librust.a\n"
 	$(RS) build $(RS-FLAGS)
 	mv $(RS-TARGET)/librust.a $(TARGET)/librust.a

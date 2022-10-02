@@ -85,7 +85,7 @@ fn link_return(vec: &mut Vec<Asm>, start: usize) {
     }
 }
 
-/* Função make_assembly é responsável por criar a representação
+/* Função `make_assembly` é responsável por criar a representação
  * assembly a partir de um vetor de quádruplas
  */
 pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {

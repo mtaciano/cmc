@@ -2,8 +2,14 @@ cargo-features = ["profile-rustflags"]
 
 [package]
 name = "rust"
-version = "0.9.0"
+version = "0.10.1"
 edition = "2021"
+description = "Parte escrita em rust do compilador cmc"
+authors = ["Miguel <miguel.taciano@unifesp.br>"]
+repository = "https://github.com/mtaciano/compilador/"
+readme = "README.md"
+license = "MIT"
+publish = false
 
 [profile.release]
 strip = "debuginfo"
@@ -15,7 +21,6 @@ codegen-units = 1
 rustflags = ["-Zsanitizer=address"]
 
 [lib]
+path = "src/rust.rs"
 crate-type = ["staticlib"]
-
-[build-dependencies]
-bindgen = "0.60.1"
+test = true

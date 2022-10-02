@@ -1,20 +1,18 @@
-#[allow(non_upper_case_globals)]
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-mod ffi {
-    // Declarações para ligação entre C e Rust
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
-
 use std::ffi::CStr;
 use std::fs::OpenOptions;
 use std::io::Write;
 
-// Gerador de assembly e binário
+/* Bindings com C */
+mod common;
+use common::ffi;
+
+/* Gerador de assembly */
 mod assembly;
+
+/* Gerador de binário */
 mod binary;
 
-// Conversor de quádrupla única de C para Rust
+/* Conversor de quádrupla única de C para Rust */
 impl From<ffi::Quad> for Quad {
     fn from(quad: ffi::Quad) -> Self {
         if quad.is_null() {
@@ -30,7 +28,7 @@ impl From<ffi::Quad> for Quad {
         // SEGURANÇA: As mesmas regras acima se aplicam
         unsafe {
             Quad {
-                cmd: CStr::from_ptr(q.command).to_str().unwrap().to_owned(),
+                cmd: CStr::from_ptr(q.cmd).to_str().unwrap().to_owned(),
                 arg1: CStr::from_ptr(q.arg1).to_str().unwrap().to_owned(),
                 arg2: CStr::from_ptr(q.arg2).to_str().unwrap().to_owned(),
                 arg3: CStr::from_ptr(q.arg3).to_str().unwrap().to_owned(),
@@ -39,7 +37,7 @@ impl From<ffi::Quad> for Quad {
     }
 }
 
-// Conversor de lista encadeada para vetor de quádruplas
+/* Conversor de lista encadeada para vetor de quádruplas */
 trait FromQuad {
     fn from_quad(quad: ffi::Quad) -> Self;
 }
@@ -71,7 +69,7 @@ where
     }
 }
 
-// Struct de quádruplas
+/* Struct de quádruplas */
 #[derive(Debug)]
 struct Quad {
     cmd: String,
@@ -80,7 +78,7 @@ struct Quad {
     arg3: String,
 }
 
-// Struct para o Assembly
+/* Struct para o Assembly */
 #[derive(Debug, Clone)]
 struct Asm {
     cmd: String,
@@ -89,12 +87,15 @@ struct Asm {
     arg3: String,
 }
 
-// Struct para o Binário
+/* Struct para o Binário */
 #[derive(Debug)]
 struct Bin {
-    inner: u32,
+    word: u32,
 }
 
+/* Função `make_assembly_and_binary` é responsável por criar
+ * o assembly e binário para o compilador
+ */
 #[no_mangle]
 pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
     let quads = Vec::<Quad>::from_quad(quad);
@@ -110,7 +111,7 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
         .expect("Não foi possível criar um arquivo de saída para o binário.");
 
     for bin in bin.iter() {
-        writeln!(&mut binary_file, "{:032b}", bin.inner)
+        writeln!(&mut binary_file, "{:032b}", bin.word)
             .expect("Erro escrevendo binário em arquivo.");
     }
     println!("\nArquivo out_bin.txt criado.");
@@ -127,7 +128,7 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
         writeln!(
             &mut verilog_file,
             "memoriaI[{}] = 32'b{:032b};",
-            i, bin.inner
+            i, bin.word
         )
         .expect("Erro escrevendo binário em arquivo.");
     }

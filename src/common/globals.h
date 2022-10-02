@@ -9,21 +9,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* A flag YYPARSER impede a inclusão do arquivo *.tab.h nele mesmo */
+/* A flag `YYPARSER` impede a inclusão do arquivo *.tab.h nele mesmo */
 #ifndef YYPARSER
 
-/* Yacc/Bison gera seus próprios valores para os tokens.
+/* O Yacc/Bison gera seus próprios valores para os tokens.
  * Caso outros arquivos queiram acessar tais valores, eles precisam incluir
  * o arquivo *.tab.h gerado durante a compilação
  */
 #include "../../build/parse.tab.h"
 
-/* ENDFILE é implicitamente definido pelo Yacc/Bison,
+/* A constante `ENDFILE` é implicitamente definida pelo Yacc/Bison,
  * e não é incluído no arquivo *.tab.h
  */
 #define ENDFILE 0
 
-#endif
+#endif /* YYPARSER */
 
 #ifndef FALSE
 #define FALSE 0
@@ -33,14 +33,14 @@
 #define TRUE 1
 #endif
 
-/* MAXRESERVED é o número de palavras reservadas */
+/* A constante `MAXRESERVED` diz o número de palavras reservadas */
 #define MAXRESERVED 6
 
-/* Yacc/Bison gera seus próprios valores int para os tokens */
+/* O Yacc/Bison gera seus próprios valores int para os tokens */
 typedef int TokenType;
 
-extern FILE *source;  /* arquivo de _input_ */
-extern FILE *listing; /* arquivo de _output_ para debug */
+extern FILE *source;  /* Arquivo de _input_ */
+extern FILE *listing; /* Arquivo de _output_ para debug */
 
 extern int lineno; /* Número da linha */
 
@@ -94,27 +94,27 @@ typedef struct treeNode {
 /**************   Flags para Debug   **************/
 /**************************************************/
 
-/* g_trace_scan faz com que informações adicionais sejam printadas
+/* A variável `g_trace_scan` faz com que informações adicionais sejam printadas
  * durante a fase de _scan_
  */
 extern int g_trace_scan;
 
-/* g_trace_parse faz com que informações adicionais sejam printadas
+/* A variável `g_trace_parse` faz com que informações adicionais sejam printadas
  * durante a fase de _parse_
  */
 extern int g_trace_parse;
 
-/* g_trace_analyze faz com que informações adicionais sejam printadas
- * durante a fase de análise sintática
+/* A variável `g_trace_analyze` faz com que informações adicionais sejam
+ * printadas durante a fase de análise sintática
  */
 extern int g_trace_analyze;
 
-/* g_trace_code faz com que informações adicionais sejam printadas
+/* A variável `g_trace_code` faz com que informações adicionais sejam printadas
  * durante a fase de geração do código intermediário
  */
 extern int g_trace_code;
 
-/* g_error faz com que a compilação pare */
+/* A variável `g_error` faz com que a compilação pare */
 extern int g_error;
 
-#endif
+#endif /* _GLOBALS_H_ */

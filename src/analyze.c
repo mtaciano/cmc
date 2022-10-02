@@ -11,14 +11,14 @@
 /* Contador da posição na memória */
 static int memloc = 0;
 
-/* Se a funcão precisa de um return,
+/* Se a funcão precisa de um `return`,
  * usado para verificar se uma função que precisa de um return não tem um
  */
 static int fn_has_return = FALSE;
 
 static CharStack scopes;
 
-/* Função symbol_error imprime um erro durante a tabela de símbolos,
+/* Função `symbol_error` imprime um erro durante a tabela de símbolos,
  * tal erro também é um erro semântico
  */
 static void symbol_error(TreeNode *t, char *message) {
@@ -28,7 +28,7 @@ static void symbol_error(TreeNode *t, char *message) {
     exit(-1);
 }
 
-/* Função verify_main verifica se a `main` é a ultima declaração de funcão */
+/* Função `verify_main` verifica se a `main` é a ultima declaração de funcão */
 static void verify_main() {
     int max_lineno = symbol_table_lookup_max_line("fun", "global");
     int max_var_lineno = symbol_table_lookup_max_line("var", "global");
@@ -44,7 +44,7 @@ static void verify_main() {
     }
 }
 
-/* Função find_return verifica o nó atual é um `return` */
+/* Função `find_return` verifica o nó atual é um `return` */
 static void find_return(TreeNode *t) {
     if (t != NULL) {
         if (t->node_kind == StmtK && t->kind.stmt == ReturnK) {
@@ -53,10 +53,11 @@ static void find_return(TreeNode *t) {
     }
 }
 
-/* Função give_scope recursivamente cria escopo para os nós */
+/* Função `give_scope` recursivamente cria escopo para os nós */
 static void give_scope(TreeNode *t) {
     if (t != NULL) {
         char *scope = scopes->items[scopes->last];
+
         t->scope = malloc(strlen(scope) * sizeof(scope));
         strcpy(t->scope, scope);
 
@@ -66,7 +67,7 @@ static void give_scope(TreeNode *t) {
     }
 }
 
-/* Função pop_stack remove o ultimo elemento da pilha */
+/* Função `pop_stack` remove o último elemento da pilha */
 static void pop_stack(TreeNode *t) {
     if (t != NULL) {
         if (t->node_kind == DeclK && t->kind.decl == FunK) {
@@ -76,9 +77,9 @@ static void pop_stack(TreeNode *t) {
     }
 }
 
-/* Função traverse é uma função genérica que aplica
- * a função pre_fn quando está descendo,
- * e aplica post_fn quando está voltando
+/* Função `traverse` é uma função genérica que aplica
+ * a função `pre_fn` quando está descendo,
+ * e aplica `post_fn` quando está voltando
  */
 static void traverse(TreeNode *t, void (*pre_fn)(TreeNode *),
                      void (*post_fn)(TreeNode *)) {
@@ -95,7 +96,7 @@ static void traverse(TreeNode *t, void (*pre_fn)(TreeNode *),
     }
 }
 
-/* Funcão null_fn é uma função que não faz nada.
+/* Funcão `null_fn` é uma função que não faz nada.
  * Ela é usada para poder fazer traversias de apenas pré ou pós ordem
  * na árvore sintática
  */
@@ -105,7 +106,7 @@ static void null_fn(TreeNode *t) {
     return;
 }
 
-/* Função insert_node insere o nó `t` na tabela de símbolos */
+/* Função `insert_node` insere o nó `t` na tabela de símbolos */
 static void insert_node(TreeNode *t) {
     char *var_or_fun;
     char *type;
@@ -272,7 +273,7 @@ static void insert_node(TreeNode *t) {
     type = "\0";
 }
 
-/* Função build_symbol_table constrói a tabela de símbolos
+/* Função `build_symbol_table` constrói a tabela de símbolos
  * através de uma passada em pré ordem da árvore sintática
  */
 void build_symbol_table(TreeNode *syntax_tree) {
@@ -298,7 +299,7 @@ void build_symbol_table(TreeNode *syntax_tree) {
     }
 }
 
-/* Função check_node realiza verificação do nó atual */
+/* Função `check_node` realiza verificação do nó atual */
 static void check_node(TreeNode *t) {
     switch (t->node_kind) {
     case StmtK:
@@ -355,7 +356,7 @@ static void check_node(TreeNode *t) {
     }
 }
 
-/* Função type_check faz _type-checking_
+/* Função `type_check` faz _type-checking_
  * através uma passada de pós ordem
  */
 void type_check(TreeNode *syntax_tree) {

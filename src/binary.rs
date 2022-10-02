@@ -1,7 +1,7 @@
 use crate::{ffi::g_trace_code, *};
 
-// Todos os opcodes do processador e funções auxiliares
-mod op_codes {
+/* Todos os opcodes do processador e funções auxiliares */
+mod opcodes {
     pub(super) const NOP: u32 = 0b00000 << 27;
     pub(super) const HLT: u32 = 0b00001 << 27;
     pub(super) const IN: u32 = 0b00010 << 27;
@@ -33,7 +33,7 @@ mod op_codes {
     // const OR: u32 = 0b00110 << 27;
     // const ORI: u32 = 0b00111 << 27;
 
-    // TODO: provavelmente dá pra fazer um macro ou algo parecido
+    /* Função `from_str` transforma uma string em um opcode */
     pub(super) fn from_str(str: &str) -> u32 {
         match str {
             "NOP" => NOP,
@@ -57,12 +57,12 @@ mod op_codes {
             "JP" => JP,
             "STORER" => STORER,
             "LOADR" => LOADR,
-            _ => panic!("opcode não conhecido!"),
+            _ => panic!("opcode {} não conhecido!", str),
         }
     }
 }
 
-/* Função parse_register é responsável por verificar
+/* Função `parse_register` é responsável por verificar
  * a validade de um registrador, e caso ele seja válido
  * ela retorna seu valor em `u32`
  */
@@ -93,7 +93,7 @@ fn parse_register(reg: &str) -> u32 {
     }
 }
 
-/* Função parse_imediate é responsável por verificar
+/* Função `parse_imediate` é responsável por verificar
  * a validade de um imediato, e caso ele seja válido
  * ela retorna seu valor em `u32`
  */
@@ -110,7 +110,7 @@ fn parse_imediate(im: &str, size: i32) -> u32 {
     }
 }
 
-/* Função make_binary é responsável por criar a representação
+/* Função `make_binary` é responsável por criar a representação
  * binária a partir de um vetor de instruções assembly
  */
 pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
@@ -129,22 +129,22 @@ pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
         match inst.cmd.as_str() {
             "NOP" | "HLT" => {
                 vec.push(Bin {
-                    inner: op_codes::from_str(&inst.cmd),
+                    word: opcodes::from_str(&inst.cmd),
                 });
             }
             "LOAD" | "LOADI" | "STORE" => {
                 // OPCODE RD IM22 (Endereço)
-                let mut inner = op_codes::from_str(&inst.cmd);
+                let mut inner = opcodes::from_str(&inst.cmd);
 
                 inner |= parse_imediate(&inst.arg2, 22);
 
                 let reg = parse_register(&inst.arg1);
                 inner |= reg << 22;
 
-                vec.push(Bin { inner });
+                vec.push(Bin { word: inner });
             }
             "STORER" | "LOADR" | "MOVE" => {
-                let mut inner = op_codes::from_str(&inst.cmd);
+                let mut inner = opcodes::from_str(&inst.cmd);
 
                 let rs = parse_register(&inst.arg1);
                 inner |= rs << 22;
@@ -152,18 +152,18 @@ pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
                 let rd = parse_register(&inst.arg2);
                 inner |= rd << 17;
 
-                vec.push(Bin { inner });
+                vec.push(Bin { word: inner });
             }
             "J" => {
-                let mut inner = op_codes::J;
+                let mut inner = opcodes::J;
 
                 let reg = parse_register(&inst.arg1);
                 inner |= reg << 22;
 
-                vec.push(Bin { inner });
+                vec.push(Bin { word: inner });
             }
             "JZ" | "JN" | "JP" => {
-                let mut inner = op_codes::from_str(&inst.cmd);
+                let mut inner = opcodes::from_str(&inst.cmd);
 
                 let rs = parse_register(&inst.arg1);
                 inner |= rs << 22;
@@ -171,11 +171,11 @@ pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
                 let rd = parse_register(&inst.arg2);
                 inner |= rd << 17;
 
-                vec.push(Bin { inner });
+                vec.push(Bin { word: inner });
             }
             "JI" => {
                 // TODO: ver oq fazer com isso
-                let mut inner = op_codes::JI;
+                let mut inner = opcodes::JI;
 
                 if inst.arg1.parse::<u32>().unwrap() >= (1 << 22) {
                     panic!("overflow");
@@ -183,12 +183,12 @@ pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
 
                 inner |= inst.arg1.parse::<u32>().unwrap();
 
-                let bin = Bin { inner };
+                let bin = Bin { word: inner };
 
                 vec.push(bin);
             }
             "ADD" | "SUB" | "MULT" | "DIV" => {
-                let mut inner = op_codes::from_str(&inst.cmd);
+                let mut inner = opcodes::from_str(&inst.cmd);
 
                 let rs = parse_register(&inst.arg1);
                 inner |= rs << 22;
@@ -199,10 +199,10 @@ pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
                 let rt = parse_register(&inst.arg3);
                 inner |= rt << 12;
 
-                vec.push(Bin { inner });
+                vec.push(Bin { word: inner });
             }
             "ADDI" | "SUBI" => {
-                let mut inner = op_codes::from_str(&inst.cmd);
+                let mut inner = opcodes::from_str(&inst.cmd);
 
                 let rs = parse_register(&inst.arg1);
                 inner |= rs << 22;
@@ -212,23 +212,23 @@ pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
 
                 inner |= parse_imediate(&inst.arg3, 17);
 
-                vec.push(Bin { inner });
+                vec.push(Bin { word: inner });
             }
             "OUT" => {
-                let mut inner = op_codes::OUT;
+                let mut inner = opcodes::OUT;
 
                 let rd = parse_register(&inst.arg2);
                 inner |= rd << 17;
 
-                vec.push(Bin { inner });
+                vec.push(Bin { word: inner });
             }
             "IN" => {
-                let mut inner = op_codes::IN;
+                let mut inner = opcodes::IN;
 
                 let rs = parse_register(&inst.arg1);
                 inner |= rs << 22;
 
-                vec.push(Bin { inner });
+                vec.push(Bin { word: inner });
             }
             _ => panic!("Valor de assembly não conhecido!"),
         }
@@ -240,7 +240,7 @@ pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
         if g_trace_code == 1 {
             // TODO: usar `listing`
             for bin in vec.iter() {
-                let bits = format!("{:032b}", bin.inner);
+                let bits = format!("{:032b}", bin.word);
                 println!("{}", bits);
             }
             println!("\nGeração do binário concluída.");

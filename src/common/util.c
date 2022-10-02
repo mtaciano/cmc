@@ -94,13 +94,13 @@ void print_token(TokenType token, const char *token_string) {
         fprintf(listing, "ERRO LÉXICO: %s LINHA: %d\n", token_string, lineno);
         g_error = TRUE;
         break;
-    default: /* não deve acontecer normalmente */
+    default: // Não deve acontecer normalmente
         fprintf(listing, "Token desconhecido: %d\n", token);
         break;
     }
 }
 
-/* Função new_StmtNode cria um novo nó do tipo statement
+/* Função `new_StmtNode` cria um novo nó do tipo statement
  * para a contrução da árvore sintática
  */
 TreeNode *new_StmtNode(StmtKind kind) {
@@ -121,7 +121,7 @@ TreeNode *new_StmtNode(StmtKind kind) {
     return t;
 }
 
-/* Função new_ExpNode cria um novo nó do tipo expressão
+/* Função `new_ExpNode` cria um novo nó do tipo expressão
  * para a contrução da árvore sintática
  */
 TreeNode *new_ExpNode(ExpKind kind) {
@@ -143,7 +143,7 @@ TreeNode *new_ExpNode(ExpKind kind) {
     return t;
 }
 
-/* Função new_DeclNode cria um novo nó do tipo declaração
+/* Função `new_DeclNode` cria um novo nó do tipo declaração
  * para a contrução da árvore sintática
  */
 TreeNode *new_DeclNode(DeclKind kind) {
@@ -165,7 +165,7 @@ TreeNode *new_DeclNode(DeclKind kind) {
     return t;
 }
 
-/* Função copy_string aloca e cria uma nova
+/* Função `copy_string` aloca e cria uma nova
  * cópia de uma string existente
  */
 char *copy_string(char *s) {
@@ -185,7 +185,7 @@ char *copy_string(char *s) {
     return t;
 }
 
-/* Variável indentno é usada pelo print_tree para
+/* Variável `indentno` é usada pelo print_tree para
  * guardar o número atual da indentação
  */
 static int indentno = 0;
@@ -194,14 +194,14 @@ static int indentno = 0;
 #define INDENT indentno += 2
 #define UNINDENT indentno -= 2
 
-/* Função print_spaces indenta printando espaços */
+/* Função `print_spaces` indenta printando espaços */
 static void print_spaces(void) {
     for (int i = 0; i < indentno; i++) {
         fprintf(listing, " ");
     }
 }
 
-/* Função print_types printa os tipos de funções e variáveis */
+/* Função `print_types` printa os tipos de funções e variáveis */
 void print_types(TreeNode *tree) {
     if (tree->child[0] != NULL) {
         switch (tree->child[0]->type) {
@@ -234,7 +234,7 @@ void print_types(TreeNode *tree) {
     }
 }
 
-/* Função print_tree printa a árvore sintática para o
+/* Função `print_tree` printa a árvore sintática para o
  * arquivo listing usando indentação para indicar sub-árvores
  */
 void print_tree(TreeNode *tree) {
@@ -347,7 +347,7 @@ void print_tree(TreeNode *tree) {
     UNINDENT;
 }
 
-/* Função cs_init inicia a pilha com um tamanho máximo de `size` */
+/* Função `cs_init` inicia a pilha com um tamanho máximo de `size` */
 CharStack cs_init() {
     int size = 256;
 
@@ -359,7 +359,7 @@ CharStack cs_init() {
     return new;
 }
 
-/* Função cs_push coloca a string na pilha */
+/* Função `cs_push` coloca a string na pilha */
 void cs_push(CharStack stack, char *item) {
     if (stack->last >= stack->max_size) { // Redimencionar
         stack->max_size *= 2;
@@ -372,7 +372,7 @@ void cs_push(CharStack stack, char *item) {
     strcpy(stack->items[stack->last], item);
 }
 
-/* Função cs_pop remove a string da pilha, retornando seu valor */
+/* Função `cs_pop` remove a string da pilha, retornando seu valor */
 char *cs_pop(CharStack stack) {
     char *item = stack->items[stack->last];
 
@@ -382,7 +382,7 @@ char *cs_pop(CharStack stack) {
     return item;
 }
 
-/* Função cs_drop remove a memória usada pela pilha */
+/* Função `cs_drop` remove a memória usada pela pilha */
 void cs_drop(CharStack stack) {
     for (int i = 0; i <= stack->last; i++) {
         free(stack->items[i]);

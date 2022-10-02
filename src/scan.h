@@ -5,15 +5,13 @@
 
 #include "common/globals.h"
 
-/* MAX_TOKEN_LEN é o tamanho máximo de um token */
+/* Constante `MAX_TOKEN_LEN` é o tamanho máximo de um token */
 #define MAX_TOKEN_LEN 40
 
-/* Variável token_string armazena o lexema de cada token */
+/* Variável `token_string` armazena o lexema de cada token */
 extern char token_string[MAX_TOKEN_LEN + 1];
 
-/* Função get_token retorna o
- * próximo token no arquivo fonte
- */
+/* Função `get_token` retorna o token atual */
 TokenType get_token(void);
 
-#endif
+#endif /* _SCAN_H_ */

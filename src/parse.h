@@ -3,7 +3,7 @@
 #ifndef _PARSE_H_
 #define _PARSE_H_
 
-/* Retorna a árvore sintática construída */
+/* Função `parse` constrói a árvore sintática */
 TreeNode *parse(void);
 
-#endif
+#endif /* _PARSE_H_ */

@@ -11,23 +11,25 @@
 /* Quadrupla final */
 static Quad quad;
 
-/* Número de $t e L */
+/* Número ainda não usado para um temporário */
 static int temp_num = 0;
+
+/* Número ainda não usado para um label */
 static int lab_num = 0;
 
-/* Ordem de LOAD */
+/* Ordem dos loads */
 static CharStack loads;
 
-/* Ordem de $t */
+/* Ordem dos temporários */
 static CharStack temps;
 
-/* Ordem de calculos */
+/* Ordem dos cálculos */
 static CharStack calcs;
 
-/* Ordem de whiles */
+/* Ordem dos whiles */
 static CharStack whiles;
 
-/* Ordem de ifs */
+/* Ordem dos ifs */
 static CharStack ifs;
 
 /* O quanto dentro de uma call o programa está */
@@ -36,24 +38,25 @@ static int nested_call_level = 0;
 /* Se o nó atual está dentro de um bloco de parâmetros */
 static int is_inside_param = FALSE;
 
-/* Função print_quad printa a quadrupla inteira */
+/* Função `print_quad` printa a quadrupla inteira */
 static void print_quad(Quad q) {
     Quad current = q;
 
     fprintf(listing, "|%7s, %7s, %7s, %7s|\n\n", "CMD", "ARG1", "ARG2", "ARG3");
 
     while (current != NULL) {
-        fprintf(listing, "(%7s, %7s, %7s, %7s)\n", current->command,
-                current->arg1, current->arg2, current->arg3);
+        fprintf(listing, "(%7s, %7s, %7s, %7s)\n", current->cmd, current->arg1,
+                current->arg2, current->arg3);
 
         current = current->next;
     }
 }
 
-/* Função insert_quad insere quadruplas na variável quad */
+/* Função `insert_quad` insere quadruplas na variável quad */
 static void insert_quad(char *cmd, char *arg1, char *arg2, char *arg3) {
     Quad new_quad = malloc(sizeof(*new_quad));
-    new_quad->command = cmd;
+
+    new_quad->cmd = cmd;
     new_quad->arg1 = arg1;
     new_quad->arg2 = arg2;
     new_quad->arg3 = arg3;
@@ -72,7 +75,7 @@ static void insert_quad(char *cmd, char *arg1, char *arg2, char *arg3) {
     }
 }
 
-/* Função type_to_string transforma o tipo em uma string, void ou int */
+/* Função `type_to_string` transforma o tipo em uma string, void ou int */
 // TODO: verificar se realmente é necessária uma função para isso
 char *type_to_string(TreeNode *t) {
     switch (t->type) {
@@ -88,7 +91,7 @@ char *type_to_string(TreeNode *t) {
     }
 }
 
-/* Função read_tree_node lê o nó da arvore e trata ele de acordo */
+/* Função `read_tree_node` lê o nó da árvore e trata ele de acordo */
 /* TODO: tratar todos os casos possíveis */
 static void read_tree_node(TreeNode *t) {
     // TODO: melhorar e documentar
@@ -145,11 +148,11 @@ static void read_tree_node(TreeNode *t) {
             break;
 
         case CompoundK:
-            /* code */
+            /* todo */
             break;
 
         case ReturnK:
-            /* code */
+            /* todo */
             break;
         }
     } break;
@@ -158,43 +161,43 @@ static void read_tree_node(TreeNode *t) {
         case OpK: {
             switch (t->attr.op) {
             case LT:
-                /* code */
+                /* todo */
                 break;
 
             case LE:
-                /* code */
+                /* todo */
                 break;
 
             case GT:
-                /* code */
+                /* todo */
                 break;
 
             case GE:
-                /* code */
+                /* todo */
                 break;
 
             case EQ:
-                /* code */
+                /* todo */
                 break;
 
             case NE:
-                /* code */
+                /* todo */
                 break;
 
             case PLUS:
-                /* code */
+                /* todo */
                 break;
 
             case MINUS:
-                /* code */
+                /* todo */
                 break;
 
             case TIMES:
-                /* code */
+                /* todo */
                 break;
 
             case OVER:
-                /* code */
+                /* todo */
                 break;
             }
         } break;
@@ -219,7 +222,7 @@ static void read_tree_node(TreeNode *t) {
             }
         } break;
         case TypeK:
-            /* code */
+            /* todo */
             break;
         case ArrIdK:
             is_arr = TRUE;
@@ -252,7 +255,7 @@ static void read_tree_node(TreeNode *t) {
             insert_quad("ARRLOC", name, t->scope, size);
         } break;
         case ArrParamK:
-            /* code */
+            /* todo */
             break;
         case ParamK: {
             char *temp;
@@ -530,8 +533,9 @@ static void read_tree_node(TreeNode *t) {
     }
 }
 
-/* make_intermediate é responsável por gerar o código intermediário */
+/* Função `make_intermediate` é responsável por gerar o código intermediário */
 Quad make_intermediate(TreeNode *t) {
+    // Inicializando as pilhas
     loads = cs_init();
     temps = cs_init();
     calcs = cs_init();
@@ -545,6 +549,7 @@ Quad make_intermediate(TreeNode *t) {
         print_quad(quad);
     }
 
+    // Removendo todas as pilhas da memória
     cs_drop(loads);
     cs_drop(temps);
     cs_drop(calcs);

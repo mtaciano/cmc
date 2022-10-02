@@ -5,12 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* SIZE é o tamanho da tabela hash
+/* Constante `SIZE` é o tamanho da tabela hash
  * seu ideal é ser um número primo
  */
 #define SIZE 211
 
-/* SHIFT é a potência de dois usada como multiplicador na tabela hash */
+/* Constante `SHIFT` é a potência de dois usada como multiplicador
+ * na tabela hash
+ */
 #define SHIFT 4
 
 /* Função de hash */
@@ -51,11 +53,11 @@ typedef struct BucketListRec {
 
 static BucketList hash_table[SIZE];
 
-/* Função symbol_table_insert coloca as linhas,
- * posicoes de memoria e os escopos na tabela de simbolos
+/* Função `symbol_table_insert` coloca as linhas,
+ * posições de memória e os escopos na tabela de símbolos
  */
 void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
-                         int lineno, int loc) {
+                         int lineno, int memloc) {
     int h = hash(name);
     BucketList l = hash_table[h];
 
@@ -64,7 +66,7 @@ void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
                                (strcmp(scope, l->scope) != 0))) {
             l = l->next;
         }
-        if (l == NULL) { /* se não está na tabela, adicione */
+        if (l == NULL) { // se não está na tabela, adicione
             l = malloc(sizeof(*l));
             l->name = name;
             l->scope = scope;
@@ -73,10 +75,10 @@ void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
             l->lines = malloc(sizeof(*l->lines));
             l->lines->lineno = lineno;
             l->lines->next = NULL;
-            l->memloc = loc;
+            l->memloc = memloc;
             l->next = hash_table[h];
             hash_table[h] = l;
-        } else { /* encontrou, então adiciona na tabela */
+        } else { // encontrou, então adiciona na tabela
             LineList t = l->lines;
 
             while (t->next != NULL) {
@@ -90,7 +92,7 @@ void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
         while ((l != NULL) && (strcmp(name, l->name) != 0)) {
             l = l->next;
         }
-        if (l == NULL) { /* se não está na tabela, adicione */
+        if (l == NULL) { // se não está na tabela, adicione
             l = malloc(sizeof(*l));
             l->name = name;
             l->scope = scope;
@@ -99,10 +101,10 @@ void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
             l->lines = malloc(sizeof(*l->lines));
             l->lines->lineno = lineno;
             l->lines->next = NULL;
-            l->memloc = loc;
+            l->memloc = memloc;
             l->next = hash_table[h];
             hash_table[h] = l;
-        } else { /* encontrou, então adiciona na tabela */
+        } else { // encontrou, então adiciona na tabela
             LineList t = l->lines;
             while (t->next != NULL) {
                 t = t->next;
@@ -114,7 +116,7 @@ void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
     }
 }
 
-/* Função symbol_table_lookup retorna a primeira linha de
+/* Função `symbol_table_lookup` retorna a primeira linha de
  * uma variável, e -1 se não encontrar
  */
 int symbol_table_lookup(char *name) {
@@ -132,8 +134,8 @@ int symbol_table_lookup(char *name) {
     }
 }
 
-/* Função symbol_table_lookup_scope retorna a primeira linha de
- * uma variável, e -1 se não encontrar
+/* Função `symbol_table_lookup_scope` retorna a primeira linha de
+ * uma variável, e `-1` se não encontrar
  */
 int symbol_table_lookup_scope(char *name, char *scope) {
     for (int i = 0; i < SIZE; i++) {
@@ -151,8 +153,8 @@ int symbol_table_lookup_scope(char *name, char *scope) {
     return -1;
 }
 
-/* Função symbol_table_lookup_max_line retorna o número da linha de
- * uma função, e -1 se não encontrar
+/* Função `symbol_table_lookup_max_line` retorna o número da linha de
+ * uma função, e `-1` se não encontrar
  */
 int symbol_table_lookup_max_line(char *var_or_fun, char *scope) {
     int linhaMax = -1;
@@ -175,7 +177,7 @@ int symbol_table_lookup_max_line(char *var_or_fun, char *scope) {
     return linhaMax;
 }
 
-/* Função symbol_table_print printa de modo formatado
+/* Função `symbol_table_print` printa de modo formatado
  * os conteúdos da tabela de símbolos
  * para o arquivo listing
  */
@@ -188,17 +190,21 @@ void symbol_table_print(FILE *listing) {
     for (int i = 0; i < SIZE; ++i) {
         if (hash_table[i] != NULL) {
             BucketList l = hash_table[i];
+
             while (l != NULL) {
                 LineList t = l->lines;
+
                 fprintf(listing, "%-14s ", l->name);
                 fprintf(listing, "%-9d  ", l->memloc);
                 fprintf(listing, "%8s", l->scope);
                 fprintf(listing, "%7s", l->var_or_fun);
                 fprintf(listing, "%10s", l->type);
+
                 while (t != NULL) {
                     fprintf(listing, "%7d ", t->lineno);
                     t = t->next;
                 }
+
                 fprintf(listing, "\n");
                 l = l->next;
             }
