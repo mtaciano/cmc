@@ -88,6 +88,9 @@ char *type_to_string(TreeNode *t) {
     case Void:
         return "VOID";
         break;
+    default: // Não deve acontecer normalmente
+        return NULL;
+        break;
     }
 }
 
