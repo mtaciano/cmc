@@ -5,9 +5,6 @@
 #include "common/util.h"
 #include "symtab.h"
 
-#define STACK_SIZE 256
-#define STRING_SIZE 256
-
 /* Contador da posição na memória */
 static int memloc = 0;
 
@@ -16,6 +13,7 @@ static int memloc = 0;
  */
 static int fn_has_return = FALSE;
 
+/* Escopos das variáveis e funções */
 static CharStack scopes;
 
 /* Função `symbol_error` imprime um erro durante a tabela de símbolos,
@@ -134,6 +132,18 @@ static void insert_node(TreeNode *t) {
         case ArrIdK:
             var_or_fun = "var";
             type = "int";
+
+            if (symbol_table_lookup(t->attr.name) == -1) {
+                // Não está na tabela, nova definição
+                symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
+                                    t->lineno, memloc++);
+            } else {
+                // Já na tabela
+                symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
+                                    t->lineno, 0);
+            }
+            break;
+
         case CallK: {
             if (t->kind.exp == CallK) {
                 var_or_fun = "fun";
@@ -142,6 +152,8 @@ static void insert_node(TreeNode *t) {
                 } else if (t->child[0] != NULL &&
                            t->child[0]->type == Integer) {
                     type = "int";
+                } else {
+                    type = "error";
                 }
             }
 
@@ -149,12 +161,13 @@ static void insert_node(TreeNode *t) {
                 // Não está na tabela, nova definição
                 symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
                                     t->lineno, memloc++);
-            } else
+            } else {
                 // Já na tabela
                 symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
                                     t->lineno, 0);
-            break;
-        }
+            }
+        } break;
+
         default:
             break;
         }
@@ -173,6 +186,8 @@ static void insert_node(TreeNode *t) {
                 type = "void";
             } else if (t->child[0] != NULL && t->child[0]->type == Integer) {
                 type = "int";
+            } else {
+                type = "error";
             }
 
             if (symbol_table_lookup(t->attr.name) == -1) {
@@ -181,6 +196,7 @@ static void insert_node(TreeNode *t) {
                                     t->lineno, memloc++);
             }
             break;
+
         case VarK:
             var_or_fun = "var";
             type = "int";
@@ -199,6 +215,7 @@ static void insert_node(TreeNode *t) {
             symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
                                 t->lineno, memloc++);
             break;
+
         case ArrVarK:
             var_or_fun = "var";
             type = "int";
@@ -217,6 +234,7 @@ static void insert_node(TreeNode *t) {
             symbol_table_insert(t->attr.arr.name, var_or_fun, type, t->scope,
                                 t->lineno, memloc++);
             break;
+
         case ArrParamK:
             if (t->attr.name == NULL) {
                 break;
@@ -240,6 +258,7 @@ static void insert_node(TreeNode *t) {
             symbol_table_insert(t->attr.name, var_or_fun, type, t->scope,
                                 t->lineno, memloc++);
             break;
+
         case ParamK:
             if (t->attr.name != NULL) {
                 // Verifica se o parâmetro existe ou é void
@@ -262,15 +281,18 @@ static void insert_node(TreeNode *t) {
                 break;
             }
             break;
+
         default:
             break;
         }
+        break;
+
     default:
         break;
     }
 
-    var_or_fun = "\0";
-    type = "\0";
+    var_or_fun = NULL;
+    type = NULL;
 }
 
 /* Função `build_symbol_table` constrói a tabela de símbolos
@@ -311,12 +333,13 @@ static void check_node(TreeNode *t) {
                     -1) {
                 symbol_error(t->child[0], "Váriavel não declarada");
             }
-            break;
-        }
+        } break;
+
         default:
             break;
         }
         break;
+
     case ExpK:
         switch (t->kind.exp) {
         case IdK:
@@ -325,10 +348,13 @@ static void check_node(TreeNode *t) {
             if (symbol_table_lookup(t->attr.name) == -1) {
                 symbol_error(t, "Símbolo não declarado");
             }
-        }
+        } break;
+
         default:
             break;
         }
+        break;
+
     case DeclK:
         switch (t->kind.decl) {
         case FunK:
@@ -348,9 +374,11 @@ static void check_node(TreeNode *t) {
                 fn_has_return = FALSE;
             }
             break;
+
         default:
             break;
         }
+
     default:
         break;
     }
