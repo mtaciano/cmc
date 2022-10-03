@@ -106,19 +106,12 @@ $(TARGET)/librust.a: $(SRC)/rust.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 
-# Gera a FFI entre C e Rust
-.PHONY: bindings
-bindings:
-	@printf "$(BOLD)$(GREEN)Gerando bindings:$(NC)$(NORMAL)\n"
-	cbindgen --config cbindgen.toml --output $(SRC)/rust.h
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
-
-
 # Copia o binário de saída para o processador
+# Apenas usar caso tenha o processador na mesma pasta
 .PHONY: cpu
 cpu:
 	@printf "$(BOLD)$(GREEN)Copiando binário:$(NC)$(NORMAL) out_bin.txt\n"
-	cp $(TARGET)/out_bin.txt ../processador/out_bin.txt
+	cp $(TARGET)/out_bin.txt ../fpgmips/out_bin.txt
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
