@@ -102,26 +102,26 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
     let asm = crate::assembly::make_assembly(quads);
     let bin = crate::binary::make_binary(asm);
 
-    println!("\nCriando arquivo out_bin.txt");
+    println!("\nCriando arquivo output.txt");
     let mut binary_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open("build/out_bin.txt")
+        .open("build/output.txt")
         .expect("Não foi possível criar um arquivo de saída para o binário.");
 
     for bin in bin.iter() {
         writeln!(&mut binary_file, "{:032b}", bin.word)
             .expect("Erro escrevendo binário em arquivo.");
     }
-    println!("\nArquivo out_bin.txt criado.");
+    println!("\nArquivo output.txt criado.");
 
-    println!("\nCriando arquivo out_verilog.txt");
+    println!("\nCriando arquivo verilog_output.txt");
     let mut verilog_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open("build/out_verilog.txt")
+        .open("build/verilog_output.txt")
         .expect("Não foi possível criar um arquivo de saída para o binário.");
 
     for (i, bin) in bin.iter().enumerate() {
@@ -132,5 +132,5 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
         )
         .expect("Erro escrevendo binário em arquivo.");
     }
-    println!("\nArquivo out_verilog.txt criado.");
+    println!("\nArquivo verilog_output.txt criado.");
 }
