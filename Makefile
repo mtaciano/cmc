@@ -28,10 +28,11 @@ RS-FLAGS = #empty
 
 # C Minus Compiler
 BIN = cmc
-BIN-FLAGS = -static
+BIN-FLAGS = -static # Pode dar erro, remover se der
 
 # Componentes do compilador
-OBJS = $(TARGET)/parse.tab.o $(TARGET)/scan.yy.o $(TARGET)/main.o $(TARGET)/util.o $(TARGET)/symtab.o $(TARGET)/analyze.o $(TARGET)/intermediate.o $(TARGET)/librust.a
+OBJS = $(TARGET)/parse.tab.o $(TARGET)/scan.yy.o $(TARGET)/main.o $(TARGET)/util.o $(TARGET)/symtab.o $(TARGET)/analyze.o $(TARGET)/intermediate.o
+LIBS = $(TARGET)/libc.a $(TARGET)/librust.a
 
 
 # Otimização de velocidade e tamanho
@@ -41,7 +42,9 @@ release: RS-FLAGS += --release
 release: RS-TARGET = $(TARGET)/release
 release: $(BIN)
 release:
+	@printf "\n$(BOLD)$(GREEN)Removendo símbolos:$(NC)$(NORMAL) $(BIN)\n"
 	strip -p --strip-all $(TARGET)/$(BIN)
+	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
 # Símbolos de debug
@@ -54,9 +57,9 @@ debug: $(BIN)
 
 
 # Executável
-$(BIN): $(OBJS)
+$(BIN): $(OBJS) $(LIBS)
 	@printf "$(BOLD)$(GREEN)Compilando:$(NC)$(NORMAL) $(BIN)\n"
-	$(CC) $(OBJS) $(CC-FLAGS) $(BIN-FLAGS) -o $(TARGET)/$(BIN)
+	$(CC) $(LIBS) $(CC-FLAGS) $(BIN-FLAGS) -o $(TARGET)/$(BIN)
 	ln -sf $(TARGET)/$(BIN) $(BIN)
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
@@ -100,9 +103,14 @@ $(TARGET)/parse.tab.o: $(SRC)/parse.y $(COMMON)/globals.h
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/librust.a: $(SRC)/rust.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.rs $(SRC)/binary.rs $(SRC)/intermediate.h $(COMMON)/globals.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) librust.a\n"
+	@printf "$(BOLD)$(GREEN)Criando biblioteca:$(NC)$(NORMAL) librust.a\n"
 	$(RS) build $(RS-FLAGS)
 	mv $(RS-TARGET)/librust.a $(TARGET)/librust.a
+	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+
+$(TARGET)/libc.a: $(OBJS)
+	@printf "$(BOLD)$(GREEN)Criando biblioteca:$(NC)$(NORMAL) libc.a\n"
+	ar rcs $(TARGET)/libc.a $(OBJS)
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 
@@ -110,8 +118,8 @@ $(TARGET)/librust.a: $(SRC)/rust.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.
 # Apenas usar caso tenha o processador na mesma pasta
 .PHONY: cpu
 cpu:
-	@printf "$(BOLD)$(GREEN)Copiando binário:$(NC)$(NORMAL) out_bin.txt\n"
-	cp $(TARGET)/out_bin.txt ../fpgmips/out_bin.txt
+	@printf "$(BOLD)$(GREEN)Copiando binário:$(NC)$(NORMAL) output.txt\n"
+	cp $(TARGET)/output.txt ../fpgmips/output.txt
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
@@ -122,3 +130,8 @@ clean:
 	-rm -rf $(TARGET)/*
 	-rm -f $(BIN)
 	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
+
+
+# Para compilar na UNIFESP:
+# make CC=gcc CC-FLAGS="-Wall -Wextra -pedantic -ldl -pthread" BIN-FLAGS= release
+# make CC=gcc CC-FLAGS="-Wall -Wextra -pedantic -ldl -pthread -g -fsanitize=address,undefined -fno-omit-frame-pointer" debug
