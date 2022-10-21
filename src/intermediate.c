@@ -1,5 +1,4 @@
 /* Código intermediário */
-// TODO: desistir, impossível melhorar isso
 
 #include "intermediate.h"
 #include "common/globals.h"
@@ -12,10 +11,10 @@
 static Quad quad;
 
 /* Número ainda não usado para um temporário */
-static int temp_num = 0;
+static int available_temp_num = 0;
 
 /* Número ainda não usado para um label */
-static int lab_num = 0;
+static int available_lab_num = 0;
 
 /* Ordem dos loads */
 static CharStack loads;
@@ -36,7 +35,7 @@ static CharStack ifs;
 static int nested_call_level = 0;
 
 /* Se o nó atual está dentro de um bloco de parâmetros */
-static int is_inside_param = FALSE;
+static int inside_param = FALSE;
 
 /* Função `print_quad` printa a quadrupla inteira */
 static void print_quad(Quad q) {
@@ -103,50 +102,45 @@ static void read_tree_node(TreeNode *t) {
     // TODO: transformando read_tree_node em uma função que executa 3 outras
     // TODO: sendo elas uma pré, uma mid e uma pós nó
     // TODO: documentar flags
-    int is_fun = FALSE;
-    int is_asn = FALSE;
-    int is_const_asn = FALSE;
-    int is_call;
-    int is_iff = FALSE;
-    int is_while = FALSE;
-    int is_arr = FALSE;
-    int is_arr_asn = FALSE;
-    int is_curr_callk = FALSE;
-
-    if (nested_call_level <= 0) {
-        is_call = FALSE;
-    } else {
-        is_call = TRUE;
-    }
+    int fun_node = FALSE;
+    int assign_node = FALSE;
+    int const_assign_node = FALSE;
+    int inside_call = nested_call_level <= 0 ? FALSE : TRUE;
+    int if_node = FALSE;
+    int while_node = FALSE;
+    int array_node = FALSE;
+    int array_assign_node = FALSE;
+    int callk_node = FALSE;
 
     // Verifica o nó atual
     switch (t->node_kind) {
     case StmtK: {
         switch (t->kind.stmt) {
         case IfK:
-            is_iff = TRUE;
+            if_node = TRUE;
             break;
 
         case WhileK: {
             char *label = malloc(STRING_SIZE * sizeof(*label));
-            snprintf(label, STRING_SIZE, ".LB%d", lab_num);
-            insert_quad("LAB", label, "--", "--");
 
-            is_while = TRUE;
-            lab_num++;
+            snprintf(label, STRING_SIZE, ".LB%d", available_lab_num);
+            insert_quad("LAB", label, "--", "--");
             cs_push(whiles, label);
+
+            while_node = TRUE;
+            available_lab_num++;
         } break;
 
         case AssignK:
-            is_asn = TRUE;
+            assign_node = TRUE;
             if (t->child[0]->node_kind == ExpK &&
                 t->child[0]->kind.exp == ArrIdK) {
-                is_arr_asn = TRUE;
+                array_assign_node = TRUE;
             }
 
             if (t->child[1]->node_kind == ExpK &&
                 t->child[1]->kind.exp == ConstK) {
-                is_const_asn = TRUE;
+                const_assign_node = TRUE;
             }
             break;
 
@@ -208,66 +202,81 @@ static void read_tree_node(TreeNode *t) {
         case ConstK: {
             char *temp = malloc(STRING_SIZE * sizeof(*temp));
             char *c = malloc(STRING_SIZE * sizeof(*c));
+
             snprintf(c, STRING_SIZE, "%d", t->attr.val);
-            snprintf(temp, STRING_SIZE, "$t%d", temp_num);
+            snprintf(temp, STRING_SIZE, "$t%d", available_temp_num);
             cs_push(temps, temp);
-            // push(stack_temp, temp, &stack_temp_last);
             insert_quad("LOAD", temp, c, "--");
-            temp_num++;
+
+            available_temp_num++;
         } break;
+
         case IdK: {
-            if (is_call || !is_fun) {
+            if (inside_call || !fun_node) {
                 char *temp = malloc(STRING_SIZE * sizeof(*temp));
-                snprintf(temp, STRING_SIZE, "$t%d", temp_num);
+
+                snprintf(temp, STRING_SIZE, "$t%d", available_temp_num);
                 cs_push(temps, temp);
-                temp_num++;
                 insert_quad("LOAD", temp, t->attr.name, "--");
+
+                available_temp_num++;
             }
         } break;
+
         case TypeK:
             /* todo */
             break;
+
         case ArrIdK:
-            is_arr = TRUE;
+            array_node = TRUE;
             break;
+
         case CallK:
-            is_curr_callk = TRUE;
-            is_call = TRUE;
+            callk_node = TRUE;
+            inside_call = TRUE;
             nested_call_level++;
             break;
+
         case CalcK:
             break;
         }
     } break;
+
     case DeclK: {
         switch (t->kind.decl) {
         case VarK: {
             char *name = t->attr.name;
+
             insert_quad("ALLOC", name, t->scope, "--");
         } break;
+
         case FunK: {
             char *name = t->attr.name;
             char *temp = type_to_string(t->child[0]);
-            is_fun = TRUE;
+
             insert_quad("FUN", temp, name, "--");
+
+            fun_node = TRUE;
         } break;
+
         case ArrVarK: {
             char *name = t->attr.arr.name;
             char *size = malloc(STRING_SIZE * sizeof(*size));
+
             snprintf(size, STRING_SIZE, "%d", t->attr.arr.size);
             insert_quad("ARRLOC", name, t->scope, size);
         } break;
+
         case ArrParamK:
             /* todo */
             break;
+
         case ParamK: {
-            char *temp;
-            char *name;
-            char *scope;
             if (t->child[0] != NULL) {
-                temp = type_to_string(t->child[0]);
-                name = t->attr.name;
-                scope = t->scope;
+                char *temp = type_to_string(t->child[0]);
+                char *name = t->attr.name;
+                char *scope = t->scope;
+
                 insert_quad("ARG", temp, name, scope);
             }
         } break;
@@ -283,45 +292,47 @@ static void read_tree_node(TreeNode *t) {
                 t->child[i]->kind.exp == TypeK) {
                 continue; // É do tipo `Type`, não há necessidade de continuar
             }
-            if (is_asn && is_const_asn && i == 1) {
+            if (assign_node && const_assign_node && i == 1) {
                 continue; // É do tipo `Id`, não há necessidade de continuar
             }
 
-            if (is_iff && i == 1) { // Antes de entrar no `if`
+            if (if_node && i == 1) { // Antes de entrar no `if`
                 char *temp = cs_pop(temps);
                 char *label = malloc(STRING_SIZE * sizeof(*label));
 
-                snprintf(label, STRING_SIZE, ".LB%d", lab_num);
+                snprintf(label, STRING_SIZE, ".LB%d", available_lab_num);
                 insert_quad("IFF", temp, label, "--");
 
-                lab_num++;
                 cs_push(ifs, label);
+
+                available_lab_num++;
             }
 
-            if (is_while && i == 1) { // Antes de entrar no `while`
+            if (while_node && i == 1) { // Antes de entrar no `while`
                 char *temp = cs_pop(temps);
                 char *label = malloc(STRING_SIZE * sizeof(*label));
 
-                snprintf(label, STRING_SIZE, ".LB%d", lab_num);
+                snprintf(label, STRING_SIZE, ".LB%d", available_lab_num);
                 insert_quad("IFF", temp, label, "--");
 
-                lab_num++;
                 cs_push(whiles, label);
+
+                available_lab_num++;
             }
 
             // Chamada dos filhos do nó
-            if (is_curr_callk) { // CallK que chama
-                is_inside_param = TRUE;
+            if (callk_node) { // CallK que chama
+                inside_param = TRUE;
                 read_tree_node(t->child[i]);
-            } else if (is_inside_param) { // Filhos de CallK chamam
-                is_inside_param = FALSE;
+            } else if (inside_param) { // Filhos de CallK chamam
+                inside_param = FALSE;
                 read_tree_node(t->child[i]);
-                is_inside_param = TRUE;
+                inside_param = TRUE;
             } else { // Outros nós chamam
                 read_tree_node(t->child[i]);
             }
 
-            if (is_iff && i == 1) { // Saindo do `if`, entrando no `else`
+            if (if_node && i == 1) { // Saindo do `if`, entrando no `else`
                 // Como há uma comparação se é `NULL` no começo do `for`
                 // então não tem como realizar estes passos
                 // durante a entrada no `else`
@@ -329,25 +340,24 @@ static void read_tree_node(TreeNode *t) {
                     char *l1 = cs_pop(ifs);
                     char *l2 = malloc(STRING_SIZE * sizeof(*l2));
 
-                    snprintf(l2, STRING_SIZE, ".LB%d", lab_num);
+                    snprintf(l2, STRING_SIZE, ".LB%d", available_lab_num);
                     insert_quad("GOTO", l2, "--", "--");
                     insert_quad("LAB", l1, "--", "--");
 
-                    lab_num++;
                     cs_push(ifs, l2);
+
+                    available_lab_num++;
                 } else { // Não tem else, apenas fazer pop()
-                    char *label = cs_pop(ifs);
-                    insert_quad("LAB", label, "--", "--");
+                    insert_quad("LAB", cs_pop(ifs), "--", "--");
                 }
-            } else if (is_iff && i == 2) { // Saindo do `else`
+            } else if (if_node && i == 2) { // Saindo do `else`
                 // Como acontece uma comparação com `NULL` no começo do `for`
                 // esse caso só acontece se existe um `else`
                 // então não é necessário verificar se é NULL
-                char *label = cs_pop(ifs);
-                insert_quad("LAB", label, "--", "--");
+                insert_quad("LAB", cs_pop(ifs), "--", "--");
             }
 
-            if (is_while && i == 1) { // Saindo do `while`
+            if (while_node && i == 1) { // Saindo do `while`
                 char *l2 = cs_pop(whiles);
                 char *l1 = cs_pop(whiles);
 
@@ -355,55 +365,57 @@ static void read_tree_node(TreeNode *t) {
                 insert_quad("LAB", l2, "--", "--");
             }
 
-            if (is_arr) {
+            if (array_node) {
                 char *name = malloc(STRING_SIZE * sizeof(*name));
                 char *temp = malloc(STRING_SIZE * sizeof(*temp));
                 char *offset = malloc(STRING_SIZE * sizeof(*offset));
-                snprintf(temp, STRING_SIZE, "$t%d", temp_num);
+
+                snprintf(temp, STRING_SIZE, "$t%d", available_temp_num);
                 strcpy(offset, temps->items[temps->last]);
                 strcpy(name, t->attr.name);
                 insert_quad("ARRLOAD", temp, name, offset);
-                temp_num++;
                 cs_push(temps, temp);
+
+                available_temp_num++;
             }
         }
     }
 
-    if (is_fun) {
+    if (fun_node) {
         insert_quad("END", t->attr.name, "--", "--");
     }
 
-    if (is_asn) {
-        if (is_const_asn) {
+    if (assign_node) {
+        if (const_assign_node) {
             char *temp = cs_pop(temps);
             char *val = malloc(STRING_SIZE * sizeof(*val));
+            char *name = t->child[0]->attr.name;
+
             snprintf(val, STRING_SIZE, "%d", t->child[1]->attr.val);
-            if (is_arr_asn) {
-                char *offset = cs_pop(temps);
-                insert_quad("ASSIGN", temp, val, "--");
-                insert_quad("ARRSTR", t->child[0]->attr.name, temp, offset);
+            insert_quad("ASSIGN", temp, val, "--");
+
+            if (array_assign_node) {
+                insert_quad("ARRSTR", name, temp, cs_pop(temps));
             } else {
-                insert_quad("ASSIGN", temp, val, "--");
-                insert_quad("STORE", t->child[0]->attr.name, temp, "--");
+                insert_quad("STORE", name, temp, "--");
             }
         } else {
             char *t1 = cs_pop(temps);
             char *t2 = cs_pop(temps);
-            if (is_arr_asn) {
-                char *offset = cs_pop(temps);
-                insert_quad("ASSIGN", t2, t1, "--");
-                insert_quad("ARRSTR", t->child[0]->attr.name, t2, offset);
+            char *name = t->child[0]->attr.name;
+
+            insert_quad("ASSIGN", t2, t1, "--");
+
+            if (array_assign_node) {
+                insert_quad("ARRSTR", name, t2, cs_pop(temps));
             } else {
-                insert_quad("ASSIGN", t2, t1, "--");
-                insert_quad("STORE", t->child[0]->attr.name, t2, "--");
+                insert_quad("STORE", name, t2, "--");
             }
         }
     }
 
-    if (is_inside_param && !(t->node_kind == ExpK && t->kind.exp == CalcK) &&
-        t->sibling != NULL) {
-        char *temp = cs_pop(temps);
-        insert_quad("PARAM", temp, "--", "--");
+    if (inside_param && !callk_node && t->sibling != NULL) {
+        insert_quad("PARAM", cs_pop(temps), "--", "--");
     }
 
     // Verifica o irmão
@@ -463,74 +475,87 @@ static void read_tree_node(TreeNode *t) {
                 break;
             }
         } break;
+
         case CalcK: {
             char *t1 = cs_pop(temps);
             char *t2 = cs_pop(temps);
             char *t3 = malloc(STRING_SIZE * sizeof(*t3));
             char *cmd = cs_pop(calcs);
-            snprintf(t3, STRING_SIZE, "$t%d", temp_num);
-            temp_num++;
+
+            snprintf(t3, STRING_SIZE, "$t%d", available_temp_num);
             cs_push(temps, t3);
             insert_quad(cmd, t3, t2, t1);
+
+            available_temp_num++;
         } break;
+
         case ArrIdK:
-            is_arr = TRUE;
+            array_node = TRUE;
             break;
+
         case CallK: {
-            if (is_inside_param &&
+            if (inside_param &&
                 !(t->node_kind == ExpK && t->kind.exp == CalcK)) {
                 if (t->node_kind == ExpK && t->kind.exp == CallK) {
                     if (nested_call_level <= 0) {
-                        is_inside_param = FALSE;
+                        inside_param = FALSE;
                     }
                 }
-                char *temp = cs_pop(temps);
-                insert_quad("PARAM", temp, "--", "--");
+
+                insert_quad("PARAM", cs_pop(temps), "--", "--");
             }
-            is_curr_callk = FALSE;
+
+            callk_node = FALSE;
             nested_call_level--;
+
             if (nested_call_level <= 0) { // Ultima call de todas
                 nested_call_level = 0;
-                is_inside_param = FALSE;
-                is_call = FALSE;
+                inside_param = FALSE;
+                inside_call = FALSE;
             }
 
             // Calculando quantos parâmetros a função tem
             int param_num = 0;
             TreeNode *curr_node = t->child[0];
+
             while (curr_node != NULL) {
                 curr_node = curr_node->sibling;
                 param_num++;
             }
+
             char *temp = malloc(STRING_SIZE * sizeof(*temp));
             char *p_num = malloc(STRING_SIZE * sizeof(*p_num));
-            snprintf(temp, STRING_SIZE, "$t%d", temp_num);
+
+            snprintf(temp, STRING_SIZE, "$t%d", available_temp_num);
             cs_push(temps, temp);
             snprintf(p_num, STRING_SIZE, "%d", param_num);
             insert_quad("CALL", temp, t->attr.name, p_num);
 
-            temp_num++;
+            available_temp_num++;
         } break;
 
         case IdK:
+            /* code */
             break;
 
         default:
             break;
         }
     } break;
+
     case StmtK: {
         switch (t->kind.stmt) {
-        case ReturnK: {
-            char *temp = cs_pop(temps);
-            insert_quad("RET", temp, "--", "--");
-        } break;
+        case ReturnK:
+            insert_quad("RET", cs_pop(temps), "--", "--");
+            break;
+
         default:
             break;
         }
     } break;
 
     case DeclK: {
+        /* code */
         break;
     }
     }
