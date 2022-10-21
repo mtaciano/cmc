@@ -11,13 +11,7 @@ enum Comparison {
     NE,
 }
 
-#[allow(dead_code)]
-struct IfComp {
-    comp: Comparison,
-    temp: String,
-}
-
-#[derive(Debug, Eq, Hash, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct Variable {
     name: String,
     scope: String,
@@ -57,38 +51,44 @@ fn remove_reg(
     reg_map.remove_entry(&source);
 }
 
+/* Função `link_return` é responsável por ditar onde o programa
+ * tem que retornar quando uma função termina
+*/
 fn link_return(vec: &mut Vec<Asm>, start: usize) {
     for i in start..vec.len() {
-        if vec[i].cmd == "ret" {
-            let source = vec[i].arg1.clone();
-            let source = format!("$r{}", source[2..].parse::<i32>().unwrap());
-            let asm = Asm {
-                cmd: "MOVE".to_string(),
-                arg1: "$r_ret".to_string(),
-                arg2: source,
-                arg3: "--".to_string(),
-            };
-            let _ = std::mem::replace(&mut vec[i - 1], asm);
+        match vec[i].cmd.as_str() {
+            "ret" => {
+                let asm = Asm {
+                    cmd: "MOVE".to_string(),
+                    arg1: "$r_ret".to_string(),
+                    arg2: format!(
+                        "$r{}",
+                        vec[i].arg1[2..].parse::<i32>().unwrap()
+                    ),
+                    arg3: "--".to_string(),
+                };
+                let _ = std::mem::replace(&mut vec[i - 1], asm);
 
-            let jmp = Asm {
-                cmd: "J".to_string(),
-                arg1: "$r_call".to_string(),
-                arg2: "--".to_string(),
-                arg3: "--".to_string(),
-            };
-            let _ = std::mem::replace(&mut vec[i], jmp);
-        }
-
-        if vec[i].cmd == "end" {
-            break;
+                let jmp = Asm {
+                    cmd: "J".to_string(),
+                    arg1: "$r_call".to_string(),
+                    arg2: "--".to_string(),
+                    arg3: "--".to_string(),
+                };
+                let _ = std::mem::replace(&mut vec[i], jmp);
+            }
+            "end" => {
+                break;
+            }
+            _ => (),
         }
     }
 }
 
 /* Função `make_assembly` é responsável por criar a representação
  * assembly a partir de um vetor de quádruplas
- */
-pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
+*/
+pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     // SEGURANÇA: No momento temos acesso único a variável `g_trace_code`
     // justamente pelo código ser _single-thread_
     unsafe {
@@ -101,20 +101,19 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     let mut vec = Vec::new();
     let mut variables: HashMap<Variable, Memory> = HashMap::new();
     let mut iff = Vec::new();
-    let mut mem_free = 0;
+    let mut mem_available = 0;
 
     let debug = false;
-    let mut output_param = Vec::new();
+    let mut output_param: Vec<String> = Vec::new();
 
     let mut fun_args: HashMap<&str, Vec<(Variable, Memory)>> = HashMap::new();
 
-    let noop = Asm {
+    vec.push(Asm {
         cmd: "NOP".to_string(),
         arg1: "--".to_string(),
         arg2: "--".to_string(),
         arg3: "--".to_string(),
-    };
-    vec.push(noop); // J main
+    }); // J main
 
     let mut quad_func_limits = Vec::new();
     let mut quad_finish;
@@ -148,42 +147,44 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 scope = current;
             }
         }
+
         match q.cmd.as_str() {
             "ALLOC" => {
-                let var_size = 1;
+                variables.insert(
+                    Variable {
+                        name: q.arg1.to_string(),
+                        scope: q.arg2.to_string(),
+                    },
+                    Memory {
+                        mem_location: mem_available,
+                        size: 1,
+                    },
+                );
 
-                let k = Variable {
-                    name: q.arg1.to_owned(),
-                    scope: q.arg2.to_owned(),
-                };
-                let v = Memory {
-                    mem_location: mem_free,
-                    size: var_size,
-                };
-                mem_free += var_size;
-
-                variables.insert(k, v);
+                mem_available += 1;
             }
             "ARG" => {
-                let var_size = 1;
-
                 let k = Variable {
                     name: q.arg2.to_owned().to_lowercase(),
                     scope: scope.to_owned(),
                 };
                 let v = Memory {
-                    mem_location: mem_free,
-                    size: var_size,
+                    mem_location: mem_available,
+                    size: 1,
                 };
-                mem_free += var_size;
 
-                let clone_k = k.clone();
-                fun_args
-                    .entry(scope)
-                    .and_modify(|value| value.push((clone_k.clone(), v)))
-                    .or_insert_with(|| vec![(clone_k, v)]);
+                match fun_args.entry(scope) {
+                    Entry::Occupied(entry) => {
+                        entry.into_mut().push((k.clone(), v));
+                    }
+                    Entry::Vacant(entry) => {
+                        entry.insert(vec![(k.clone(), v)]);
+                    }
+                };
 
                 variables.insert(k, v);
+
+                mem_available += 1;
             }
             "ARRLOC" => {
                 let var_size = q.arg3.parse().unwrap();
@@ -193,12 +194,13 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     scope: q.arg2.to_owned(),
                 };
                 let v = Memory {
-                    mem_location: mem_free,
+                    mem_location: mem_available,
                     size: var_size,
                 };
-                mem_free += var_size;
 
                 variables.insert(k, v);
+
+                mem_available += var_size;
             }
             "ARRLOAD" => {
                 let command = "LOADR".to_string();
@@ -257,20 +259,12 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 vec.push(asm);
             }
             "ASSIGN" => {
-                let command;
-                let value;
-                match q.arg2.parse::<i32>() {
-                    Ok(val) => {
-                        command = "LOADI".to_string();
-                        value = val.to_string();
-                    }
-                    Err(_) => {
-                        command = "MOVE".to_string();
-                        value = format!(
-                            "$r{}",
-                            q.arg2[2..].parse::<i32>().unwrap()
-                        );
-                    }
+                let (command, value) = match q.arg2.parse::<i32>() {
+                    Ok(val) => ("LOADI".to_string(), val.to_string()),
+                    Err(_) => (
+                        "MOVE".to_string(),
+                        format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
+                    ),
                 };
                 let asm = Asm {
                     cmd: command,
@@ -282,23 +276,18 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 vec.push(asm);
             }
             "LOAD" => {
-                let command;
-                let value;
-                match q.arg2.parse::<i32>() {
-                    Ok(val) => {
-                        command = "LOADI".to_string();
-                        value = val;
-                    }
-                    Err(_) => {
-                        command = "LOAD".to_string();
-                        value = variables
+                let (command, value) = match q.arg2.parse::<i32>() {
+                    Ok(val) => ("LOADI".to_string(), val),
+                    Err(_) => (
+                        "LOAD".to_string(),
+                        variables
                             .get(&Variable {
                                 name: q.arg2.to_owned(),
                                 scope: scope.to_owned(),
                             })
                             .unwrap()
-                            .mem_location;
-                    }
+                            .mem_location,
+                    ),
                 };
                 let asm = Asm {
                     cmd: command,
@@ -350,12 +339,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg3: "--".to_string(),
                 };
 
-                let comparison = IfComp {
-                    comp: Comparison::LT,
-                    temp: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
-                };
-
-                iff.push(comparison);
+                iff.push(Comparison::LT);
                 vec.push(asm);
                 vec.push(noop.clone());
                 vec.push(noop);
@@ -374,12 +358,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg3: "--".to_string(),
                 };
 
-                let comparison = IfComp {
-                    comp: Comparison::GT,
-                    temp: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
-                };
-
-                iff.push(comparison);
+                iff.push(Comparison::GT);
                 vec.push(asm);
                 vec.push(noop.clone());
                 vec.push(noop);
@@ -398,12 +377,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg3: "--".to_string(),
                 };
 
-                let comparison = IfComp {
-                    comp: Comparison::LE,
-                    temp: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
-                };
-
-                iff.push(comparison);
+                iff.push(Comparison::LE);
                 vec.push(asm);
                 vec.push(noop);
             }
@@ -421,12 +395,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg3: "--".to_string(),
                 };
 
-                let comparison = IfComp {
-                    comp: Comparison::GE,
-                    temp: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
-                };
-
-                iff.push(comparison);
+                iff.push(Comparison::GE);
                 vec.push(asm);
                 vec.push(noop)
             }
@@ -444,12 +413,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg3: "--".to_string(),
                 };
 
-                let comparison = IfComp {
-                    comp: Comparison::NE,
-                    temp: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
-                };
-
-                iff.push(comparison);
+                iff.push(Comparison::NE);
                 vec.push(asm);
                 vec.push(noop);
             }
@@ -467,12 +431,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg3: "--".to_string(),
                 };
 
-                let comparison = IfComp {
-                    comp: Comparison::EQ,
-                    temp: format!("$r{}", q.arg1[2..].parse::<i32>().unwrap()),
-                };
-
-                iff.push(comparison);
+                iff.push(Comparison::EQ);
                 vec.push(asm);
                 vec.push(noop.clone());
                 vec.push(noop);
@@ -495,9 +454,14 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg2: "--".to_string(),
                     arg3: "--".to_string(),
                 };
+
                 if q.arg2 == "output" {
-                    let mut param: String = output_param.pop().unwrap();
-                    param = format!("$r{}", param[2..].parse::<i32>().unwrap());
+                    let param = format!(
+                        "$r{}",
+                        output_param.pop().unwrap()[2..]
+                            .parse::<i32>()
+                            .unwrap()
+                    );
                     asm = Asm {
                         cmd: "OUT".to_string(),
                         arg1: "--".to_string(),
@@ -508,6 +472,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     if debug {
                         println!("{:?}", q);
                     }
+
                     let dest =
                         format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
                     asm = Asm {
@@ -523,45 +488,41 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         arg2: q.arg2.to_owned().to_lowercase(),
                         arg3: q.arg3.to_owned().to_lowercase(),
                     };
-                    vec.push(noop.clone());
 
-                    // for _ in 0..=q.arg3.parse::<i32>().unwrap() {
-                    //     vec.push(noop.clone());
-                    // }
+                    vec.push(noop.clone());
                 }
+
                 vec.push(asm);
+
                 if q.arg2 != "output" && q.arg2 != "input" {
                     vec.push(noop);
                 }
             }
             "RET" => {
-                let asm = Asm {
-                    cmd: q.cmd.to_owned().to_lowercase(),
-                    arg1: q.arg1.to_owned().to_lowercase(),
-                    arg2: q.arg2.to_owned().to_lowercase(),
-                    arg3: q.arg3.to_owned().to_lowercase(),
-                };
-                let noop = Asm {
+                vec.push(Asm {
                     cmd: "NOP".to_string(),
                     arg1: "--".to_string(),
                     arg2: "--".to_string(),
                     arg3: "--".to_string(),
-                };
+                });
 
-                vec.push(noop.clone());
-                vec.push(asm);
+                vec.push(Asm {
+                    cmd: q.cmd.to_owned().to_lowercase(),
+                    arg1: q.arg1.to_owned().to_lowercase(),
+                    arg2: q.arg2.to_owned().to_lowercase(),
+                    arg3: q.arg3.to_owned().to_lowercase(),
+                });
             }
             "PARAM" => {
                 if quad[i + 1].arg2 == "output" {
                     output_param.push(q.arg1.clone());
                 } else {
-                    let asm = Asm {
+                    vec.push(Asm {
                         cmd: q.cmd.to_owned().to_lowercase(),
                         arg1: q.arg1.to_owned().to_lowercase(),
                         arg2: q.arg2.to_owned().to_lowercase(),
                         arg3: q.arg3.to_owned().to_lowercase(),
-                    };
-                    vec.push(asm);
+                    });
                 }
             }
             _ => {
@@ -674,9 +635,11 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 arg2: (i + 1).to_string(),
                 arg3: "--".to_string(),
             };
+
             let _ = std::mem::replace(&mut vec[i - 1], load);
             let _ = std::mem::replace(&mut vec[i], jmp);
             let _ = std::mem::replace(&mut vec[i + 1], mv);
+
             link_return(&mut vec, start);
         }
     }
@@ -688,6 +651,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
             arg2: "--".to_string(),
             arg3: "--".to_string(),
         };
+
         if function.0 == "main" {
             let jmp = Asm {
                 cmd: "JI".to_string(),
@@ -695,6 +659,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 arg2: "--".to_string(),
                 arg3: "--".to_string(),
             };
+
             let _ = std::mem::replace(&mut vec[0], jmp); // J main
             let _ = std::mem::replace(&mut vec[function.1], noop.clone());
             let _ = std::mem::replace(&mut vec[function.2], noop);
@@ -705,6 +670,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 arg2: "--".to_string(),
                 arg3: "--".to_string(),
             };
+
             if function.3 == "void" {
                 let _ = std::mem::replace(&mut vec[function.1], noop);
                 let _ = std::mem::replace(&mut vec[function.2], ret);
@@ -718,13 +684,16 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     let mut labels: HashMap<String, usize> = HashMap::new();
     for (i, v) in vec.iter_mut().enumerate() {
         if v.cmd.as_str() == "lab" {
-            let noop = Asm {
-                cmd: "NOP".to_string(),
-                arg1: "--".to_string(),
-                arg2: "--".to_string(),
-                arg3: "--".to_string(),
-            };
-            let label = std::mem::replace(v, noop);
+            let label = std::mem::replace(
+                v,
+                Asm {
+                    cmd: "NOP".to_string(),
+                    arg1: "--".to_string(),
+                    arg2: "--".to_string(),
+                    arg3: "--".to_string(),
+                },
+            );
+
             labels.insert(label.arg1, i);
         }
     }
@@ -742,6 +711,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg3: "--".to_string(),
                 };
                 let label = std::mem::replace(v, jmp);
+
                 labels.insert(label.arg1, i);
             }
             "iff" => {
@@ -752,11 +722,9 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg2: location.to_string(),
                     arg3: "--".to_string(),
                 };
-                let command;
-                let comparison = iff.pop().unwrap();
-                match comparison.comp {
+
+                let command = match iff.pop().unwrap() {
                     Comparison::LT => {
-                        command = "JN".to_string();
                         let jmp = Asm {
                             cmd: "JZ".to_string(),
                             arg1: "$r_lab".to_string(),
@@ -766,15 +734,18 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                             ),
                             arg3: "--".to_string(),
                         };
+
                         loads.push((jmp, i - 1));
                         loads.push((load, i - 2));
+
+                        "JN".to_string()
                     }
                     Comparison::LE => {
-                        command = "JN".to_string();
                         loads.push((load, i - 1));
+
+                        "JN".to_string()
                     }
                     Comparison::GT => {
-                        command = "JN".to_string();
                         let jmp = Asm {
                             cmd: "JZ".to_string(),
                             arg1: "$r_lab".to_string(),
@@ -784,15 +755,18 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                             ),
                             arg3: "--".to_string(),
                         };
+
                         loads.push((jmp, i - 1));
                         loads.push((load, i - 2));
+
+                        "JN".to_string()
                     }
                     Comparison::GE => {
-                        command = "JN".to_string();
                         loads.push((load, i - 1));
+
+                        "JN".to_string()
                     }
                     Comparison::EQ => {
-                        command = "JN".to_string();
                         let jmp = Asm {
                             cmd: "JP".to_string(),
                             arg1: "$r_lab".to_string(),
@@ -802,22 +776,31 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                             ),
                             arg3: "--".to_string(),
                         };
+
                         loads.push((jmp, i - 1));
                         loads.push((load, i - 2));
+
+                        "JN".to_string()
                     }
                     Comparison::NE => {
-                        command = "JZ".to_string();
                         loads.push((load, i - 1));
-                    }
-                }
 
-                let asm = Asm {
-                    cmd: command,
-                    arg1: "$r_lab".to_string(),
-                    arg2: format!("$r{}", v.arg1[2..].parse::<i32>().unwrap()),
-                    arg3: "--".to_string(),
+                        "JZ".to_string()
+                    }
                 };
-                let _ = std::mem::replace(v, asm);
+
+                let _ = std::mem::replace(
+                    v,
+                    Asm {
+                        cmd: command,
+                        arg1: "$r_lab".to_string(),
+                        arg2: format!(
+                            "$r{}",
+                            v.arg1[2..].parse::<i32>().unwrap()
+                        ),
+                        arg3: "--".to_string(),
+                    },
+                );
             }
             _ => (),
         }
@@ -829,13 +812,16 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
 
     let mut register_map: HashMap<usize, usize> = HashMap::new();
     let mut available_reg = Vec::with_capacity(32);
+
     for i in 0..32 {
         let mut reserved = false;
         let mut available = true;
+
         if i >= 28 {
             reserved = true;
             available = false;
         }
+
         available_reg.push(Register {
             reserved,
             available,
@@ -1013,22 +999,18 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 "{:<3} | {:>6}, {:>6}, {:>6}, {:>6} |\n",
                 "--", "CMD", "ARG1", "ARG2", "ARG3"
             );
+
             if debug {
                 println!("{:?}", &function_limits);
             }
+
             for (i, asm) in vec.iter().enumerate() {
-                if asm.cmd.chars().any(|c| c.is_lowercase()) {
-                    println!(
-                        "{:<3} ( {:>6}, {:>6}, {:>6}, {:>6} )",
-                        i, asm.cmd, asm.arg1, asm.arg2, asm.arg3
-                    );
-                } else {
-                    println!(
-                        "{:<3} < {:>6}, {:>6}, {:>6}, {:>6} >",
-                        i, asm.cmd, asm.arg1, asm.arg2, asm.arg3
-                    );
-                }
+                println!(
+                    "{:<3} < {:>6}, {:>6}, {:>6}, {:>6} >",
+                    i, asm.cmd, asm.arg1, asm.arg2, asm.arg3
+                );
             }
+
             if debug {
                 for (var, loc) in variables.iter() {
                     println!();
@@ -1037,6 +1019,7 @@ pub(super) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     var.name, var.scope, loc.mem_location, loc.size);
                 }
             }
+
             println!("\nGeração do código assembly concluída.");
         }
     };

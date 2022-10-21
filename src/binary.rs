@@ -2,27 +2,27 @@ use crate::{ffi::g_trace_code, *};
 
 /* Todos os opcodes do processador e funções auxiliares */
 mod opcodes {
-    pub(super) const NOP: u32 = 0b00000 << 27;
-    pub(super) const HLT: u32 = 0b00001 << 27;
-    pub(super) const IN: u32 = 0b00010 << 27;
-    pub(super) const OUT: u32 = 0b00011 << 27;
-    pub(super) const MULT: u32 = 0b01000 << 27;
-    pub(super) const DIV: u32 = 0b01001 << 27;
-    pub(super) const ADD: u32 = 0b01011 << 27;
-    pub(super) const ADDI: u32 = 0b01100 << 27;
-    pub(super) const SUB: u32 = 0b01101 << 27;
-    pub(super) const SUBI: u32 = 0b01110 << 27;
-    pub(super) const STORE: u32 = 0b01111 << 27;
-    pub(super) const MOVE: u32 = 0b10000 << 27;
-    pub(super) const LOAD: u32 = 0b10001 << 27;
-    pub(super) const LOADI: u32 = 0b10010 << 27;
-    pub(super) const J: u32 = 0b10011 << 27;
-    pub(super) const JI: u32 = 0b10100 << 27;
-    pub(super) const JZ: u32 = 0b10101 << 27;
-    pub(super) const JN: u32 = 0b10111 << 27;
-    pub(super) const JP: u32 = 0b11001 << 27;
-    pub(super) const STORER: u32 = 0b11010 << 27; // RS RD
-    pub(super) const LOADR: u32 = 0b11011 << 27; // RD RS
+    pub(crate) const NOP: u32 = 0b00000 << 27;
+    pub(crate) const HLT: u32 = 0b00001 << 27;
+    pub(crate) const IN: u32 = 0b00010 << 27;
+    pub(crate) const OUT: u32 = 0b00011 << 27;
+    pub(crate) const MULT: u32 = 0b01000 << 27;
+    pub(crate) const DIV: u32 = 0b01001 << 27;
+    pub(crate) const ADD: u32 = 0b01011 << 27;
+    pub(crate) const ADDI: u32 = 0b01100 << 27;
+    pub(crate) const SUB: u32 = 0b01101 << 27;
+    pub(crate) const SUBI: u32 = 0b01110 << 27;
+    pub(crate) const STORE: u32 = 0b01111 << 27;
+    pub(crate) const MOVE: u32 = 0b10000 << 27;
+    pub(crate) const LOAD: u32 = 0b10001 << 27;
+    pub(crate) const LOADI: u32 = 0b10010 << 27;
+    pub(crate) const J: u32 = 0b10011 << 27;
+    pub(crate) const JI: u32 = 0b10100 << 27;
+    pub(crate) const JZ: u32 = 0b10101 << 27;
+    pub(crate) const JN: u32 = 0b10111 << 27;
+    pub(crate) const JP: u32 = 0b11001 << 27;
+    pub(crate) const STORER: u32 = 0b11010 << 27; // RS RD
+    pub(crate) const LOADR: u32 = 0b11011 << 27; // RD RS
 
     // TODO: implementar futuramente
     // const NOT: u32 = 0b01010 << 27;
@@ -34,7 +34,7 @@ mod opcodes {
     // const ORI: u32 = 0b00111 << 27;
 
     /* Função `from_str` transforma uma string em um opcode */
-    pub(super) fn from_str(str: &str) -> u32 {
+    pub(crate) fn from_str(str: &str) -> u32 {
         match str {
             "NOP" => NOP,
             "HLT" => HLT,
@@ -113,7 +113,7 @@ fn parse_imediate(im: &str, size: i32) -> u32 {
 /* Função `make_binary` é responsável por criar a representação
  * binária a partir de um vetor de instruções assembly
  */
-pub(super) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
+pub(crate) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
     // SEGURANÇA: No momento temos acesso único a variável `g_trace_code`
     // justamente pelo código ser _single-thread_
     unsafe {
