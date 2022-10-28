@@ -5,6 +5,7 @@
 #ifndef _GLOBALS_H_
 #define _GLOBALS_H_
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,14 +25,6 @@
 #define ENDFILE 0
 
 #endif /* YYPARSER */
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-#ifndef TRUE
-#define TRUE 1
-#endif
 
 /* A constante `MAXRESERVED` diz o número de palavras reservadas */
 #define MAXRESERVED 6

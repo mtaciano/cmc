@@ -3,6 +3,7 @@
 #include "intermediate.h"
 #include "common/globals.h"
 #include "common/util.h"
+#include <stdbool.h>
 
 /* Tamanho máximo de uma string */
 #define STRING_SIZE 64
@@ -35,7 +36,7 @@ static CharStack ifs;
 static int nested_call_level = 0;
 
 /* Se o nó atual está dentro de um bloco de parâmetros */
-static int inside_param = FALSE;
+static int inside_param = false;
 
 /* Função `print_quad` printa a quadrupla inteira */
 static void print_quad(Quad q) {
@@ -102,22 +103,22 @@ static void read_tree_node(TreeNode *t) {
     // TODO: transformando read_tree_node em uma função que executa 3 outras
     // TODO: sendo elas uma pré, uma mid e uma pós nó
     // TODO: documentar flags
-    int fun_node = FALSE;
-    int assign_node = FALSE;
-    int const_assign_node = FALSE;
-    int inside_call = nested_call_level <= 0 ? FALSE : TRUE;
-    int if_node = FALSE;
-    int while_node = FALSE;
-    int array_node = FALSE;
-    int array_assign_node = FALSE;
-    int callk_node = FALSE;
+    int fun_node = false;
+    int assign_node = false;
+    int const_assign_node = false;
+    int inside_call = nested_call_level <= 0 ? false : true;
+    int if_node = false;
+    int while_node = false;
+    int array_node = false;
+    int array_assign_node = false;
+    int callk_node = false;
 
     // Verifica o nó atual
     switch (t->node_kind) {
     case StmtK: {
         switch (t->kind.stmt) {
         case IfK:
-            if_node = TRUE;
+            if_node = true;
             break;
 
         case WhileK: {
@@ -127,20 +128,20 @@ static void read_tree_node(TreeNode *t) {
             insert_quad("LAB", label, "--", "--");
             cs_push(whiles, label);
 
-            while_node = TRUE;
+            while_node = true;
             available_lab_num++;
         } break;
 
         case AssignK:
-            assign_node = TRUE;
+            assign_node = true;
             if (t->child[0]->node_kind == ExpK &&
                 t->child[0]->kind.exp == ArrIdK) {
-                array_assign_node = TRUE;
+                array_assign_node = true;
             }
 
             if (t->child[1]->node_kind == ExpK &&
                 t->child[1]->kind.exp == ConstK) {
-                const_assign_node = TRUE;
+                const_assign_node = true;
             }
             break;
 
@@ -228,12 +229,12 @@ static void read_tree_node(TreeNode *t) {
             break;
 
         case ArrIdK:
-            array_node = TRUE;
+            array_node = true;
             break;
 
         case CallK:
-            callk_node = TRUE;
-            inside_call = TRUE;
+            callk_node = true;
+            inside_call = true;
             nested_call_level++;
             break;
 
@@ -256,7 +257,7 @@ static void read_tree_node(TreeNode *t) {
 
             insert_quad("FUN", temp, name, "--");
 
-            fun_node = TRUE;
+            fun_node = true;
         } break;
 
         case ArrVarK: {
@@ -322,12 +323,12 @@ static void read_tree_node(TreeNode *t) {
 
             // Chamada dos filhos do nó
             if (callk_node) { // CallK que chama
-                inside_param = TRUE;
+                inside_param = true;
                 read_tree_node(t->child[i]);
             } else if (inside_param) { // Filhos de CallK chamam
-                inside_param = FALSE;
+                inside_param = false;
                 read_tree_node(t->child[i]);
-                inside_param = TRUE;
+                inside_param = true;
             } else { // Outros nós chamam
                 read_tree_node(t->child[i]);
             }
@@ -490,7 +491,7 @@ static void read_tree_node(TreeNode *t) {
         } break;
 
         case ArrIdK:
-            array_node = TRUE;
+            array_node = true;
             break;
 
         case CallK: {
@@ -498,20 +499,20 @@ static void read_tree_node(TreeNode *t) {
                 !(t->node_kind == ExpK && t->kind.exp == CalcK)) {
                 if (t->node_kind == ExpK && t->kind.exp == CallK) {
                     if (nested_call_level <= 0) {
-                        inside_param = FALSE;
+                        inside_param = false;
                     }
                 }
 
                 insert_quad("PARAM", cs_pop(temps), "--", "--");
             }
 
-            callk_node = FALSE;
+            callk_node = false;
             nested_call_level--;
 
             if (nested_call_level <= 0) { // Ultima call de todas
                 nested_call_level = 0;
-                inside_param = FALSE;
-                inside_call = FALSE;
+                inside_param = false;
+                inside_call = false;
             }
 
             // Calculando quantos parâmetros a função tem

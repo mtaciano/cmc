@@ -92,7 +92,7 @@ void print_token(TokenType token, const char *token_string) {
         break;
     case ERROR:
         fprintf(listing, "ERRO LÉXICO: %s LINHA: %d\n", token_string, lineno);
-        g_error = TRUE;
+        g_error = true;
         break;
     default: // Não deve acontecer normalmente
         fprintf(listing, "Token desconhecido: %d\n", token);

@@ -1,19 +1,19 @@
 /* Ponto de entrada para o compilador
  * Responsável por chamar todos os componentes dele
  */
-
 #include "common/globals.h"
 #include "common/util.h"
 #include "rust.h"
+#include <stdbool.h>
 
-/* Mude NO_PARSE para TRUE para ter um compilador _scanner-only_ */
-#define NO_PARSE FALSE
+/* Mude NO_PARSE para true para ter um compilador _scanner-only_ */
+#define NO_PARSE false
 
-/* Mude NO_ANALYZE para TRUE para ter um compilador _parser-only_ */
-#define NO_ANALYZE FALSE
+/* Mude NO_ANALYZE para true para ter um compilador _parser-only_ */
+#define NO_ANALYZE false
 
-/* Mude NO_CODE para TRUE para ter um compilador que não gera _output_ */
-#define NO_CODE FALSE
+/* Mude NO_CODE para true para ter um compilador que não gera _output_ */
+#define NO_CODE false
 
 #if NO_PARSE
 #include "scan.h"
@@ -33,13 +33,13 @@ FILE *source;
 FILE *listing;
 
 /* Flags para debug */
-int g_trace_scan = TRUE;
-int g_trace_parse = TRUE;
-int g_trace_analyze = TRUE;
-int g_trace_code = TRUE;
+int g_trace_scan = true;
+int g_trace_parse = true;
+int g_trace_analyze = true;
+int g_trace_code = true;
 
 /* Flag de erro de compilação */
-int g_error = FALSE;
+int g_error = false;
 
 /* Função principal */
 int main(int argc, char *argv[]) {

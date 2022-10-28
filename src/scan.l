@@ -68,11 +68,11 @@ whitespace   [ \t]+
 
 /* Função `get_token` retorna o token atual */
 TokenType get_token(void) {
-    static int first_time = TRUE;
+    static int first_time = true;
     TokenType current_token;
 
     if (first_time) {
-        first_time = FALSE;
+        first_time = false;
         lineno++;
         yyin = source;
         yyout = listing;

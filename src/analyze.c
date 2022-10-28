@@ -4,6 +4,7 @@
 #include "common/globals.h"
 #include "common/util.h"
 #include "symtab.h"
+#include <stdbool.h>
 
 /* Contador da posição na memória */
 static int memloc = 0;
@@ -11,7 +12,7 @@ static int memloc = 0;
 /* Se a funcão precisa de um `return`,
  * usado para verificar se uma função que precisa de um return não tem um
  */
-static int fn_has_return = FALSE;
+static int fn_has_return = false;
 
 /* Escopos das variáveis e funções */
 static CharStack scopes;
@@ -22,7 +23,7 @@ static CharStack scopes;
 static void symbol_error(TreeNode *t, char *message) {
     fprintf(listing, "ERRO SEMÂNTICO: %s LINHA: %d\n", message, t->lineno);
 
-    g_error = TRUE;
+    g_error = true;
     exit(-1);
 }
 
@@ -37,7 +38,7 @@ static void verify_main() {
         fprintf(listing,
                 "ERRO SEMÂNTICO: declaração depois do main LINHA: %d\n", max);
 
-        g_error = TRUE;
+        g_error = true;
         exit(-1);
     }
 }
@@ -46,7 +47,7 @@ static void verify_main() {
 static void find_return(TreeNode *t) {
     if (t != NULL) {
         if (t->node_kind == StmtK && t->kind.stmt == ReturnK) {
-            fn_has_return = TRUE;
+            fn_has_return = true;
         }
     }
 }
@@ -371,7 +372,7 @@ static void check_node(TreeNode *t) {
                         symbol_error(t, "Valor de retorno esperado");
                     }
                 }
-                fn_has_return = FALSE;
+                fn_has_return = false;
             }
             break;
 

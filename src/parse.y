@@ -415,7 +415,7 @@ int yyerror(char *message) {
     }
 
     fprintf(listing,"ERRO SINTÁTICO: %s LINHA: %d\n", token_string, lineno);
-    g_error = TRUE;
+    g_error = true;
 
     return -1;
 }
