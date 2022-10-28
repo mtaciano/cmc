@@ -42,9 +42,9 @@ release: RS-FLAGS += --release
 release: RS-TARGET = $(TARGET)/release
 release: $(BIN)
 release:
-	@printf "\n$(BOLD)$(GREEN)Removendo símbolos:$(NC)$(NORMAL) $(BIN)\n"
+	@printf "\n==> $(BOLD)$(GREEN)Removendo símbolos:$(NC)$(NORMAL)$(BIN)\n"
 	strip -p --strip-all $(TARGET)/$(BIN)
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
 # Símbolos de debug
@@ -58,78 +58,78 @@ debug: $(BIN)
 
 # Executável
 $(BIN): $(OBJS) $(LIBS)
-	@printf "$(BOLD)$(GREEN)Compilando:$(NC)$(NORMAL) $(BIN)\n"
+	@printf "==> $(BOLD)$(GREEN)Compilando:$(NC)$(NORMAL)$(BIN)\n"
 	$(CC) $(LIBS) $(CC-FLAGS) $(BIN-FLAGS) -o $(TARGET)/$(BIN)
 	ln -sf $(TARGET)/$(BIN) $(BIN)
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
 # Objetos
 $(TARGET)/main.o: $(SRC)/main.c $(COMMON)/globals.h $(COMMON)/util.h $(SRC)/scan.h $(SRC)/analyze.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) main.o\n"
+	@printf "==> $(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL)main.o\n"
 	$(CC) $(CC-FLAGS) -c $(SRC)/main.c -o $(TARGET)/main.o
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/util.o: $(COMMON)/util.c $(COMMON)/util.h $(COMMON)/globals.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) util.o\n"
+	@printf "==> $(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL)util.o\n"
 	$(CC) $(CC-FLAGS) -c $(COMMON)/util.c -o $(TARGET)/util.o
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/intermediate.o: $(SRC)/intermediate.c $(SRC)/intermediate.h $(COMMON)/globals.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) intermediate.o\n"
+	@printf "==> $(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL)intermediate.o\n"
 	$(CC) $(CC-FLAGS) -c $(SRC)/intermediate.c -o $(TARGET)/intermediate.o
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/symtab.o: $(SRC)/symtab.c $(SRC)/symtab.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) symtab.o\n"
+	@printf "==> $(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL)symtab.o\n"
 	$(CC) $(CC-FLAGS) -c $(SRC)/symtab.c -o $(TARGET)/symtab.o
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/analyze.o: $(SRC)/analyze.c $(COMMON)/globals.h $(SRC)/symtab.h $(SRC)/analyze.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) analyze.o\n"
+	@printf "==> $(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL)analyze.o\n"
 	$(CC) $(CC-FLAGS) -c $(SRC)/analyze.c -o $(TARGET)/analyze.o
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/scan.yy.o: $(SRC)/scan.l $(SRC)/scan.h $(COMMON)/util.h $(COMMON)/globals.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) scan.yy.o\n"
+	@printf "==> $(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL)scan.yy.o\n"
 	$(LEX) -o $(TARGET)/scan.yy.c $(SRC)/scan.l
 	$(CC) $(CC-FLAGS) -c $(TARGET)/scan.yy.c -o $(TARGET)/scan.yy.o
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/parse.tab.o: $(SRC)/parse.y $(COMMON)/globals.h
-	@printf "$(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL) parse.tab.o\n"
+	@printf "==> $(BOLD)$(GREEN)Criando objeto:$(NC)$(NORMAL)parse.tab.o\n"
 	$(BISON) $(BISON-FLAGS) $(SRC)/parse.y -o $(TARGET)/parse.tab.c
 	$(CC) $(CC-FLAGS) -c $(TARGET)/parse.tab.c -o $(TARGET)/parse.tab.o
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/librust.a: $(SRC)/rust.rs Cargo.toml $(SRC)/wrapper.h $(SRC)/assembly.rs $(SRC)/binary.rs $(SRC)/intermediate.h $(COMMON)/globals.h
-	@printf "$(BOLD)$(GREEN)Criando biblioteca:$(NC)$(NORMAL) librust.a\n"
+	@printf "==> $(BOLD)$(GREEN)Criando biblioteca:$(NC)$(NORMAL)librust.a\n"
 	$(RS) build $(RS-FLAGS)
-	mv $(RS-TARGET)/librust.a $(TARGET)/librust.a
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	mv -f $(RS-TARGET)/librust.a $(TARGET)/librust.a
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 $(TARGET)/libc.a: $(OBJS)
-	@printf "$(BOLD)$(GREEN)Criando biblioteca:$(NC)$(NORMAL) libc.a\n"
+	@printf "==> $(BOLD)$(GREEN)Criando biblioteca:$(NC)$(NORMAL)libc.a\n"
 	ar rcs $(TARGET)/libc.a $(OBJS)
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n\n"
 
 
 # Copia o binário de saída para o processador
 # Apenas usar caso tenha o processador na mesma pasta
 .PHONY: cpu
 cpu:
-	@printf "$(BOLD)$(GREEN)Copiando binário:$(NC)$(NORMAL) output.txt\n"
+	@printf "==> $(BOLD)$(GREEN)Copiando binário:$(NC)$(NORMAL)output.txt\n"
 	cp $(TARGET)/output.txt ../fpgmips/output.txt
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
 # Limpa a saída
 .PHONY: clean
 clean:
-	@printf "$(BOLD)$(GREEN)Removendo arquivos:$(NC)$(NORMAL)\n"
+	@printf "==> $(BOLD)$(GREEN)Removendo arquivos:$(NC)$(NORMAL)\n"
 	-rm -rf $(TARGET)/*
 	-rm -f $(BIN)
-	@printf "$(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
+	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
 # Para compilar na UNIFESP:
