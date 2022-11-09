@@ -1,6 +1,7 @@
 /* Especificação C- Lex/Flex */
 %option noyywrap
 %option nounput
+%option never-interactive
 
 %{
 #include "../src/common/globals.h"

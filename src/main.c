@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
             fprintf(listing, "\nMontando tabela de símbolos...\n");
         }
 
-        build_symbol_table(syntax_tree);
+        build_symtab(syntax_tree);
 
         if (g_trace_analyze) {
             fprintf(listing, "\nVerificando tipos...\n");

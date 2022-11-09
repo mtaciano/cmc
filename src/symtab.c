@@ -53,11 +53,11 @@ typedef struct BucketListRec {
 
 static BucketList hash_table[SIZE];
 
-/* Função `symbol_table_insert` coloca as linhas,
+/* Função `symtab_insert` coloca as linhas,
  * posições de memória e os escopos na tabela de símbolos
  */
-void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
-                         int lineno, int memloc) {
+void symtab_insert(char *name, char *var_or_fun, char *type, char *scope,
+                   int lineno, int memloc) {
     int h = hash(name);
     BucketList l = hash_table[h];
 
@@ -116,10 +116,10 @@ void symbol_table_insert(char *name, char *var_or_fun, char *type, char *scope,
     }
 }
 
-/* Função `symbol_table_lookup` retorna a primeira linha de
+/* Função `symtab_lookup` retorna a primeira linha de
  * uma variável, e -1 se não encontrar
  */
-int symbol_table_lookup(char *name) {
+int symtab_lookup(char *name) {
     int h = hash(name);
     BucketList l = hash_table[h];
 
@@ -134,10 +134,10 @@ int symbol_table_lookup(char *name) {
     }
 }
 
-/* Função `symbol_table_lookup_scope` retorna a primeira linha de
+/* Função `symtab_lookup_scope` retorna a primeira linha de
  * uma variável, e `-1` se não encontrar
  */
-int symbol_table_lookup_scope(char *name, char *scope) {
+int symtab_lookup_scope(char *name, char *scope) {
     for (int i = 0; i < SIZE; i++) {
         BucketList l = hash_table[i];
 
@@ -153,10 +153,10 @@ int symbol_table_lookup_scope(char *name, char *scope) {
     return -1;
 }
 
-/* Função `symbol_table_lookup_max_line` retorna o número da linha de
+/* Função `symtab_lookup_max_line` retorna o número da linha de
  * uma função, e `-1` se não encontrar
  */
-int symbol_table_lookup_max_line(char *var_or_fun, char *scope) {
+int symtab_lookup_max_line(char *var_or_fun, char *scope) {
     int linhaMax = -1;
 
     for (int i = 0; i < SIZE; i++) {
@@ -177,11 +177,11 @@ int symbol_table_lookup_max_line(char *var_or_fun, char *scope) {
     return linhaMax;
 }
 
-/* Função `symbol_table_print` printa de modo formatado
+/* Função `symtab_print` printa de modo formatado
  * os conteúdos da tabela de símbolos
  * para o arquivo listing
  */
-void symbol_table_print(FILE *listing) {
+void symtab_print(FILE *listing) {
     fprintf(listing,
             "NOME VARIÁVEL  LOCALIZAÇÃO  ESCOPO  TIPO_ID  TIPO_DADO  LINHAS\n");
     fprintf(listing,
