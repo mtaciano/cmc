@@ -2,39 +2,46 @@
 
 ## Sobre
 
-Nesse repositõrio está o compilador para um _subset_ da linguagem C, conhecido como C-.
+Nesse repositório está o compilador para um _subset_ da linguagem C, conhecido como C-.
 
-As etapas atualmente implementadas são:
+Todas as etapas foram implementadas, sendo elas:
 
 - [x] Lexer
 - [x] Parser
 - [x] Analyser
-- [x] Gerador de código intermediário (Alguns bugs existem)
-- [x] Gerador de cõdigo assembly (Alguns bugs existem)
-- [x] Gerador de cõdigo binãrio (Alguns bugs existem)
+- [x] Gerador de código intermediário
+- [x] Gerador de cõdigo assembly
+- [x] Gerador de cõdigo binário
+
+Pode-se melhorar diversas partes do código. No entanto, para o propósito desejado, a implementação atual é o suficiente.
 
 ## Instalação
-
-Para realizar o desenvolvimento do `cmc` é recomendado usar seguinte comando:
+Após clonar o repositório, entre nele e crie a pasta para onde os arquivos de compilação serão armazenados:
 ```
-make debug # Gera código para desenvolvimento
+cd cmc
+mkdir build
 ```
 
-Enquanto que para usar o compilador é recomendado usar o próximo comando:
+Para realizar o desenvolvimento do compilador `cmc` é recomendado usar seguinte comando:
+```
+make debug # Gera código ideal para o desenvolvimento
+```
+
+Para utilizar o compilador `cmc` como um produto final é recomendado usar o seguinte comando:
 ```
 make release # Gera código otimizado em tanto tamanho e velocidade
 ```
 
 ## Dependências
-- Cargo (rustup)
+- Rust
 - Clang
 - Bison
 - Flex
 
 ## Contribuição
 
-Caso ache bugs, use a aba de _issues_ para relatá-los.
+Caso ache erros, use a aba de _issues_ para relatá-los.
 
 ## Licença
 
-A licença usada para o compilador é a licença permissiva MIT. 
+A licença usada para o compilador é a licença permissiva MIT.

@@ -1,11 +1,10 @@
 # Makefile para o compilador C-
-# Miguel Silva Taciano e Gabriel Bianchi e Silva
 
 # Cores
 BOLD := $(shell tput bold)
 NORMAL := $(shell tput sgr0)
-GREEN := $(shell echo -e "\033[0;32m")
-NC := $(shell echo -e "\033[0m") # No color
+GREEN := $(shell echo "\033[0;32m")
+NC := $(shell echo "\033[0m") # No color
 
 # Pastas
 SRC = src
@@ -29,6 +28,7 @@ RSFLAGS = #empty
 # C Minus Compiler
 BIN = cmc
 BINFLAGS = -static # Pode dar erro, remover se der
+LDFLAGS = -fuse-ld=mold -Wl,-O1 -Wl,--as-needed # Se der erro, remover `-fuse-ld=mold` pois não está no sistema
 
 # Componentes do compilador
 OBJS = $(TARGET)/parse.tab.o $(TARGET)/scan.yy.o $(TARGET)/main.o $(TARGET)/util.o $(TARGET)/symtab.o $(TARGET)/analyze.o $(TARGET)/intermediate.o
@@ -37,7 +37,7 @@ LIBS = $(TARGET)/libc.a $(TARGET)/librust.a
 
 # Otimização de velocidade e tamanho
 .PHONY: release
-release: CFLAGS += -O3
+release: CFLAGS += -march=native -flto -O3
 release: RSFLAGS += --release
 release: RSTARGET = $(TARGET)/release
 release: $(BIN)
@@ -59,7 +59,7 @@ debug: $(BIN)
 # Executável
 $(BIN): $(OBJS) $(LIBS)
 	@printf "==> $(BOLD)$(GREEN)Compilando:$(NC)$(NORMAL)$(BIN)\n"
-	$(CC) $(LIBS) $(CFLAGS) $(BINFLAGS) -o $(TARGET)/$(BIN)
+	$(CC) $(LIBS) $(CFLAGS) $(BINFLAGS) $(LDFLAGS) -o $(TARGET)/$(BIN)
 	ln -sf $(TARGET)/$(BIN) $(BIN)
 	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
@@ -127,8 +127,9 @@ cpu:
 .PHONY: clean
 clean:
 	@printf "==> $(BOLD)$(GREEN)Removendo arquivos:$(NC)$(NORMAL)\n"
-	$(RM) -r $(TARGET)/*
+	$(RM) -rv $(TARGET)
 	$(RM) $(BIN)
+	mkdir $(TARGET)
 	@printf "==> $(BOLD)$(GREEN)sucesso!$(NC)$(NORMAL)\n"
 
 
