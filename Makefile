@@ -23,7 +23,7 @@ LEX = flex
 
 # Rust
 RS = cargo
-RSFLAGS = #empty
+RSFLAGS = --verbose
 
 # C Minus Compiler
 BIN = cmc
