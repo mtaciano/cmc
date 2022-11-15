@@ -1,3 +1,4 @@
+/* Implementação do gerador de código assembly */
 use crate::{ffi::g_trace_code, *};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;

@@ -348,7 +348,7 @@ void print_tree(TreeNode *tree) {
 }
 
 /* Função `cs_init` inicia a pilha com um tamanho máximo de `size` */
-CharStack cs_init() {
+CharStack cs_init(void) {
     int size = 256;
 
     CharStack new = malloc(sizeof(*new));

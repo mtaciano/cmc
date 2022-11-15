@@ -1,3 +1,5 @@
+/* Wrapper para integração entre Rust e C */
+
 #ifndef _WRAPPER_H_
 #define _WRAPPER_H_
 

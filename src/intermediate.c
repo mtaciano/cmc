@@ -1,4 +1,4 @@
-/* Código intermediário */
+/* Implementação do ódigo intermediário */
 
 #include "intermediate.h"
 #include "common/globals.h"
@@ -145,61 +145,13 @@ static void read_tree_node(TreeNode *t) {
             }
             break;
 
-        case CompoundK:
-            /* todo */
-            break;
-
-        case ReturnK:
-            /* todo */
+        default:
             break;
         }
     } break;
+
     case ExpK: {
         switch (t->kind.exp) {
-        case OpK: {
-            switch (t->attr.op) {
-            case LT:
-                /* todo */
-                break;
-
-            case LE:
-                /* todo */
-                break;
-
-            case GT:
-                /* todo */
-                break;
-
-            case GE:
-                /* todo */
-                break;
-
-            case EQ:
-                /* todo */
-                break;
-
-            case NE:
-                /* todo */
-                break;
-
-            case PLUS:
-                /* todo */
-                break;
-
-            case MINUS:
-                /* todo */
-                break;
-
-            case TIMES:
-                /* todo */
-                break;
-
-            case OVER:
-                /* todo */
-                break;
-            }
-        } break;
-
         case ConstK: {
             char *temp = malloc(STRING_SIZE * sizeof(*temp));
             char *c = malloc(STRING_SIZE * sizeof(*c));
@@ -224,10 +176,6 @@ static void read_tree_node(TreeNode *t) {
             }
         } break;
 
-        case TypeK:
-            /* todo */
-            break;
-
         case ArrIdK:
             array_node = true;
             break;
@@ -238,7 +186,7 @@ static void read_tree_node(TreeNode *t) {
             nested_call_level++;
             break;
 
-        case CalcK:
+        default:
             break;
         }
     } break;
@@ -535,10 +483,6 @@ static void read_tree_node(TreeNode *t) {
             available_temp_num++;
         } break;
 
-        case IdK:
-            /* code */
-            break;
-
         default:
             break;
         }
@@ -555,10 +499,8 @@ static void read_tree_node(TreeNode *t) {
         }
     } break;
 
-    case DeclK: {
-        /* code */
+    default:
         break;
-    }
     }
 }
 

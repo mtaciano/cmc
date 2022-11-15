@@ -1,4 +1,4 @@
-/* Analise Semântica da linguagem C- */
+/* Análise Semântica da linguagem C- */
 
 #include "analyze.h"
 #include "common/globals.h"
@@ -28,7 +28,7 @@ static void symbol_error(TreeNode *t, char *message) {
 }
 
 /* Função `verify_main` verifica se a `main` é a ultima declaração de funcão */
-static void verify_main() {
+static void verify_main(void) {
     int max_lineno = symtab_lookup_max_line("fun", "global");
     int max_var_lineno = symtab_lookup_max_line("var", "global");
     int main_lineno = symtab_lookup("main");

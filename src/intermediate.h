@@ -1,4 +1,4 @@
-/* Código intermediário */
+/* Declarações do código intermediário */
 
 #ifndef _CODE_H_
 #define _CODE_H_

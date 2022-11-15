@@ -1,3 +1,5 @@
+/* Header para que arquivos C usem funções do Rust */
+
 #ifndef _RUST_H_
 #define _RUST_H_
 

@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 
     if (!g_error) {
         if (g_trace_parse) {
-            fprintf(listing, "\nArvore sintática:\n\n");
+            fprintf(listing, "\nÁrvore sintática:\n\n");
             print_tree(syntax_tree);
         }
     }

@@ -1,4 +1,5 @@
 /* Especificação C- Yacc/Bison */
+/* TODO: consertar os conflitos de shift/reduce */
 
 %{
 #define YYPARSER /* Diferencia o output do Yacc de outros códigos de output */

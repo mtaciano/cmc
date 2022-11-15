@@ -1,3 +1,4 @@
+/* Implementação do gerador de código binário */
 use crate::{ffi::g_trace_code, *};
 
 /* Todos os opcodes do processador e funções auxiliares */

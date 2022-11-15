@@ -43,7 +43,7 @@ typedef struct {
 } * CharStack;
 
 /* Função `cs_init` inicia a pilha com um tamanho máximo de `size` */
-CharStack cs_init();
+CharStack cs_init(void);
 
 /* Função `cs_push` coloca a string na pilha */
 void cs_push(CharStack stack, char *item);
