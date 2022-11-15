@@ -11,12 +11,14 @@ readme = "README.md"
 license = "MIT"
 publish = false
 
+# Configurações usadas durante `make release`
 [profile.release]
 strip = "debuginfo"
 panic = "abort"
 lto = true
 codegen-units = 1
 
+# Configurações usadas durante `make debug`
 [profile.dev]
 rustflags = ["-Zsanitizer=address"]
 

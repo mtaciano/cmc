@@ -1,4 +1,4 @@
-# Configurações
+# Configurações, cache e artefatos
 .vscode/
 .ccls-cache/
 compile_commands.json

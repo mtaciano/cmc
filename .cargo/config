@@ -1,3 +1,6 @@
+# Muda a saída para os arquivos gerados pelo cargo
+# para a mesma pasta que todos os outros arquivos
+
 [build]
 target-dir = "build"
 
