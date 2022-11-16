@@ -10,8 +10,8 @@ Todas as etapas foram implementadas, sendo elas:
 - [x] Parser
 - [x] Analyser
 - [x] Gerador de código intermediário
-- [x] Gerador de cõdigo assembly
-- [x] Gerador de cõdigo binário
+- [x] Gerador de código assembly
+- [x] Gerador de código binário
 
 Pode-se melhorar diversas partes do código. No entanto, para o propósito desejado, a implementação atual é o suficiente.
 
