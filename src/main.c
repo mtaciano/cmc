@@ -1,10 +1,11 @@
 /* Ponto de entrada para o compilador
  * Responsável por chamar todos os componentes dele
  */
+#include <stdbool.h>
+
 #include "common/globals.h"
 #include "common/util.h"
 #include "rust.h"
-#include <stdbool.h>
 
 /* Mude NO_PARSE para true para ter um compilador _scanner-only_ */
 #define NO_PARSE false
@@ -51,7 +52,7 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-    program = malloc(strlen(argv[1]) * sizeof(argv[1]));
+    program = malloc(strlen(argv[1]) + 1);
     strcpy(program, argv[1]);
 
     if (strchr(program, '.') == NULL) {
@@ -70,8 +71,9 @@ int main(int argc, char *argv[]) {
     fprintf(listing, "\nCOMPILAÇÃO DO C-: %s\n\n", program);
 
 #if NO_PARSE
-    while (get_token() != ENDFILE)
+    while (get_token() != ENDFILE) {
         ;
+    }
 #else
     syntax_tree = parse();
 

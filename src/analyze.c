@@ -1,10 +1,12 @@
 /* Análise Semântica da linguagem C- */
 
 #include "analyze.h"
+
+#include <stdbool.h>
+
 #include "common/globals.h"
 #include "common/util.h"
 #include "symtab.h"
-#include <stdbool.h>
 
 /* Contador da posição na memória */
 static int memloc = 0;
@@ -100,196 +102,203 @@ static void traverse(TreeNode *t, void (*pre_fn)(TreeNode *),
  * na árvore sintática
  */
 static void null_fn(TreeNode *t) {
-    (void)t; // Suprime os avisos de variável não usada
+    (void)t;  // Suprime os avisos de variável não usada
 
     return;
 }
 
 /* Função `insert_node` insere o nó `t` na tabela de símbolos */
 static void insert_node(TreeNode *t) {
-    char *var_or_fun;
+    char *varfn;
     char *type;
 
     switch (t->node_kind) {
-    case StmtK:
-        switch (t->kind.stmt) {
-        case AssignK:
-            if (symtab_lookup_scope(t->child[0]->attr.name, t->scope) == -1 &&
-                symtab_lookup_scope(t->child[0]->attr.name, "global") == -1) {
-                symbol_error(t, "Váriável não declarada");
+        case StmtK:
+            switch (t->kind.stmt) {
+                case AssignK:
+                    if (symtab_lookup_scope(t->child[0]->attr.name, t->scope) ==
+                            -1 &&
+                        symtab_lookup_scope(t->child[0]->attr.name, "global") ==
+                            -1) {
+                        symbol_error(t, "Váriável não declarada");
+                    }
+                    break;
+
+                default:
+                    break;
             }
             break;
 
-        default:
-            break;
-        }
-        break;
-
-    case ExpK:
-        switch (t->kind.exp) {
-        case IdK:
-        case ArrIdK:
-            var_or_fun = "var";
-            type = "int";
-
-            if (symtab_lookup(t->attr.name) == -1) {
-                // Não está na tabela, nova definição
-                symtab_insert(t->attr.name, var_or_fun, type, t->scope,
-                              t->lineno, memloc++);
-            } else {
-                // Já na tabela
-                symtab_insert(t->attr.name, var_or_fun, type, t->scope,
-                              t->lineno, 0);
-            }
-            break;
-
-        case CallK: {
-            if (t->kind.exp == CallK) {
-                var_or_fun = "fun";
-                if (t->child[0] != NULL && t->child[0]->type == Void) {
-                    type = "void";
-                } else if (t->child[0] != NULL &&
-                           t->child[0]->type == Integer) {
+        case ExpK:
+            switch (t->kind.exp) {
+                case IdK:
+                case ArrIdK:
+                    varfn = "var";
                     type = "int";
-                } else {
-                    type = "error";
-                }
-            }
 
-            if (symtab_lookup(t->attr.name) == -1) {
-                // Não está na tabela, nova definição
-                symtab_insert(t->attr.name, var_or_fun, type, t->scope,
-                              t->lineno, memloc++);
-            } else {
-                // Já na tabela
-                symtab_insert(t->attr.name, var_or_fun, type, t->scope,
-                              t->lineno, 0);
-            }
-        } break;
+                    if (symtab_lookup(t->attr.name) == -1) {
+                        // Não está na tabela, nova definição
+                        symtab_insert(t->attr.name, varfn, type, t->scope,
+                                      t->lineno, memloc++);
+                    } else {
+                        // Já na tabela
+                        symtab_insert(t->attr.name, varfn, type, t->scope,
+                                      t->lineno, 0);
+                    }
+                    break;
 
-        default:
-            break;
-        }
-        break;
+                case CallK: {
+                    if (t->kind.exp == CallK) {
+                        varfn = "fun";
+                        if (t->child[0] != NULL && t->child[0]->type == Void) {
+                            type = "void";
+                        } else if (t->child[0] != NULL &&
+                                   t->child[0]->type == Integer) {
+                            type = "int";
+                        } else {
+                            type = "error";
+                        }
+                    }
 
-    case DeclK:
-        switch (t->kind.decl) {
-        case FunK:
-            if (symtab_lookup(t->attr.name) != -1) {
-                symbol_error(t, "Redefinição de função");
-                break;
-            }
+                    if (symtab_lookup(t->attr.name) == -1) {
+                        // Não está na tabela, nova definição
+                        symtab_insert(t->attr.name, varfn, type, t->scope,
+                                      t->lineno, memloc++);
+                    } else {
+                        // Já na tabela
+                        symtab_insert(t->attr.name, varfn, type, t->scope,
+                                      t->lineno, 0);
+                    }
+                } break;
 
-            var_or_fun = "fun";
-            if (t->child[0] != NULL && t->child[0]->type == Void) {
-                type = "void";
-            } else if (t->child[0] != NULL && t->child[0]->type == Integer) {
-                type = "int";
-            } else {
-                type = "error";
-            }
-
-            if (symtab_lookup(t->attr.name) == -1) {
-                // Não está na tabela, nova definição
-                symtab_insert(t->attr.name, var_or_fun, type, t->scope,
-                              t->lineno, memloc++);
+                default:
+                    break;
             }
             break;
 
-        case VarK:
-            var_or_fun = "var";
-            type = "int";
-
-            // Verificar se a variável já existe
-            if (symtab_lookup_scope(t->attr.name, t->scope) != -1) {
-                symbol_error(t, "Redefinição de variável");
-                break;
-            }
-            // Tipo não deve ser VOID
-            if (t->child[0]->type == Void) {
-                symbol_error(t, "Variável não pode ser do tipo void");
-                break;
-            }
-
-            symtab_insert(t->attr.name, var_or_fun, type, t->scope, t->lineno,
-                          memloc++);
-            break;
-
-        case ArrVarK:
-            var_or_fun = "var";
-            type = "int";
-            // Tipo não deve ser VOID
-            if (t->child[0]->type == Void) {
-                symbol_error(t, "Variável do tipo array não pode ser void");
-                break;
-            }
-
-            // Verificar se a variável  array já foi declarada
-            if (symtab_lookup_scope(t->attr.arr.name, t->scope) != -1) {
-                symbol_error(t, "Variável do tipo array já declarada");
-                break;
-            }
-
-            symtab_insert(t->attr.arr.name, var_or_fun, type, t->scope,
-                          t->lineno, memloc++);
-            break;
-
-        case ArrParamK:
-            if (t->attr.name == NULL) {
-                break;
-            }
-
-            var_or_fun = "var";
-            type = "int";
-
-            // Tipo não deve ser VOID
-            if (t->child[0]->type == Void) {
-                symbol_error(t, "Parâmetro do tipo array não pode ser void");
-                break;
-            }
-
-            // Verifica se o array já foi declarado
-            if (symtab_lookup_scope(t->attr.name, t->scope) != -1) {
-                symbol_error(t, "Parâmetro do tipo array já declarado");
-                break;
-            }
-
-            symtab_insert(t->attr.name, var_or_fun, type, t->scope, t->lineno,
-                          memloc++);
-            break;
-
-        case ParamK:
-            if (t->attr.name != NULL) {
-                // Verifica se o parâmetro existe ou é void
-                if (t->type != Void) {
-                    if (t->child[0]->type == Void) {
-                        symbol_error(t, "Parâmetro não pode ser do tipo void");
+        case DeclK:
+            switch (t->kind.decl) {
+                case FunK:
+                    if (symtab_lookup(t->attr.name) != -1) {
+                        symbol_error(t, "Redefinição de função");
                         break;
                     }
+
+                    varfn = "fun";
+                    if (t->child[0] != NULL && t->child[0]->type == Void) {
+                        type = "void";
+                    } else if (t->child[0] != NULL &&
+                               t->child[0]->type == Integer) {
+                        type = "int";
+                    } else {
+                        type = "error";
+                    }
+
+                    if (symtab_lookup(t->attr.name) == -1) {
+                        // Não está na tabela, nova definição
+                        symtab_insert(t->attr.name, varfn, type, t->scope,
+                                      t->lineno, memloc++);
+                    }
+                    break;
+
+                case VarK:
+                    varfn = "var";
+                    type = "int";
+
+                    // Verificar se a variável já existe
                     if (symtab_lookup_scope(t->attr.name, t->scope) != -1) {
-                        symbol_error(t, "Redefinição de parâmetro");
+                        symbol_error(t, "Redefinição de variável");
+                        break;
+                    }
+                    // Tipo não deve ser VOID
+                    if (t->child[0]->type == Void) {
+                        symbol_error(t, "Variável não pode ser do tipo void");
                         break;
                     }
 
-                    var_or_fun = "var";
-                    type = "int";
-                    symtab_insert(t->attr.name, var_or_fun, type, t->scope,
+                    symtab_insert(t->attr.name, varfn, type, t->scope,
                                   t->lineno, memloc++);
-                }
-                break;
+                    break;
+
+                case ArrVarK:
+                    varfn = "var";
+                    type = "int";
+                    // Tipo não deve ser VOID
+                    if (t->child[0]->type == Void) {
+                        symbol_error(
+                            t, "Variável do tipo array não pode ser void");
+                        break;
+                    }
+
+                    // Verificar se a variável  array já foi declarada
+                    if (symtab_lookup_scope(t->attr.arr.name, t->scope) != -1) {
+                        symbol_error(t, "Variável do tipo array já declarada");
+                        break;
+                    }
+
+                    symtab_insert(t->attr.arr.name, varfn, type, t->scope,
+                                  t->lineno, memloc++);
+                    break;
+
+                case ArrParamK:
+                    if (t->attr.name == NULL) {
+                        break;
+                    }
+
+                    varfn = "var";
+                    type = "int";
+
+                    // Tipo não deve ser VOID
+                    if (t->child[0]->type == Void) {
+                        symbol_error(
+                            t, "Parâmetro do tipo array não pode ser void");
+                        break;
+                    }
+
+                    // Verifica se o array já foi declarado
+                    if (symtab_lookup_scope(t->attr.name, t->scope) != -1) {
+                        symbol_error(t, "Parâmetro do tipo array já declarado");
+                        break;
+                    }
+
+                    symtab_insert(t->attr.name, varfn, type, t->scope,
+                                  t->lineno, memloc++);
+                    break;
+
+                case ParamK:
+                    if (t->attr.name != NULL) {
+                        // Verifica se o parâmetro existe ou é void
+                        if (t->type != Void) {
+                            if (t->child[0]->type == Void) {
+                                symbol_error(
+                                    t, "Parâmetro não pode ser do tipo void");
+                                break;
+                            }
+                            if (symtab_lookup_scope(t->attr.name, t->scope) !=
+                                -1) {
+                                symbol_error(t, "Redefinição de parâmetro");
+                                break;
+                            }
+
+                            varfn = "var";
+                            type = "int";
+                            symtab_insert(t->attr.name, varfn, type, t->scope,
+                                          t->lineno, memloc++);
+                        }
+                        break;
+                    }
+                    break;
+
+                default:
+                    break;
             }
             break;
 
         default:
             break;
-        }
-        break;
-
-    default:
-        break;
     }
 
-    var_or_fun = NULL;
+    varfn = NULL;
     type = NULL;
 }
 
@@ -322,61 +331,64 @@ void build_symtab(TreeNode *syntax_tree) {
 /* Função `check_node` realiza verificação do nó atual */
 static void check_node(TreeNode *t) {
     switch (t->node_kind) {
-    case StmtK:
-        switch (t->kind.stmt) {
-        case AssignK: {
-            if (symtab_lookup_scope(t->child[0]->attr.name, t->scope) == -1 &&
-                symtab_lookup_scope(t->child[0]->attr.name, "global") == -1) {
-                symbol_error(t->child[0], "Váriavel não declarada");
-            }
-        } break;
-
-        default:
-            break;
-        }
-        break;
-
-    case ExpK:
-        switch (t->kind.exp) {
-        case IdK:
-        case ArrIdK:
-        case CallK: {
-            if (symtab_lookup(t->attr.name) == -1) {
-                symbol_error(t, "Símbolo não declarado");
-            }
-        } break;
-
-        default:
-            break;
-        }
-        break;
-
-    case DeclK:
-        switch (t->kind.decl) {
-        case FunK:
-            // Verifica se a função tem um return se ela precisa de um
-            if (t->child[2] != NULL && t->child[2]->child[1] != NULL) {
-                traverse(t->child[2], find_return, null_fn);
-                if (t->child[0] != NULL && t->child[0]->type == Void) {
-                    if (fn_has_return) {
-                        symbol_error(t, "Nenhum valor de retorno esperado");
+        case StmtK:
+            switch (t->kind.stmt) {
+                case AssignK: {
+                    if (symtab_lookup_scope(t->child[0]->attr.name, t->scope) ==
+                            -1 &&
+                        symtab_lookup_scope(t->child[0]->attr.name, "global") ==
+                            -1) {
+                        symbol_error(t->child[0], "Váriavel não declarada");
                     }
-                } else if (t->child[0] != NULL &&
-                           t->child[0]->type == Integer) {
-                    if (!fn_has_return) {
-                        symbol_error(t, "Valor de retorno esperado");
-                    }
-                }
-                fn_has_return = false;
+                } break;
+
+                default:
+                    break;
             }
             break;
 
+        case ExpK:
+            switch (t->kind.exp) {
+                case IdK:
+                case ArrIdK:
+                case CallK: {
+                    if (symtab_lookup(t->attr.name) == -1) {
+                        symbol_error(t, "Símbolo não declarado");
+                    }
+                } break;
+
+                default:
+                    break;
+            }
+            break;
+
+        case DeclK:
+            switch (t->kind.decl) {
+                case FunK:
+                    // Verifica se a função tem um return se ela precisa de um
+                    if (t->child[2] != NULL && t->child[2]->child[1] != NULL) {
+                        traverse(t->child[2], find_return, null_fn);
+                        if (t->child[0] != NULL && t->child[0]->type == Void) {
+                            if (fn_has_return) {
+                                symbol_error(
+                                    t, "Nenhum valor de retorno esperado");
+                            }
+                        } else if (t->child[0] != NULL &&
+                                   t->child[0]->type == Integer) {
+                            if (!fn_has_return) {
+                                symbol_error(t, "Valor de retorno esperado");
+                            }
+                        }
+                        fn_has_return = false;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+
         default:
             break;
-        }
-
-    default:
-        break;
     }
 }
 

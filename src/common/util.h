@@ -40,7 +40,7 @@ typedef struct {
     int max_size;
     int last;
     char **items;
-} * CharStack;
+} *CharStack;
 
 /* Função `cs_init` inicia a pilha com um tamanho máximo de `size` */
 CharStack cs_init(void);

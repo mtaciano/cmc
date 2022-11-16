@@ -8,8 +8,8 @@
 /* Função `symtab_insert` coloca as linhas,
  * posições de memória e os escopos na tabela de símbolos
  */
-void symtab_insert(char *name, char *var_or_fun, char *type, char *scope,
-                   int lineno, int memloc);
+void symtab_insert(char *name, char *varfn, char *type, char *scope, int lineno,
+                   int memloc);
 
 /* Função `symtab_lookup` retorna a posição na memória de
  * uma variável, e -1 se não encontrar
@@ -24,7 +24,7 @@ int symtab_lookup_scope(char *name, char *scope);
 /* Função `symtab_lookup_max_line` retorna o número da linha de
  * uma função, e -1 se não encontrar
  */
-int symtab_lookup_max_line(char *var_or_fun, char *scope);
+int symtab_lookup_max_line(char *varfn, char *scope);
 
 /* Função `symtab_print` printa de modo formatado
  * os conteúdos da tabela de símbolos

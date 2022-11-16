@@ -1,6 +1,7 @@
 /* Implementação da tabela de símbolos */
 
 #include "symtab.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,7 +35,7 @@ static int hash(char *key) {
 typedef struct LineListRec {
     int lineno;
     struct LineListRec *next;
-} * LineList;
+} *LineList;
 
 /* O histórico nas bucket lists para cada variável,
  * como nome, memória, escopo, e
@@ -44,33 +45,34 @@ typedef struct LineListRec {
 typedef struct BucketListRec {
     char *name;
     char *scope;
-    char *var_or_fun;
+    char *varfn;
     char *type;
     LineList lines;
     int memloc;
     struct BucketListRec *next;
-} * BucketList;
+} *BucketList;
 
 static BucketList hash_table[SIZE];
 
 /* Função `symtab_insert` coloca as linhas,
  * posições de memória e os escopos na tabela de símbolos
  */
-void symtab_insert(char *name, char *var_or_fun, char *type, char *scope,
-                   int lineno, int memloc) {
+void symtab_insert(char *name, char *varfn, char *type, char *scope, int lineno,
+                   int memloc) {
     int h = hash(name);
     BucketList l = hash_table[h];
 
-    if (strcmp(var_or_fun, "var") == 0) {
+    if (strcmp(varfn, "var") == 0) {
         while ((l != NULL) && ((strcmp(name, l->name) != 0) ||
                                (strcmp(scope, l->scope) != 0))) {
             l = l->next;
         }
-        if (l == NULL) { // se não está na tabela, adicione
+
+        if (l == NULL) {  // se não está na tabela, adicione
             l = malloc(sizeof(*l));
             l->name = name;
             l->scope = scope;
-            l->var_or_fun = var_or_fun;
+            l->varfn = varfn;
             l->type = type;
             l->lines = malloc(sizeof(*l->lines));
             l->lines->lineno = lineno;
@@ -78,7 +80,7 @@ void symtab_insert(char *name, char *var_or_fun, char *type, char *scope,
             l->memloc = memloc;
             l->next = hash_table[h];
             hash_table[h] = l;
-        } else { // encontrou, então adiciona na tabela
+        } else {  // encontrou, então adiciona na tabela
             LineList t = l->lines;
 
             while (t->next != NULL) {
@@ -88,15 +90,16 @@ void symtab_insert(char *name, char *var_or_fun, char *type, char *scope,
             t->next->lineno = lineno;
             t->next->next = NULL;
         }
-    } else if (strcmp(var_or_fun, "fun") == 0) {
+    } else if (strcmp(varfn, "fun") == 0) {
         while ((l != NULL) && (strcmp(name, l->name) != 0)) {
             l = l->next;
         }
-        if (l == NULL) { // se não está na tabela, adicione
+
+        if (l == NULL) {  // se não está na tabela, adicione
             l = malloc(sizeof(*l));
             l->name = name;
             l->scope = scope;
-            l->var_or_fun = var_or_fun;
+            l->varfn = varfn;
             l->type = type;
             l->lines = malloc(sizeof(*l->lines));
             l->lines->lineno = lineno;
@@ -104,7 +107,7 @@ void symtab_insert(char *name, char *var_or_fun, char *type, char *scope,
             l->memloc = memloc;
             l->next = hash_table[h];
             hash_table[h] = l;
-        } else { // encontrou, então adiciona na tabela
+        } else {  // encontrou, então adiciona na tabela
             LineList t = l->lines;
             while (t->next != NULL) {
                 t = t->next;
@@ -156,15 +159,14 @@ int symtab_lookup_scope(char *name, char *scope) {
 /* Função `symtab_lookup_max_line` retorna o número da linha de
  * uma função, e `-1` se não encontrar
  */
-int symtab_lookup_max_line(char *var_or_fun, char *scope) {
+int symtab_lookup_max_line(char *varfn, char *scope) {
     int linhaMax = -1;
 
     for (int i = 0; i < SIZE; i++) {
         BucketList l = hash_table[i];
 
         while (l != NULL) {
-            if (strcmp(var_or_fun, l->var_or_fun) == 0 &&
-                strcmp(scope, l->scope) == 0) {
+            if (strcmp(varfn, l->varfn) == 0 && strcmp(scope, l->scope) == 0) {
                 if (l->lines->lineno >= linhaMax) {
                     linhaMax = l->lines->lineno;
                 }
@@ -197,7 +199,7 @@ void symtab_print(FILE *listing) {
                 fprintf(listing, "%-14s ", l->name);
                 fprintf(listing, "%-9d  ", l->memloc);
                 fprintf(listing, "%8s", l->scope);
-                fprintf(listing, "%7s", l->var_or_fun);
+                fprintf(listing, "%7s", l->varfn);
                 fprintf(listing, "%10s", l->type);
 
                 while (t != NULL) {
