@@ -5,8 +5,8 @@
 
 #include "common/globals.h"
 
-/* Função `build_symtab` constrói uma tabela de símbolos
- * por travessia em pré-ordem da árvore síntatica
+/* Função `build_symtab` constrói a tabela de símbolos
+ * através de uma passada em pré ordem da árvore sintática
  */
 void build_symtab(TreeNode *syntax_tree);
 

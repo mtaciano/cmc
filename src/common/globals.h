@@ -10,17 +10,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* A flag `YYPARSER` impede a inclusão do arquivo *.tab.h nele mesmo */
+/* A flag `YYPARSER` impede a inclusão do arquivo `*.tab.h` nele mesmo */
 #ifndef YYPARSER
 
 /* O Yacc/Bison gera seus próprios valores para os tokens.
  * Caso outros arquivos queiram acessar tais valores, eles precisam incluir
- * o arquivo *.tab.h gerado durante a compilação
+ * o arquivo `*.tab.h` gerado durante a compilação
  */
 #include "../../build/parse.tab.h"
 
 /* A constante `ENDFILE` é implicitamente definida pelo Yacc/Bison,
- * e não é incluído no arquivo *.tab.h
+ * logo não é incluída no arquivo `*.tab.h`
  */
 #define ENDFILE 0
 
@@ -32,17 +32,16 @@
 /* O Yacc/Bison gera seus próprios valores int para os tokens */
 typedef int TokenType;
 
-extern FILE *source;  /* Arquivo de _input_ */
-extern FILE *listing; /* Arquivo de _output_ para debug */
+extern FILE *source;     /* Descritor de _input_ */
+extern FILE *listing;    /* Descritor de _output_ para saída padrão */
+extern FILE *errlisting; /* Descritor de _output_ para erros */
 
 extern int lineno; /* Número da linha */
 
-/**************************************************/
-/*************   Árvore sintática   ***************/
-/**************************************************/
-
 /* Tipo do nó */
 typedef enum { StmtK, ExpK, DeclK } NodeKind;
+
+/* Tipo específico do nó */
 typedef enum { IfK, WhileK, AssignK, CompoundK, ReturnK } StmtKind;
 typedef enum { OpK, ConstK, IdK, TypeK, ArrIdK, CallK, CalcK } ExpKind;
 typedef enum { VarK, FunK, ArrVarK, ArrParamK, ParamK } DeclKind;
@@ -53,12 +52,14 @@ typedef enum { Void, Integer, IntegerArray } ExpType;
 /* Número máximo de filhos de um nó */
 #define MAXCHILDREN 3
 
+/* Atributos exclusivos de um nó do tipo _array_ */
 typedef struct ArrayAttribute {
     TokenType type;
     char *name;
     int size;
 } ArrAttr;
 
+/* Informações de um nó */
 typedef struct treeNode {
     struct treeNode *child[MAXCHILDREN];
     struct treeNode *sibling;
@@ -83,10 +84,6 @@ typedef struct treeNode {
     ExpType type;
 } TreeNode;
 
-/**************************************************/
-/**************   Flags para Debug   **************/
-/**************************************************/
-
 /* A variável `g_trace_scan` faz com que informações adicionais sejam printadas
  * durante a fase de _scan_
  */
@@ -106,8 +103,5 @@ extern int g_trace_analyze;
  * durante a fase de geração do código intermediário
  */
 extern int g_trace_code;
-
-/* A variável `g_error` faz com que a compilação pare */
-extern int g_error;
 
 #endif /* _GLOBALS_H_ */

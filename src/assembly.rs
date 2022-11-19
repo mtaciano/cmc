@@ -1,7 +1,9 @@
 /* Implementação do gerador de código assembly */
-use crate::{ffi::g_trace_code, *};
+use crate::ffi::{g_trace_code, listing};
+use crate::{Asm, Quad};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::ffi::CString;
 
 enum Comparison {
     LT,
@@ -40,11 +42,7 @@ fn map_reg(reg: &mut String, reg_map: &HashMap<usize, usize>) {
     *reg = format!("$r{}", dest);
 }
 
-fn remove_reg(
-    reg: &str,
-    reg_map: &mut HashMap<usize, usize>,
-    available: &mut [Register],
-) {
+fn remove_reg(reg: &str, reg_map: &mut HashMap<usize, usize>, available: &mut [Register]) {
     let source = reg[2..].parse::<usize>().unwrap();
     let dest = reg_map.get(&source).unwrap();
 
@@ -62,10 +60,7 @@ fn link_return(vec: &mut Vec<Asm>, start: usize) {
                 let asm = Asm {
                     cmd: "MOVE".to_string(),
                     arg1: "$r_ret".to_string(),
-                    arg2: format!(
-                        "$r{}",
-                        vec[i].arg1[2..].parse::<i32>().unwrap()
-                    ),
+                    arg2: format!("$r{}", vec[i].arg1[2..].parse::<i32>().unwrap()),
                     arg3: "--".to_string(),
                 };
                 let _ = std::mem::replace(&mut vec[i - 1], asm);
@@ -94,8 +89,8 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     // justamente pelo código ser _single-thread_
     unsafe {
         if g_trace_code == 1 {
-            // TODO: usar `listing`
-            println!("\nGerando código assembly\n");
+            let str = CString::new("\nGerando código assembly\n\n").unwrap();
+            libc::fprintf(listing, str.as_ptr());
         }
     }
 
@@ -459,9 +454,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 if q.arg2 == "output" {
                     let param = format!(
                         "$r{}",
-                        output_param.pop().unwrap()[2..]
-                            .parse::<i32>()
-                            .unwrap()
+                        output_param.pop().unwrap()[2..].parse::<i32>().unwrap()
                     );
                     asm = Asm {
                         cmd: "OUT".to_string(),
@@ -474,8 +467,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         println!("{:?}", q);
                     }
 
-                    let dest =
-                        format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
+                    let dest = format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
                     asm = Asm {
                         cmd: "IN".to_string(),
                         arg1: dest,
@@ -562,10 +554,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         let loc = p.1.mem_location;
                         let asm = Asm {
                             cmd: "STORE".to_string(),
-                            arg1: format!(
-                                "$r{}",
-                                temp[2..].parse::<i32>().unwrap()
-                            ),
+                            arg1: format!("$r{}", temp[2..].parse::<i32>().unwrap()),
                             arg2: loc.to_string(),
                             arg3: "--".to_string(),
                         };
@@ -624,8 +613,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
             };
             let mv = Asm {
                 cmd: "MOVE".to_string(),
-                arg1: format!("$r{}", temp[2..].parse::<i32>().unwrap())
-                    .to_owned(),
+                arg1: format!("$r{}", temp[2..].parse::<i32>().unwrap()).to_owned(),
                 arg2: "$r_ret".to_string(),
                 arg3: "--".to_string(),
             };
@@ -729,10 +717,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         let jmp = Asm {
                             cmd: "JZ".to_string(),
                             arg1: "$r_lab".to_string(),
-                            arg2: format!(
-                                "$r{}",
-                                v.arg1[2..].parse::<i32>().unwrap()
-                            ),
+                            arg2: format!("$r{}", v.arg1[2..].parse::<i32>().unwrap()),
                             arg3: "--".to_string(),
                         };
 
@@ -750,10 +735,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         let jmp = Asm {
                             cmd: "JZ".to_string(),
                             arg1: "$r_lab".to_string(),
-                            arg2: format!(
-                                "$r{}",
-                                v.arg1[2..].parse::<i32>().unwrap()
-                            ),
+                            arg2: format!("$r{}", v.arg1[2..].parse::<i32>().unwrap()),
                             arg3: "--".to_string(),
                         };
 
@@ -771,10 +753,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         let jmp = Asm {
                             cmd: "JP".to_string(),
                             arg1: "$r_lab".to_string(),
-                            arg2: format!(
-                                "$r{}",
-                                v.arg1[2..].parse::<i32>().unwrap()
-                            ),
+                            arg2: format!("$r{}", v.arg1[2..].parse::<i32>().unwrap()),
                             arg3: "--".to_string(),
                         };
 
@@ -795,10 +774,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     Asm {
                         cmd: command,
                         arg1: "$r_lab".to_string(),
-                        arg2: format!(
-                            "$r{}",
-                            v.arg1[2..].parse::<i32>().unwrap()
-                        ),
+                        arg2: format!("$r{}", v.arg1[2..].parse::<i32>().unwrap()),
                         arg3: "--".to_string(),
                     },
                 );
@@ -842,8 +818,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
             match vec[i].cmd.as_str() {
                 "LOAD" | "LOADI" => {
                     if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_lab" {
-                        let register =
-                            vec[i].arg1[2..].parse::<usize>().unwrap();
+                        let register = vec[i].arg1[2..].parse::<usize>().unwrap();
                         if let Entry::Vacant(e) = register_map.entry(register) {
                             let available = find_available_reg(&available_reg)
                                 .unwrap_or_else(|| panic!("register overflow"));
@@ -880,22 +855,14 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     map_reg(&mut vec[i].arg1, &register_map);
                     if i > start {
                         // HACK: não sei melhorar dentro de f()
-                        remove_reg(
-                            &old1,
-                            &mut register_map,
-                            &mut available_reg,
-                        );
+                        remove_reg(&old1, &mut register_map, &mut available_reg);
                     }
 
                     let old2 = vec[i].arg2.clone();
                     map_reg(&mut vec[i].arg2, &register_map);
                     if i > start {
                         // HACK: não sei melhorar dentro de f()
-                        remove_reg(
-                            &old2,
-                            &mut register_map,
-                            &mut available_reg,
-                        );
+                        remove_reg(&old2, &mut register_map, &mut available_reg);
                     }
                 }
                 "ADD" | "SUB" | "MULT" | "DIV" => {
@@ -910,22 +877,14 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     map_reg(&mut vec[i].arg2, &register_map);
                     if i > start {
                         // HACK: não sei melhorar dentro de f()
-                        remove_reg(
-                            &old2,
-                            &mut register_map,
-                            &mut available_reg,
-                        );
+                        remove_reg(&old2, &mut register_map, &mut available_reg);
                     }
 
                     let old3 = vec[i].arg3.clone();
                     map_reg(&mut vec[i].arg3, &register_map);
                     if i > start {
                         // HACK: não sei melhorar dentro de f()
-                        remove_reg(
-                            &old3,
-                            &mut register_map,
-                            &mut available_reg,
-                        );
+                        remove_reg(&old3, &mut register_map, &mut available_reg);
                     }
                 }
                 "ADDI" => {
@@ -934,13 +893,10 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 }
                 "MOVE" => {
                     if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_ret" {
-                        if register_map.contains_key(
-                            &vec[i].arg1[2..].parse::<usize>().unwrap(),
-                        ) {
+                        if register_map.contains_key(&vec[i].arg1[2..].parse::<usize>().unwrap()) {
                             map_reg(&mut vec[i].arg1, &register_map);
                         } else {
-                            let register =
-                                vec[i].arg1[2..].parse::<usize>().unwrap();
+                            let register = vec[i].arg1[2..].parse::<usize>().unwrap();
                             let available = find_available_reg(&available_reg)
                                 .unwrap_or_else(|| panic!("register overflow"));
                             available_reg[available].available = false;
@@ -953,11 +909,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         map_reg(&mut vec[i].arg2, &register_map);
                         if i > start {
                             // HACK: não sei melhorar dentro de f()
-                            remove_reg(
-                                &old,
-                                &mut register_map,
-                                &mut available_reg,
-                            );
+                            remove_reg(&old, &mut register_map, &mut available_reg);
                         }
                     }
                 }
@@ -996,32 +948,38 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
         if g_trace_code == 1 {
             // TODO: mudar para uma função (print_assembly)
             // TODO: usar `listing`
-            println!(
+            let str = CString::new(format!(
                 "{:<3} | {:>6}, {:>6}, {:>6}, {:>6} |\n",
                 "--", "CMD", "ARG1", "ARG2", "ARG3"
-            );
+            ))
+            .unwrap();
+            libc::fprintf(listing, str.as_ptr());
 
             if debug {
                 println!("{:?}", &function_limits);
             }
 
             for (i, asm) in vec.iter().enumerate() {
-                println!(
-                    "{:<3} < {:>6}, {:>6}, {:>6}, {:>6} >",
+                let str = CString::new(format!(
+                    "{:<3} < {:>6}, {:>6}, {:>6}, {:>6} >\n",
                     i, asm.cmd, asm.arg1, asm.arg2, asm.arg3
-                );
+                ))
+                .unwrap();
+                libc::fprintf(listing, str.as_ptr());
             }
 
             if debug {
                 for (var, loc) in variables.iter() {
                     println!();
                     println!(
-                    "var.name: {}, var.scope: {} -> loc.mem: {}, loc.size: {}",
-                    var.name, var.scope, loc.mem_location, loc.size);
+                        "var.name: {}, var.scope: {} -> loc.mem: {}, loc.size: {}",
+                        var.name, var.scope, loc.mem_location, loc.size
+                    );
                 }
             }
 
-            println!("\nGeração do código assembly concluída.");
+            let str = CString::new("\nGeração do código assembly concluída.\n").unwrap();
+            libc::fprintf(listing, str.as_ptr());
         }
     };
 

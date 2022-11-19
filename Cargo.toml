@@ -26,3 +26,6 @@ rustflags = ["-Zsanitizer=address"]
 path = "src/rust.rs"
 crate-type = ["staticlib"]
 test = true
+
+[dependencies]
+libc = "0.2"

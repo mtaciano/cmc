@@ -1,4 +1,4 @@
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::fs::OpenOptions;
 use std::io::Write;
 
@@ -95,14 +95,17 @@ struct Bin {
 
 /* Função `make_assembly_and_binary` é responsável por criar
  * o assembly e binário para o compilador
- */
+*/
 #[no_mangle]
 pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
     let quads = Vec::<Quad>::from_quad(quad);
     let asm = crate::assembly::make_assembly(quads);
     let bin = crate::binary::make_binary(asm);
 
-    println!("\nCriando arquivo output.txt");
+    let str = CString::new("\nCriando arquivo output.txt\n").unwrap();
+    unsafe {
+        libc::fprintf(ffi::listing, str.as_ptr());
+    }
     let mut binary_file = OpenOptions::new()
         .create(true)
         .write(true)
@@ -114,9 +117,15 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
         writeln!(&mut binary_file, "{:032b}", bin.word)
             .expect("Erro escrevendo binário em arquivo.");
     }
-    println!("\nArquivo output.txt criado.");
+    let str = CString::new("\nArquivo output.txt criado.\n").unwrap();
+    unsafe {
+        libc::fprintf(ffi::listing, str.as_ptr());
+    }
 
-    println!("\nCriando arquivo verilog_output.txt");
+    let str = CString::new("\nCriando arquivo verilog_output.txt\n").unwrap();
+    unsafe {
+        libc::fprintf(ffi::listing, str.as_ptr());
+    }
     let mut verilog_file = OpenOptions::new()
         .create(true)
         .write(true)
@@ -132,5 +141,9 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
         )
         .expect("Erro escrevendo binário em arquivo.");
     }
-    println!("\nArquivo verilog_output.txt criado.");
+
+    let str = CString::new("\nArquivo verilog_output.txt criado.\n").unwrap();
+    unsafe {
+        libc::fprintf(ffi::listing, str.as_ptr());
+    }
 }

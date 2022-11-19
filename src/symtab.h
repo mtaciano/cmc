@@ -8,8 +8,9 @@
 /* Função `symtab_insert` coloca as linhas,
  * posições de memória e os escopos na tabela de símbolos
  */
-void symtab_insert(char *name, char *varfn, char *type, char *scope, int lineno,
-                   int memloc);
+void symtab_insert(
+    char *name, char *varfn, char *type, char *scope, int lineno, int memloc
+);
 
 /* Função `symtab_lookup` retorna a posição na memória de
  * uma variável, e -1 se não encontrar

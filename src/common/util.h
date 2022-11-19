@@ -5,6 +5,18 @@
 
 #include "globals.h"
 
+/* Função `malloc_or_die` é um _wrapper_ para a função `malloc`
+ * com a diferença que, quando não foi possível realizar o `malloc`,
+ * ela chama `exit` e encerra a execução do código
+ */
+void *malloc_or_die(size_t size);
+
+/* Função `realloc_or_die` é um _wrapper_ para a função `realloc`
+ * com a diferença que, quando não foi possível realizar o `realloc`,
+ * ela chama `exit` e encerra a execução do código
+ */
+void *realloc_or_die(void *ptr, size_t size);
+
 /* Função `printToken` printa um token
  * e seu lexema para o arquivo listing
  */
@@ -35,23 +47,26 @@ char *copy_string(char *s);
  */
 void print_tree(TreeNode *tree);
 
-/* Componentes da pilha */
+/* Pilha de strings */
 typedef struct {
     int max_size;
     int last;
     char **items;
-} *CharStack;
+} * CharStack;
 
 /* Função `cs_init` inicia a pilha com um tamanho máximo de `size` */
 CharStack cs_init(void);
 
-/* Função `cs_push` coloca a string na pilha */
+/* Função `cs_push` coloca um elemento na pilha */
 void cs_push(CharStack stack, char *item);
 
-/* Função `cs_pop` remove a string da pilha, retornando seu valor */
+/* Função `cs_pop` remove o elemento da pilha, retornando seu valor */
 char *cs_pop(CharStack stack);
 
 /* Função `cs_drop` remove a memória usada pela pilha */
 void cs_drop(CharStack stack);
+
+/* Função `cs_peek` retorna o elemento mais recente sem removê-lo da pilha */
+char *cs_peek(CharStack stack);
 
 #endif /* _UTIL_H_ */

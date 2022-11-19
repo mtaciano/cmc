@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common/util.h"
+
 /* Constante `SIZE` é o tamanho da tabela hash
  * seu ideal é ser um número primo
  */
@@ -17,7 +19,9 @@
 #define SHIFT 4
 
 /* Função de hash */
-static int hash(char *key) {
+static int
+hash(char *key)
+{
     int temp = 0;
     int i = 0;
 
@@ -35,7 +39,7 @@ static int hash(char *key) {
 typedef struct LineListRec {
     int lineno;
     struct LineListRec *next;
-} *LineList;
+} * LineList;
 
 /* O histórico nas bucket lists para cada variável,
  * como nome, memória, escopo, e
@@ -50,15 +54,18 @@ typedef struct BucketListRec {
     LineList lines;
     int memloc;
     struct BucketListRec *next;
-} *BucketList;
+} * BucketList;
 
 static BucketList hash_table[SIZE];
 
 /* Função `symtab_insert` coloca as linhas,
  * posições de memória e os escopos na tabela de símbolos
  */
-void symtab_insert(char *name, char *varfn, char *type, char *scope, int lineno,
-                   int memloc) {
+void
+symtab_insert(
+    char *name, char *varfn, char *type, char *scope, int lineno, int memloc
+)
+{
     int h = hash(name);
     BucketList l = hash_table[h];
 
@@ -68,25 +75,25 @@ void symtab_insert(char *name, char *varfn, char *type, char *scope, int lineno,
             l = l->next;
         }
 
-        if (l == NULL) {  // se não está na tabela, adicione
-            l = malloc(sizeof(*l));
+        if (l == NULL) { // se não está na tabela, adicione
+            l = malloc_or_die(sizeof(*l));
             l->name = name;
             l->scope = scope;
             l->varfn = varfn;
             l->type = type;
-            l->lines = malloc(sizeof(*l->lines));
+            l->lines = malloc_or_die(sizeof(*l->lines));
             l->lines->lineno = lineno;
             l->lines->next = NULL;
             l->memloc = memloc;
             l->next = hash_table[h];
             hash_table[h] = l;
-        } else {  // encontrou, então adiciona na tabela
+        } else { // encontrou, então adiciona na tabela
             LineList t = l->lines;
 
             while (t->next != NULL) {
                 t = t->next;
             }
-            t->next = malloc(sizeof(*t));
+            t->next = malloc_or_die(sizeof(*t));
             t->next->lineno = lineno;
             t->next->next = NULL;
         }
@@ -95,24 +102,24 @@ void symtab_insert(char *name, char *varfn, char *type, char *scope, int lineno,
             l = l->next;
         }
 
-        if (l == NULL) {  // se não está na tabela, adicione
-            l = malloc(sizeof(*l));
+        if (l == NULL) { // se não está na tabela, adicione
+            l = malloc_or_die(sizeof(*l));
             l->name = name;
             l->scope = scope;
             l->varfn = varfn;
             l->type = type;
-            l->lines = malloc(sizeof(*l->lines));
+            l->lines = malloc_or_die(sizeof(*l->lines));
             l->lines->lineno = lineno;
             l->lines->next = NULL;
             l->memloc = memloc;
             l->next = hash_table[h];
             hash_table[h] = l;
-        } else {  // encontrou, então adiciona na tabela
+        } else { // encontrou, então adiciona na tabela
             LineList t = l->lines;
             while (t->next != NULL) {
                 t = t->next;
             }
-            t->next = malloc(sizeof(*t));
+            t->next = malloc_or_die(sizeof(*t));
             t->next->lineno = lineno;
             t->next->next = NULL;
         }
@@ -122,7 +129,9 @@ void symtab_insert(char *name, char *varfn, char *type, char *scope, int lineno,
 /* Função `symtab_lookup` retorna a primeira linha de
  * uma variável, e -1 se não encontrar
  */
-int symtab_lookup(char *name) {
+int
+symtab_lookup(char *name)
+{
     int h = hash(name);
     BucketList l = hash_table[h];
 
@@ -140,7 +149,9 @@ int symtab_lookup(char *name) {
 /* Função `symtab_lookup_scope` retorna a primeira linha de
  * uma variável, e `-1` se não encontrar
  */
-int symtab_lookup_scope(char *name, char *scope) {
+int
+symtab_lookup_scope(char *name, char *scope)
+{
     for (int i = 0; i < SIZE; i++) {
         BucketList l = hash_table[i];
 
@@ -159,7 +170,9 @@ int symtab_lookup_scope(char *name, char *scope) {
 /* Função `symtab_lookup_max_line` retorna o número da linha de
  * uma função, e `-1` se não encontrar
  */
-int symtab_lookup_max_line(char *varfn, char *scope) {
+int
+symtab_lookup_max_line(char *varfn, char *scope)
+{
     int linhaMax = -1;
 
     for (int i = 0; i < SIZE; i++) {
@@ -183,11 +196,17 @@ int symtab_lookup_max_line(char *varfn, char *scope) {
  * os conteúdos da tabela de símbolos
  * para o arquivo listing
  */
-void symtab_print(FILE *listing) {
-    fprintf(listing,
-            "NOME VARIÁVEL  LOCALIZAÇÃO  ESCOPO  TIPO_ID  TIPO_DADO  LINHAS\n");
-    fprintf(listing,
-            "-------------  -----------  ------  -------  ---------  ------\n");
+void
+symtab_print(FILE *listing)
+{
+    fprintf(
+        listing,
+        "NOME VARIÁVEL  LOCALIZAÇÃO  ESCOPO  TIPO_ID  TIPO_DADO  LINHAS\n"
+    );
+    fprintf(
+        listing,
+        "-------------  -----------  ------  -------  ---------  ------\n"
+    );
 
     for (int i = 0; i < SIZE; ++i) {
         if (hash_table[i] != NULL) {

@@ -1,5 +1,7 @@
 /* Implementação do gerador de código binário */
-use crate::{ffi::g_trace_code, *};
+use crate::ffi::{g_trace_code, listing};
+use crate::{Asm, Bin};
+use std::ffi::CString;
 
 /* Todos os opcodes do processador e funções auxiliares */
 mod opcodes {
@@ -66,7 +68,7 @@ mod opcodes {
 /* Função `parse_register` é responsável por verificar
  * a validade de um registrador, e caso ele seja válido
  * ela retorna seu valor em `u32`
- */
+*/
 fn parse_register(reg: &str) -> u32 {
     // Verificar se é um registrador reservado
     if reg.eq("$r_call") {
@@ -97,7 +99,7 @@ fn parse_register(reg: &str) -> u32 {
 /* Função `parse_imediate` é responsável por verificar
  * a validade de um imediato, e caso ele seja válido
  * ela retorna seu valor em `u32`
- */
+*/
 fn parse_imediate(im: &str, size: i32) -> u32 {
     match im.parse::<u32>() {
         Ok(num) => {
@@ -113,14 +115,15 @@ fn parse_imediate(im: &str, size: i32) -> u32 {
 
 /* Função `make_binary` é responsável por criar a representação
  * binária a partir de um vetor de instruções assembly
- */
+*/
 pub(crate) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
     // SEGURANÇA: No momento temos acesso único a variável `g_trace_code`
     // justamente pelo código ser _single-thread_
     unsafe {
         if g_trace_code == 1 {
             // TODO: usar `listing`
-            println!("\nGerando binário\n");
+            let str = CString::new("\nGerando binário\n\n").unwrap();
+            libc::fprintf(listing, str.as_ptr());
         }
     }
 
@@ -241,10 +244,12 @@ pub(crate) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
         if g_trace_code == 1 {
             // TODO: usar `listing`
             for bin in vec.iter() {
-                let bits = format!("{:032b}", bin.word);
-                println!("{}", bits);
+                let bits = CString::new(format!("{:032b}\n", bin.word)).unwrap();
+                libc::fprintf(listing, bits.as_ptr());
             }
-            println!("\nGeração do binário concluída.");
+
+            let str  = CString::new("\nGeração do binário concluída.\n").unwrap();
+            libc::fprintf(listing, str.as_ptr());
         }
     };
 

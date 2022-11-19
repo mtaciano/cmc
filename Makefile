@@ -31,8 +31,18 @@ BINFLAGS = -static # Pode dar erro, remover se der
 LDFLAGS = -fuse-ld=mold -Wl,-O1 -Wl,--as-needed # Se der erro, remover `-fuse-ld=mold` pois não está no sistema
 
 # Componentes do compilador
-OBJS = $(TARGET)/parse.tab.o $(TARGET)/scan.yy.o $(TARGET)/main.o $(TARGET)/util.o $(TARGET)/symtab.o $(TARGET)/analyze.o $(TARGET)/intermediate.o
-LIBS = $(TARGET)/libc.a $(TARGET)/librust.a
+OBJS = \
+	$(TARGET)/parse.tab.o \
+	$(TARGET)/scan.yy.o   \
+	$(TARGET)/main.o      \
+	$(TARGET)/util.o      \
+	$(TARGET)/symtab.o    \
+	$(TARGET)/analyze.o   \
+	$(TARGET)/intermediate.o
+
+LIBS = \
+	$(TARGET)/libc.a \
+	$(TARGET)/librust.a
 
 
 # Otimização de velocidade e tamanho

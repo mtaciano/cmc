@@ -411,14 +411,10 @@ arg_lista : arg_lista COMMA expressao
 int yyerror(char *message) {
     (void)message; // Suprime os avisos de variável não usada
 
-    if(g_error) {
-        return -1;
-    }
-
     fprintf(listing,"ERRO SINTÁTICO: %s LINHA: %d\n", token_string, lineno);
-    g_error = true;
+    exit(EXIT_FAILURE);
 
-    return -1;
+    return EXIT_FAILURE; // Não acontece, ver o que fazer
 }
 
 /* Função `yylex` retorna o próximo token */
