@@ -23,11 +23,9 @@ static int
 hash(char *key)
 {
     int temp = 0;
-    int i = 0;
 
-    while (key[i] != '\0') {
+    for (int i = 0; key[i] != '\0'; i++) {
         temp = ((temp << SHIFT) + key[i]) % SIZE;
-        i++;
     }
 
     return temp;

@@ -1,9 +1,8 @@
 /* Implementação do gerador de código assembly */
-use crate::ffi::{g_trace_code, listing};
+use crate::ffi::{g_trace_code, listing, print_stream};
 use crate::{Asm, Quad};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::ffi::CString;
 
 enum Comparison {
     LT,
@@ -89,8 +88,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     // justamente pelo código ser _single-thread_
     unsafe {
         if g_trace_code == 1 {
-            let str = CString::new("\nGerando código assembly\n\n").unwrap();
-            libc::fprintf(listing, str.as_ptr());
+            print_stream(listing, "\nGerando código assembly\n\n");
         }
     }
 
@@ -569,7 +567,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
         }
     }
 
-    let mut function_limits = Vec::<(String, usize, usize, String)>::new();
+    let mut fn_limits = Vec::<(String, usize, usize, String)>::new();
     let mut start = 0;
     let mut finish;
     let mut name = Vec::new();
@@ -581,7 +579,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     {
         if value.cmd == "end" {
             finish = i;
-            function_limits.push((
+            fn_limits.push((
                 name.pop().unwrap(),
                 start,
                 finish,
@@ -599,7 +597,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
             let scope = vec[i].arg2.clone();
             let temp = vec[i].arg1.clone();
             let mut start = 0;
-            for f in function_limits.iter() {
+            for f in fn_limits.iter() {
                 if f.0 == scope {
                     start = f.1;
                     break;
@@ -633,7 +631,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
         }
     }
 
-    for function in function_limits.iter() {
+    for function in fn_limits.iter() {
         let noop = Asm {
             cmd: "NOP".to_string(),
             arg1: "--".to_string(),
@@ -808,7 +806,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     let refactor = true;
     if refactor {
         let mut start = 0;
-        for (fun, i, _, _) in function_limits.iter() {
+        for (fun, i, _, _) in fn_limits.iter() {
             if fun == "main" {
                 start = *i;
                 break;
@@ -948,24 +946,28 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
         if g_trace_code == 1 {
             // TODO: mudar para uma função (print_assembly)
             // TODO: usar `listing`
-            let str = CString::new(format!(
-                "{:<3} | {:>6}, {:>6}, {:>6}, {:>6} |\n",
-                "--", "CMD", "ARG1", "ARG2", "ARG3"
-            ))
-            .unwrap();
-            libc::fprintf(listing, str.as_ptr());
+            print_stream(
+                listing,
+                format!(
+                    "{:<3} | {:>6}, {:>6}, {:>6}, {:>6} |\n",
+                    "--", "CMD", "ARG1", "ARG2", "ARG3"
+                )
+                .as_str(),
+            );
 
             if debug {
-                println!("{:?}", &function_limits);
+                println!("{:?}", &fn_limits);
             }
 
             for (i, asm) in vec.iter().enumerate() {
-                let str = CString::new(format!(
-                    "{:<3} < {:>6}, {:>6}, {:>6}, {:>6} >\n",
-                    i, asm.cmd, asm.arg1, asm.arg2, asm.arg3
-                ))
-                .unwrap();
-                libc::fprintf(listing, str.as_ptr());
+                print_stream(
+                    listing,
+                    format!(
+                        "{:<3} < {:>6}, {:>6}, {:>6}, {:>6} >\n",
+                        i, asm.cmd, asm.arg1, asm.arg2, asm.arg3
+                    )
+                    .as_str(),
+                );
             }
 
             if debug {
@@ -978,8 +980,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 }
             }
 
-            let str = CString::new("\nGeração do código assembly concluída.\n").unwrap();
-            libc::fprintf(listing, str.as_ptr());
+            print_stream(listing, "\nGeração do código assembly concluída.\n");
         }
     };
 

@@ -125,12 +125,6 @@ new_temp(void)
 static void
 read_tree_node(TreeNode *t)
 {
-    // TODO: melhorar e documentar
-
-    // TODO: remover a maioria do código
-    // TODO: transformando read_tree_node em uma função que executa 3 outras
-    // TODO: sendo elas uma pré, uma mid e uma pós nó
-    // TODO: documentar flags
     int fun_node = false;
     int assign_node = false;
     int const_assign_node = false;

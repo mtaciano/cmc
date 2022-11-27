@@ -1,7 +1,6 @@
 /* Implementação do gerador de código binário */
-use crate::ffi::{g_trace_code, listing};
+use crate::ffi::{g_trace_code, listing, print_stream};
 use crate::{Asm, Bin};
-use std::ffi::CString;
 
 /* Todos os opcodes do processador e funções auxiliares */
 mod opcodes {
@@ -121,9 +120,7 @@ pub(crate) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
     // justamente pelo código ser _single-thread_
     unsafe {
         if g_trace_code == 1 {
-            // TODO: usar `listing`
-            let str = CString::new("\nGerando binário\n\n").unwrap();
-            libc::fprintf(listing, str.as_ptr());
+            print_stream(listing, "\nGerando binário\n\n");
         }
     }
 
@@ -242,14 +239,11 @@ pub(crate) fn make_binary(bin: Vec<Asm>) -> Vec<Bin> {
     // justamente pelo código ser _single-thread_
     unsafe {
         if g_trace_code == 1 {
-            // TODO: usar `listing`
             for bin in vec.iter() {
-                let bits = CString::new(format!("{:032b}\n", bin.word)).unwrap();
-                libc::fprintf(listing, bits.as_ptr());
+                print_stream(listing, format!("{:032b}\n", bin.word).as_str());
             }
 
-            let str  = CString::new("\nGeração do binário concluída.\n").unwrap();
-            libc::fprintf(listing, str.as_ptr());
+            print_stream(listing, "\nGeração do binário concluída.\n");
         }
     };
 
