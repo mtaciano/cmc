@@ -55,7 +55,7 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    program = malloc(strlen(argv[1]) + 1);
+    program = malloc_or_die(strlen(argv[1]) + 1);
     strcpy(program, argv[1]);
 
     if (strchr(program, '.') == NULL) {

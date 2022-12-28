@@ -38,7 +38,7 @@ fn map_reg(reg: &mut String, reg_map: &HashMap<usize, usize>) {
     let source = reg[2..].parse::<usize>().unwrap();
     let dest = reg_map.get(&source).unwrap();
 
-    *reg = format!("$r{}", dest);
+    *reg = format!("$r{dest}");
 }
 
 fn remove_reg(reg: &str, reg_map: &mut HashMap<usize, usize>, available: &mut [Register]) {
@@ -462,7 +462,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     };
                 } else if q.arg2 == "input" {
                     if debug {
-                        println!("{:?}", q);
+                        println!("{q:?}");
                     }
 
                     let dest = format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
@@ -822,10 +822,10 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                                 .unwrap_or_else(|| panic!("register overflow"));
                             available_reg[available].available = false;
                             e.insert(available);
-                            vec[i].arg1 = format!("$r{}", available);
+                            vec[i].arg1 = format!("$r{available}");
                         } else {
                             let dest = register_map.get(&register).unwrap();
-                            vec[i].arg1 = format!("$r{}", dest);
+                            vec[i].arg1 = format!("$r{dest}");
                         }
                     }
                 }
@@ -836,7 +836,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                             .unwrap_or_else(|| panic!("register overflow"));
                         available_reg[available].available = false;
                         e.insert(available);
-                        vec[i].arg1 = format!("$r{}", available);
+                        vec[i].arg1 = format!("$r{available}");
                         map_reg(&mut vec[i].arg2, &register_map);
                     }
                 }
@@ -869,7 +869,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         .unwrap_or_else(|| panic!("register overflow"));
                     available_reg[available].available = false;
                     register_map.insert(register, available);
-                    vec[i].arg1 = format!("$r{}", available);
+                    vec[i].arg1 = format!("$r{available}");
 
                     let old2 = vec[i].arg2.clone();
                     map_reg(&mut vec[i].arg2, &register_map);
@@ -899,7 +899,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                                 .unwrap_or_else(|| panic!("register overflow"));
                             available_reg[available].available = false;
                             register_map.insert(register, available);
-                            vec[i].arg1 = format!("$r{}", available);
+                            vec[i].arg1 = format!("$r{available}");
                         }
                     }
                     if vec[i].arg2 != "$r_ret" {
@@ -925,7 +925,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         .unwrap_or_else(|| panic!("register overflow"));
                     available_reg[available].available = false;
                     register_map.insert(register, available);
-                    vec[i].arg1 = format!("$r{}", available);
+                    vec[i].arg1 = format!("$r{available}");
                 }
                 "JN" | "JZ" | "JP" => {
                     let old = vec[i].arg2.clone();

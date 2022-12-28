@@ -56,7 +56,7 @@ print_quad(Quad q)
 static void
 insert_quad(char *cmd, char *arg1, char *arg2, char *arg3)
 {
-    Quad new_quad = malloc(sizeof(*new_quad));
+    Quad new_quad = malloc_or_die(sizeof(*new_quad));
 
     new_quad->cmd = cmd;
     new_quad->arg1 = arg1;

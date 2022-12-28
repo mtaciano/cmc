@@ -59,7 +59,7 @@ mod opcodes {
             "JP" => JP,
             "STORER" => STORER,
             "LOADR" => LOADR,
-            _ => panic!("opcode {} não conhecido!", str),
+            _ => panic!("opcode {str} não conhecido!"),
         }
     }
 }
