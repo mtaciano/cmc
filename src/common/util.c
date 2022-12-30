@@ -18,7 +18,7 @@ malloc_or_die(size_t size)
     void *ptr = malloc(size);
 
     if (ptr == NULL) {
-        fprintf(errlisting, "Falta de memória em malloc_or_die()\n");
+        fprintf(err_fd, "Falta de memória em malloc_or_die().\n");
         exit(EXIT_FAILURE);
     }
 
@@ -39,7 +39,7 @@ realloc_or_die(void *ptr, size_t size)
     void *new_ptr = realloc(ptr, size);
 
     if (new_ptr == NULL) {
-        fprintf(errlisting, "Falta de memória em realloc_or_die()\n");
+        fprintf(err_fd, "Falta de memória em realloc_or_die().\n");
         exit(EXIT_FAILURE);
     }
 
@@ -47,7 +47,7 @@ realloc_or_die(void *ptr, size_t size)
 }
 
 /* Função `printToken` printa um token
- * e seu lexema para o arquivo listing
+ * e seu lexema para o arquivo std_fd
  */
 void
 print_token(TokenType token, const char *token_string)
@@ -64,81 +64,79 @@ print_token(TokenType token, const char *token_string)
     case RETURN:
         /* fallthrough */
     case WHILE:
-        fprintf(listing, "Palavra reservada: %s\n", token_string);
+        fprintf(std_fd, "Palavra reservada: %s\n", token_string);
         break;
     case PLUS:
-        fprintf(listing, "+\n");
+        fprintf(std_fd, "+\n");
         break;
     case MINUS:
-        fprintf(listing, "-\n");
+        fprintf(std_fd, "-\n");
         break;
     case TIMES:
-        fprintf(listing, "*\n");
+        fprintf(std_fd, "*\n");
         break;
     case OVER:
-        fprintf(listing, "/\n");
+        fprintf(std_fd, "/\n");
         break;
     case LT:
-        fprintf(listing, "<\n");
+        fprintf(std_fd, "<\n");
         break;
     case LE:
-        fprintf(listing, "<=\n");
+        fprintf(std_fd, "<=\n");
         break;
     case GT:
-        fprintf(listing, ">\n");
+        fprintf(std_fd, ">\n");
         break;
     case GE:
-        fprintf(listing, ">=\n");
+        fprintf(std_fd, ">=\n");
         break;
     case EQ:
-        fprintf(listing, "==\n");
+        fprintf(std_fd, "==\n");
         break;
     case NE:
-        fprintf(listing, "!=\n");
+        fprintf(std_fd, "!=\n");
         break;
     case ASSIGN:
-        fprintf(listing, "=\n");
+        fprintf(std_fd, "=\n");
         break;
     case SEMI:
-        fprintf(listing, ";\n");
+        fprintf(std_fd, ";\n");
         break;
     case COMMA:
-        fprintf(listing, ",\n");
+        fprintf(std_fd, ",\n");
         break;
     case LPAREN:
-        fprintf(listing, "(\n");
+        fprintf(std_fd, "(\n");
         break;
     case RPAREN:
-        fprintf(listing, ")\n");
+        fprintf(std_fd, ")\n");
         break;
     case LBRACKET:
-        fprintf(listing, "[\n");
+        fprintf(std_fd, "[\n");
         break;
     case RBRACKET:
-        fprintf(listing, "]\n");
+        fprintf(std_fd, "]\n");
         break;
     case LBRACE:
-        fprintf(listing, "{\n");
+        fprintf(std_fd, "{\n");
         break;
     case RBRACE:
-        fprintf(listing, "}\n");
+        fprintf(std_fd, "}\n");
         break;
     case ENDFILE:
-        fprintf(listing, "ENDFILE EOF\n");
+        fprintf(std_fd, "ENDFILE EOF\n");
         break;
     case NUM:
-        fprintf(listing, "NUM, valor = %s\n", token_string);
+        fprintf(std_fd, "NUM, valor = %s\n", token_string);
         break;
     case ID:
-        fprintf(listing, "ID, nome = %s\n", token_string);
+        fprintf(std_fd, "ID, nome = %s\n", token_string);
         break;
     case ERROR:
-        fprintf(
-            errlisting, "ERRO LÉXICO: %s LINHA: %d\n", token_string, lineno
-        );
+        fprintf(err_fd, "ERRO LÉXICO: %s LINHA: %d\n", token_string, lineno);
         exit(EXIT_FAILURE);
     default: // Não deve acontecer normalmente
-        fprintf(errlisting, "Token desconhecido: %d\n", token);
+        fprintf(err_fd, "Token desconhecido: %d\n", token);
         exit(EXIT_FAILURE);
     }
 }
@@ -232,7 +230,7 @@ static void
 print_spaces(void)
 {
     for (int i = 0; i < indentno; i++) {
-        fprintf(listing, " ");
+        fprintf(std_fd, " ");
     }
 }
 
@@ -243,13 +241,13 @@ print_types(TreeNode *tree)
     if (tree->child[0] != NULL) {
         switch (tree->child[0]->type) {
         case Integer:
-            fprintf(listing, "int");
+            fprintf(std_fd, "int");
             break;
         case Void:
-            fprintf(listing, "void");
+            fprintf(std_fd, "void");
             break;
         case IntegerArray:
-            fprintf(listing, "int[]");
+            fprintf(std_fd, "int[]");
             break;
         default: /* Não deve acontecer nunca */
             return;
@@ -257,13 +255,13 @@ print_types(TreeNode *tree)
     } else {
         switch (tree->type) {
         case Integer:
-            fprintf(listing, "int");
+            fprintf(std_fd, "int");
             break;
         case Void:
-            fprintf(listing, "void");
+            fprintf(std_fd, "void");
             break;
         case IntegerArray:
-            fprintf(listing, "int[]");
+            fprintf(std_fd, "int[]");
             break;
         default: /* Não deve acontecer nunca */
             return;
@@ -272,7 +270,7 @@ print_types(TreeNode *tree)
 }
 
 /* Função `print_tree` printa a árvore sintática para o
- * arquivo listing usando indentação para indicar sub-árvores
+ * arquivo std_fd usando indentação para indicar sub-árvores
  */
 void
 print_tree(TreeNode *tree)
@@ -286,22 +284,22 @@ print_tree(TreeNode *tree)
         if (tree->node_kind == StmtK) {
             switch (tree->kind.stmt) {
             case IfK:
-                fprintf(listing, "If\n");
+                fprintf(std_fd, "If\n");
                 break;
             case WhileK:
-                fprintf(listing, "While\n");
+                fprintf(std_fd, "While\n");
                 break;
             case CompoundK:
-                fprintf(listing, "Declaração composta\n");
+                fprintf(std_fd, "Declaração composta\n");
                 break;
             case ReturnK:
-                fprintf(listing, "Return\n");
+                fprintf(std_fd, "Return\n");
                 break;
             case AssignK:
-                fprintf(listing, "Atribuição:\n");
+                fprintf(std_fd, "Atribuição:\n");
                 break;
             default: /* Não deve acontecer nunca */
-                fprintf(errlisting, "Tipo de declaração desconhecida\n");
+                fprintf(err_fd, "Tipo de declaração desconhecida\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -310,32 +308,30 @@ print_tree(TreeNode *tree)
             if (tree->kind.exp != TypeK)
                 switch (tree->kind.exp) {
                 case OpK:
-                    fprintf(listing, "Op: ");
+                    fprintf(std_fd, "Op: ");
                     print_token(tree->attr.op, "\0");
                     break;
                 case ConstK:
-                    fprintf(listing, "Const: %d\n", tree->attr.val);
+                    fprintf(std_fd, "Const: %d\n", tree->attr.val);
                     break;
                 case IdK:
-                    fprintf(listing, "Id: %s\n", tree->attr.name);
+                    fprintf(std_fd, "Id: %s\n", tree->attr.name);
                     break;
                 case TypeK:
                     /* Não faz nada */
                     break;
                 case ArrIdK:
-                    fprintf(listing, "ArrId: %s\n", tree->attr.name);
+                    fprintf(std_fd, "ArrId: %s\n", tree->attr.name);
                     break;
                 case CallK:
-                    fprintf(
-                        listing, "Chamada de Função: %s\n", tree->attr.name
-                    );
+                    fprintf(std_fd, "Chamada de Função: %s\n", tree->attr.name);
                     break;
                 case CalcK:
-                    fprintf(listing, "Operador: ");
+                    fprintf(std_fd, "Operador: ");
                     print_token(tree->child[1]->attr.op, "\0");
                     break;
                 default: /* Não deve acontecer nunca */
-                    fprintf(errlisting, "Tipo de expressão desconhecida\n");
+                    fprintf(err_fd, "Tipo de expressão desconhecida\n");
                     exit(EXIT_FAILURE);
                 }
         }
@@ -343,41 +339,41 @@ print_tree(TreeNode *tree)
         else if (tree->node_kind == DeclK) {
             switch (tree->kind.decl) {
             case FunK:
-                fprintf(listing, "Declaração de Função:  ");
+                fprintf(std_fd, "Declaração de Função:  ");
                 print_types(tree);
-                fprintf(listing, " %s()\n", tree->attr.name);
+                fprintf(std_fd, " %s()\n", tree->attr.name);
                 break;
             case VarK:
-                fprintf(listing, "Declaração de variável:  ");
+                fprintf(std_fd, "Declaração de variável:  ");
                 print_types(tree);
-                fprintf(listing, " %s;\n", tree->attr.name);
+                fprintf(std_fd, " %s;\n", tree->attr.name);
                 break;
             case ArrVarK:
-                fprintf(listing, "Declaração de array de variável:  ");
+                fprintf(std_fd, "Declaração de array de variável:  ");
                 print_types(tree);
                 fprintf(
-                    listing, " %s[%d];\n", tree->attr.arr.name,
+                    std_fd, " %s[%d];\n", tree->attr.arr.name,
                     tree->attr.arr.size
                 );
                 break;
             case ArrParamK:
-                fprintf(listing, "Parâmetro de array: %s\n", tree->attr.name);
+                fprintf(std_fd, "Parâmetro de array: %s\n", tree->attr.name);
                 break;
             case ParamK:
-                fprintf(listing, "Parâmetro: ");
+                fprintf(std_fd, "Parâmetro: ");
                 print_types(tree);
                 if (tree->attr.name != NULL) {
-                    fprintf(listing, " %s\n", tree->attr.name);
+                    fprintf(std_fd, " %s\n", tree->attr.name);
                 } else {
-                    fprintf(listing, " void\n");
+                    fprintf(std_fd, " void\n");
                 }
                 break;
             default: /* Não deve acontecer nunca */
-                fprintf(errlisting, "Declaração desconhecida\n");
+                fprintf(err_fd, "Declaração desconhecida\n");
                 exit(EXIT_FAILURE);
             }
         } else { /* Não deve acontecer nunca */
-            fprintf(errlisting, "Tipo de nó desconhecido\n");
+            fprintf(err_fd, "Tipo de nó desconhecido\n");
             exit(EXIT_FAILURE);
         }
 

@@ -18,7 +18,7 @@ void *malloc_or_die(size_t size);
 void *realloc_or_die(void *ptr, size_t size);
 
 /* Função `printToken` printa um token
- * e seu lexema para o arquivo listing
+ * e seu lexema para o arquivo std_fd
  */
 void print_token(TokenType token, const char *token_string);
 
@@ -43,7 +43,7 @@ TreeNode *new_DeclNode(DeclKind kind);
 char *copy_string(char *s);
 
 /* Função `print_tree` printa a árvore sintática para o
- * arquivo listing usando indentação para indicar sub-árvores
+ * arquivo std_fd usando indentação para indicar sub-árvores
  */
 void print_tree(TreeNode *tree);
 

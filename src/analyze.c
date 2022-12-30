@@ -23,7 +23,7 @@ static CharStack scopes;
 static void
 symbol_error(TreeNode *t, char *message)
 {
-    fprintf(errlisting, "ERRO SEMÂNTICO: %s LINHA: %d\n", message, t->lineno);
+    fprintf(err_fd, "ERRO SEMÂNTICO: %s LINHA: %d\n", message, t->lineno);
     exit(EXIT_FAILURE);
 }
 
@@ -37,7 +37,7 @@ verify_main(void)
 
     if (max_lineno > main_lineno || max_var_lineno > main_lineno) {
         fprintf(
-            errlisting, "ERRO SEMÂNTICO: declaração depois do main LINHA: %d\n",
+            err_fd, "ERRO SEMÂNTICO: declaração depois do main LINHA: %d\n",
             max_lineno > max_var_lineno ? max_lineno : max_var_lineno
         );
         exit(EXIT_FAILURE);
@@ -319,8 +319,8 @@ build_symtab(TreeNode *syntax_tree)
     cs_drop(scopes);
 
     if (g_trace_analyze) {
-        fprintf(listing, "\nTabela de símbolos:\n\n");
-        symtab_print(listing);
+        fprintf(std_fd, "\nTabela de símbolos:\n\n");
+        symtab_print(std_fd);
     }
 }
 

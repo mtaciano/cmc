@@ -12,6 +12,43 @@ mod assembly;
 /* Gerador de binário */
 mod binary;
 
+/* Macro para facilitar a criação de structs `Asm` */
+macro_rules! asm {
+    ($cmd:literal, $arg1:literal, $arg2:literal, $arg3:literal) => {
+        Asm {
+            cmd: $cmd.to_string(),
+            arg1: $arg1.to_string(),
+            arg2: $arg2.to_string(),
+            arg3: $arg3.to_string(),
+        }
+    };
+}
+pub(crate) use asm;
+
+/* Struct de quádruplas */
+#[derive(Debug)]
+struct Quad {
+    cmd: String,
+    arg1: String,
+    arg2: String,
+    arg3: String,
+}
+
+/* Struct para o Assembly */
+#[derive(Debug, Clone)]
+struct Asm {
+    cmd: String,
+    arg1: String,
+    arg2: String,
+    arg3: String,
+}
+
+/* Struct para o Binário */
+#[derive(Debug)]
+struct Bin {
+    word: u32,
+}
+
 /* Conversor de quádrupla única de C para Rust */
 impl From<ffi::Quad> for Quad {
     fn from(quad: ffi::Quad) -> Self {
@@ -47,10 +84,10 @@ where
     T: From<ffi::Quad>,
 {
     fn from_quad(mut quad: ffi::Quad) -> Vec<T> {
-        let mut vec = Vec::new();
+        let mut quadruple = Vec::new();
 
         while !quad.is_null() {
-            vec.push(T::from(quad));
+            quadruple.push(T::from(quad));
 
             // SEGURANÇA: Há pelo menos um elemento para quadruplas,
             // logo há pelo menos um `q.next`, então o ponteiro é verificado
@@ -63,34 +100,10 @@ where
 
         // `vec` não vai mudar de tamanho
         // então é possível liberar espaço que não vai ser usado
-        vec.shrink_to_fit();
+        quadruple.shrink_to_fit();
 
-        vec
+        quadruple
     }
-}
-
-/* Struct de quádruplas */
-#[derive(Debug)]
-struct Quad {
-    cmd: String,
-    arg1: String,
-    arg2: String,
-    arg3: String,
-}
-
-/* Struct para o Assembly */
-#[derive(Debug, Clone)]
-struct Asm {
-    cmd: String,
-    arg1: String,
-    arg2: String,
-    arg3: String,
-}
-
-/* Struct para o Binário */
-#[derive(Debug)]
-struct Bin {
-    word: u32,
 }
 
 /* Função `make_assembly_and_binary` é responsável por criar
@@ -99,11 +112,19 @@ struct Bin {
 #[no_mangle]
 pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
     let quads = Vec::<Quad>::from_quad(quad);
-    let asm = crate::assembly::make_assembly(quads);
+    let mut asm = crate::assembly::make_assembly(quads);
+
+    asm.extend(vec![
+        asm!["NOP", "--", "--", "--"];
+        unsafe {
+            (ffi::g_slot_end - ffi::g_slot_start) as usize - asm.len()
+        }
+    ]);
+
     let bin = crate::binary::make_binary(asm);
 
     unsafe {
-        ffi::print_stream(ffi::listing, "\nCriando arquivo output.txt\n");
+        ffi::print_stream(ffi::std_fd, "\nCriando arquivo output.txt\n");
     }
 
     let mut binary_file = OpenOptions::new()
@@ -119,8 +140,8 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
     }
 
     unsafe {
-        ffi::print_stream(ffi::listing, "\nArquivo output.txt criado.\n");
-        ffi::print_stream(ffi::listing, "\nCriando arquivo verilog_output.txt\n");
+        ffi::print_stream(ffi::std_fd, "\nArquivo output.txt criado.\n");
+        ffi::print_stream(ffi::std_fd, "\nCriando arquivo verilog_output.txt\n");
     }
 
     let mut verilog_file = OpenOptions::new()
@@ -140,6 +161,6 @@ pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
     }
 
     unsafe {
-        ffi::print_stream(ffi::listing, "\nArquivo verilog_output.txt criado.\n");
+        ffi::print_stream(ffi::std_fd, "\nArquivo verilog_output.txt criado.\n");
     }
 }

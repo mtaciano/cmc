@@ -29,12 +29,22 @@
 /* A constante `MAXRESERVED` diz o número de palavras reservadas */
 #define MAXRESERVED 6
 
+/* A contante `MEM_SIZE` serve para indicar o tamanho da memória
+ * de instruções do processador
+ */
+#define MEM_SIZE 512
+
+/* A contante `SLOT_SIZE` serve para indicar o tamanho que cada programa
+ * pode ocupar na memória do processador
+ */
+#define SLOT_SIZE (MEM_SIZE / 4)
+
 /* O Yacc/Bison gera seus próprios valores int para os tokens */
 typedef int TokenType;
 
 extern FILE *source;     /* Descritor de _input_ */
-extern FILE *listing;    /* Descritor de _output_ para saída padrão */
-extern FILE *errlisting; /* Descritor de _output_ para erros */
+extern FILE *std_fd;    /* Descritor de _output_ para saída padrão */
+extern FILE *err_fd; /* Descritor de _output_ para erros */
 
 extern int lineno; /* Número da linha */
 
@@ -103,5 +113,20 @@ extern int g_trace_analyze;
  * durante a fase de geração do código intermediário
  */
 extern int g_trace_code;
+
+/* A variável `g_slot_start` serve para armazenar o começo do slot
+ * que vai ser usado durante o processo de compilação,
+ * assim mudando fatores como local na memória de dados e de instruções
+ */
+// NOTE: para facilitar a implementação, é assumido que o tamanho da memória
+// de dados é o mesmo que o da memória de instruções, assim a posição
+// dos dados de cada programa na memória vai ter um _offset_ igual
+// o da de instruções
+extern int g_slot_start;
+
+/* A variável `g_slot_end` serve para armazenar o fim do slot (não inclusivo)
+ * que vai ser usado durante o processo de compilação.
+ */
+extern int g_slot_end;
 
 #endif /* _GLOBALS_H_ */

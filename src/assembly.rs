@@ -1,6 +1,6 @@
 /* Implementação do gerador de código assembly */
-use crate::ffi::{g_trace_code, listing, print_stream};
-use crate::{Asm, Quad};
+use crate::ffi::{g_slot_start, g_trace_code, print_stream, std_fd};
+use crate::{asm, Asm, Quad};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
@@ -88,26 +88,20 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     // justamente pelo código ser _single-thread_
     unsafe {
         if g_trace_code == 1 {
-            print_stream(listing, "\nGerando código assembly\n\n");
+            print_stream(std_fd, "\nGerando código assembly\n\n");
         }
     }
 
     let mut vec = Vec::new();
     let mut variables: HashMap<Variable, Memory> = HashMap::new();
     let mut iff = Vec::new();
-    let mut mem_available = 0;
+    let mut mem_available = unsafe { g_slot_start };
 
     let debug = false;
     let mut output_param: Vec<String> = Vec::new();
 
     let mut fun_args: HashMap<&str, Vec<(Variable, Memory)>> = HashMap::new();
-
-    vec.push(Asm {
-        cmd: "NOP".to_string(),
-        arg1: "--".to_string(),
-        arg2: "--".to_string(),
-        arg3: "--".to_string(),
-    }); // J main
+    vec.push(asm!["NOP", "--", "--", "--"]); // J main
 
     let mut quad_func_limits = Vec::new();
     let mut quad_finish;
@@ -326,12 +320,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg2: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                 };
-                let noop = Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                };
+                let noop = asm!["NOP", "--", "--", "--"];
 
                 iff.push(Comparison::LT);
                 vec.push(asm);
@@ -345,12 +334,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                 };
-                let noop = Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                };
+                let noop = asm!["NOP", "--", "--", "--"];
 
                 iff.push(Comparison::GT);
                 vec.push(asm);
@@ -364,12 +348,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg2: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                 };
-                let noop = Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                };
+                let noop = asm!["NOP", "--", "--", "--"];
 
                 iff.push(Comparison::LE);
                 vec.push(asm);
@@ -382,12 +361,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                 };
-                let noop = Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                };
+                let noop = asm!["NOP", "--", "--", "--"];
 
                 iff.push(Comparison::GE);
                 vec.push(asm);
@@ -400,12 +374,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                 };
-                let noop = Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                };
+                let noop = asm!["NOP", "--", "--", "--"];
 
                 iff.push(Comparison::NE);
                 vec.push(asm);
@@ -418,12 +387,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     arg2: format!("$r{}", q.arg2[2..].parse::<i32>().unwrap()),
                     arg3: format!("$r{}", q.arg3[2..].parse::<i32>().unwrap()),
                 };
-                let noop = Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                };
+                let noop = asm!["NOP", "--", "--", "--"];
 
                 iff.push(Comparison::EQ);
                 vec.push(asm);
@@ -442,12 +406,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
             }
             "CALL" => {
                 let asm;
-                let noop = Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                };
+                let noop = asm!["NOP", "--", "--", "--"];
 
                 if q.arg2 == "output" {
                     let param = format!(
@@ -490,12 +449,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 }
             }
             "RET" => {
-                vec.push(Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                });
+                vec.push(asm!["NOP", "--", "--", "--"]);
 
                 vec.push(Asm {
                     cmd: q.cmd.to_owned().to_lowercase(),
@@ -632,12 +586,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     }
 
     for function in fn_limits.iter() {
-        let noop = Asm {
-            cmd: "NOP".to_string(),
-            arg1: "--".to_string(),
-            arg2: "--".to_string(),
-            arg3: "--".to_string(),
-        };
+        let noop = asm!["NOP", "--", "--", "--"];
 
         if function.0 == "main" {
             let jmp = Asm {
@@ -671,15 +620,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     let mut labels: HashMap<String, usize> = HashMap::new();
     for (i, v) in vec.iter_mut().enumerate() {
         if v.cmd.as_str() == "lab" {
-            let label = std::mem::replace(
-                v,
-                Asm {
-                    cmd: "NOP".to_string(),
-                    arg1: "--".to_string(),
-                    arg2: "--".to_string(),
-                    arg3: "--".to_string(),
-                },
-            );
+            let label = std::mem::replace(v, asm!["NOP", "--", "--", "--"]);
 
             labels.insert(label.arg1, i);
         }
@@ -947,7 +888,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
             // TODO: mudar para uma função (print_assembly)
             // TODO: usar `listing`
             print_stream(
-                listing,
+                std_fd,
                 format!(
                     "{:<3} | {:>6}, {:>6}, {:>6}, {:>6} |\n",
                     "--", "CMD", "ARG1", "ARG2", "ARG3"
@@ -961,7 +902,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
 
             for (i, asm) in vec.iter().enumerate() {
                 print_stream(
-                    listing,
+                    std_fd,
                     format!(
                         "{:<3} < {:>6}, {:>6}, {:>6}, {:>6} >\n",
                         i, asm.cmd, asm.arg1, asm.arg2, asm.arg3
@@ -980,7 +921,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 }
             }
 
-            print_stream(listing, "\nGeração do código assembly concluída.\n");
+            print_stream(std_fd, "\nGeração do código assembly concluída.\n");
         }
     };
 

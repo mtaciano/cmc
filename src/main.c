@@ -30,14 +30,16 @@
 
 /* Variáveis globais */
 int lineno = 0;
+int g_slot_start;
+int g_slot_end;
 FILE *source;
-FILE *listing;
-FILE *errlisting;
+FILE *std_fd;
+FILE *err_fd;
 
 /* Flags para debug */
-int g_trace_scan = true;
-int g_trace_parse = true;
-int g_trace_analyze = true;
+int g_trace_scan = false;
+int g_trace_parse = false;
+int g_trace_analyze = false;
 int g_trace_code = true;
 
 /* Função principal */
@@ -47,11 +49,16 @@ main(int argc, char *argv[])
     TreeNode *syntax_tree;
     char *program; /* Nome do arquivo de entrada */
 
-    listing = stdout;    /* Manda o texto para STDOUT */
-    errlisting = stderr; /* Manda o texto para STDERR */
+    std_fd = stdout; /* Manda o texto para STDOUT */
+    err_fd = stderr; /* Manda o texto para STDERR */
 
-    if (argc != 2) {
-        fprintf(errlisting, "uso: ./%s <nome_arquivo>\n", argv[0]);
+    if (argc != 3) {
+        fprintf(err_fd, "uso: %s <nome_arquivo> <slot>\n", argv[0]);
+        fprintf(err_fd, "slots:\n");
+        fprintf(err_fd, "  0 -> sistema operacional\n");
+        fprintf(err_fd, "  1 -> programa 1\n");
+        fprintf(err_fd, "  2 -> programa 2\n");
+        fprintf(err_fd, "  3 -> programa 3\n");
         exit(EXIT_FAILURE);
     }
 
@@ -66,11 +73,24 @@ main(int argc, char *argv[])
     source = fopen(program, "r");
 
     if (source == NULL) {
-        fprintf(errlisting, "Arquivo %s não encontrado\n", program);
+        fprintf(err_fd, "Arquivo %s não encontrado.\n", program);
         exit(EXIT_FAILURE);
     }
 
-    fprintf(listing, "\nCOMPILAÇÃO DO C-: %s\n\n", program);
+    char *errptr;
+    g_slot_start = strtol(argv[2], &errptr, 10);
+    if (errptr == argv[2] || (g_slot_start < 0 || g_slot_start >= 4)) {
+        fprintf(err_fd, "slot '%s' não pode ser usado.\n", argv[2]);
+        exit(EXIT_FAILURE);
+    }
+
+    g_slot_start = g_slot_start * SLOT_SIZE;
+    g_slot_end = g_slot_start + SLOT_SIZE;
+
+    fprintf(
+        std_fd, "COMPILAÇÃO DO C- (%d-%d): %s\n\n", g_slot_start, g_slot_end,
+        program
+    );
 
 #if NO_PARSE
     while (get_token() != ENDFILE) {
@@ -80,37 +100,37 @@ main(int argc, char *argv[])
     syntax_tree = parse();
 
     if (g_trace_parse) {
-        fprintf(listing, "\nÁrvore sintática:\n\n");
+        fprintf(std_fd, "\nÁrvore sintática:\n\n");
         print_tree(syntax_tree);
     }
 #if !NO_ANALYZE
     if (g_trace_analyze) {
-        fprintf(listing, "\nMontando tabela de símbolos...\n");
+        fprintf(std_fd, "\nMontando tabela de símbolos...\n");
     }
 
     build_symtab(syntax_tree);
 
     if (g_trace_analyze) {
-        fprintf(listing, "\nVerificando tipos...\n");
+        fprintf(std_fd, "\nVerificando tipos...\n");
     }
 
     type_check(syntax_tree);
 
     if (g_trace_analyze) {
-        fprintf(listing, "\nVerificação concluída.\n");
+        fprintf(std_fd, "\nVerificação concluída.\n");
     }
 #if !NO_CODE
     if (g_trace_code) {
-        fprintf(listing, "\nGerando código intermediário\n\n");
+        fprintf(std_fd, "\nGerando código intermediário...\n\n");
     }
 
-    Quad quad = make_intermediate(syntax_tree);
+    Quad quadruple = make_intermediate(syntax_tree);
 
     if (g_trace_code) {
-        fprintf(listing, "\nGeração do código intermediário concluída.\n");
+        fprintf(std_fd, "\nGeração do código intermediário concluída.\n");
     }
 
-    make_assembly_and_binary(quad);
+    make_assembly_and_binary(quadruple);
 #endif
 #endif
 #endif

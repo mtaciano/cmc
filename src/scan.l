@@ -76,14 +76,14 @@ TokenType get_token(void) {
         first_time = false;
         lineno++;
         yyin = source;
-        yyout = listing;
+        yyout = std_fd;
     }
 
     current_token = yylex();
     strncpy(token_string, yytext, MAX_TOKEN_LEN);
 
     if (g_trace_scan) {
-        fprintf(listing, "\t%d: ", lineno);
+        fprintf(std_fd, "\t%d: ", lineno);
         print_token(current_token, token_string);
     }
 

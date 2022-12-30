@@ -40,11 +40,11 @@ print_quad(Quad q)
 {
     Quad current = q;
 
-    fprintf(listing, "|%7s, %7s, %7s, %7s|\n\n", "CMD", "ARG1", "ARG2", "ARG3");
+    fprintf(std_fd, "|%7s, %7s, %7s, %7s|\n\n", "CMD", "ARG1", "ARG2", "ARG3");
 
     while (current != NULL) {
         fprintf(
-            listing, "(%7s, %7s, %7s, %7s)\n", current->cmd, current->arg1,
+            std_fd, "(%7s, %7s, %7s, %7s)\n", current->cmd, current->arg1,
             current->arg2, current->arg3
         );
 

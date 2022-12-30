@@ -411,7 +411,7 @@ arg_lista : arg_lista COMMA expressao
 int yyerror(char *message) {
     (void)message; // Suprime os avisos de variável não usada
 
-    fprintf(listing,"ERRO SINTÁTICO: %s LINHA: %d\n", token_string, lineno);
+    fprintf(std_fd,"ERRO SINTÁTICO: %s LINHA: %d\n", token_string, lineno);
     exit(EXIT_FAILURE);
 
     return EXIT_FAILURE; // Não acontece, ver o que fazer
