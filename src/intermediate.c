@@ -34,6 +34,11 @@ static int nested_call_level = 0;
 /* Se o nó atual está dentro de um bloco de parâmetros */
 static int inside_param = false;
 
+/* Não é necessário guardar o offset se ele não faz parte do lado esquerdo
+ * de um assign, já que não vai acontecer um ARRSTR com esse offset
+ */
+static int arr_is_left_assign = true;
+
 /* Função `print_quad` printa a quadrupla inteira */
 static void
 print_quad(Quad q)
@@ -226,6 +231,7 @@ read_tree_node(TreeNode *t)
         }
         break;
     }
+
     // Verifica os 3 filhos
     for (int i = 0; i < 3; i++) {
         if (t->child[i] != NULL) {
@@ -235,6 +241,12 @@ read_tree_node(TreeNode *t)
             }
             if (assign_node && const_assign_node && i == 1) {
                 continue; // É do tipo `Id`, não há necessidade de continuar
+            }
+
+            if (assign_node && i == 0) { // Array é na esquerda
+                arr_is_left_assign = true;
+            } else if (assign_node && i != 0) { // Array é na direita
+                arr_is_left_assign = false;
             }
 
             if (if_node && i == 1) { // Antes de entrar no `if`
@@ -298,7 +310,13 @@ read_tree_node(TreeNode *t)
             if (array_node) {
                 char *name = copy_string(t->attr.name);
                 char *temp = new_temp();
-                char *offset = copy_string(cs_peek(temps));
+                char *offset;
+
+                if (arr_is_left_assign == false) {
+                    offset = cs_pop(temps); // Não é pra guardar o offset
+                } else {
+                    offset = copy_string(cs_peek(temps));
+                }
 
                 insert_quad("ARRLOAD", temp, name, offset);
                 cs_push(temps, temp);
@@ -341,6 +359,54 @@ read_tree_node(TreeNode *t)
 
     if (inside_param && !callk_node && t->sibling != NULL) {
         insert_quad("PARAM", cs_pop(temps), "--", "--");
+    }
+
+    if (t->node_kind == ExpK && t->kind.exp == CallK) {
+        if (inside_param && !(t->node_kind == ExpK && t->kind.exp == CalcK)) {
+            if (t->node_kind == ExpK && t->kind.exp == CallK) {
+                if (nested_call_level <= 0) {
+                    inside_param = false;
+                }
+            }
+
+            insert_quad("PARAM", cs_pop(temps), "--", "--");
+        }
+
+        callk_node = false;
+        nested_call_level--;
+
+        if (nested_call_level <= 0) { // Ultima call de todas
+            nested_call_level = 0;
+            inside_param = false;
+            inside_call = false;
+        }
+
+        // Calculando quantos parâmetros a função tem
+        int param_num = 0;
+        TreeNode *curr_node = t->child[0];
+
+        while (curr_node != NULL) {
+            curr_node = curr_node->sibling;
+            param_num++;
+        }
+
+        if ((strcmp(t->attr.name, "output") == 0) ||
+            (strcmp(t->attr.name, "save_reg") == 0) ||
+            (strcmp(t->attr.name, "load_reg") == 0) ||
+            (strcmp(t->attr.name, "set_preempt") == 0) ||
+            (strcmp(t->attr.name, "set_pc") == 0)) {
+            char *p_num = malloc_or_die(STRING_SIZE * sizeof(*p_num));
+
+            snprintf(p_num, STRING_SIZE, "%d", param_num);
+            insert_quad("CALL", "--", t->attr.name, p_num);
+        } else {
+            char *temp = new_temp();
+            char *p_num = malloc_or_die(STRING_SIZE * sizeof(*p_num));
+
+            cs_push(temps, temp);
+            snprintf(p_num, STRING_SIZE, "%d", param_num);
+            insert_quad("CALL", temp, t->attr.name, p_num);
+        }
     }
 
     // Verifica o irmão
@@ -403,43 +469,6 @@ read_tree_node(TreeNode *t)
         case ArrIdK:
             array_node = true;
             break;
-        case CallK: {
-            if (inside_param &&
-                !(t->node_kind == ExpK && t->kind.exp == CalcK)) {
-                if (t->node_kind == ExpK && t->kind.exp == CallK) {
-                    if (nested_call_level <= 0) {
-                        inside_param = false;
-                    }
-                }
-
-                insert_quad("PARAM", cs_pop(temps), "--", "--");
-            }
-
-            callk_node = false;
-            nested_call_level--;
-
-            if (nested_call_level <= 0) { // Ultima call de todas
-                nested_call_level = 0;
-                inside_param = false;
-                inside_call = false;
-            }
-
-            // Calculando quantos parâmetros a função tem
-            int param_num = 0;
-            TreeNode *curr_node = t->child[0];
-
-            while (curr_node != NULL) {
-                curr_node = curr_node->sibling;
-                param_num++;
-            }
-
-            char *temp = new_temp();
-            char *p_num = malloc_or_die(STRING_SIZE * sizeof(*p_num));
-
-            cs_push(temps, temp);
-            snprintf(p_num, STRING_SIZE, "%d", param_num);
-            insert_quad("CALL", temp, t->attr.name, p_num);
-        } break;
         default:
             break;
         }

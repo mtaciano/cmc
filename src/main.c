@@ -30,8 +30,10 @@
 
 /* Variáveis globais */
 int lineno = 0;
-int g_slot_start;
-int g_slot_end;
+int g_mem_start;
+int g_mem_end;
+int g_inst_start;
+int g_inst_end;
 FILE *source;
 FILE *std_fd;
 FILE *err_fd;
@@ -78,17 +80,20 @@ main(int argc, char *argv[])
     }
 
     char *errptr;
-    g_slot_start = strtol(argv[2], &errptr, 10);
-    if (errptr == argv[2] || (g_slot_start < 0 || g_slot_start >= 4)) {
+    int slot = strtol(argv[2], &errptr, 10);
+    if (errptr == argv[2] || (slot < 0 || slot >= 4)) {
         fprintf(err_fd, "slot '%s' não pode ser usado.\n", argv[2]);
         exit(EXIT_FAILURE);
     }
 
-    g_slot_start = g_slot_start * SLOT_SIZE;
-    g_slot_end = g_slot_start + SLOT_SIZE;
+    g_mem_start = slot * MEM_AVAILABLE;
+    g_mem_end = g_mem_start + MEM_AVAILABLE;
+
+    g_inst_start = slot * INST_AVAILABLE;
+    g_inst_end = g_inst_start + INST_AVAILABLE;
 
     fprintf(
-        std_fd, "COMPILAÇÃO DO C- (%d-%d): %s\n\n", g_slot_start, g_slot_end,
+        std_fd, "COMPILAÇÃO DO C- (%d-%d): %s\n\n", g_inst_start, g_inst_end,
         program
     );
 

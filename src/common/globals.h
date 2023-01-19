@@ -29,15 +29,25 @@
 /* A constante `MAXRESERVED` diz o número de palavras reservadas */
 #define MAXRESERVED 6
 
-/* A contante `MEM_SIZE` serve para indicar o tamanho da memória
- * de instruções do processador
+/* A constante `TOTAL_MEM_SIZE` serve para indicar o tamanho da memória
+ * de dados do processador disponível
  */
-#define MEM_SIZE 512
+#define TOTAL_MEM_SIZE 1024
 
-/* A contante `SLOT_SIZE` serve para indicar o tamanho que cada programa
- * pode ocupar na memória do processador
+/* A contante `MEM_AVAILABLE` serve para indicar o tamanho que cada programa
+ * pode ocupar na memória de dados do processador
  */
-#define SLOT_SIZE (MEM_SIZE / 4)
+#define MEM_AVAILABLE (TOTAL_MEM_SIZE / 4)
+
+/* A constante `TOTAL_INST_SIZE` serve para indicar o tamanho da memória
+ * de instruções do processador disponível
+ */
+#define TOTAL_INST_SIZE 2048
+
+/* A constante `INST_AVAILABLE` serve para indicar o tamanho que cada programa
+ * pode ocupar na memória de instruções do processador
+ */
+#define INST_AVAILABLE (TOTAL_INST_SIZE / 4)
 
 /* O Yacc/Bison gera seus próprios valores int para os tokens */
 typedef int TokenType;
@@ -114,19 +124,24 @@ extern int g_trace_analyze;
  */
 extern int g_trace_code;
 
-/* A variável `g_slot_start` serve para armazenar o começo do slot
- * que vai ser usado durante o processo de compilação,
- * assim mudando fatores como local na memória de dados e de instruções
+/* A variável `g_mem_start` serve para armazenar o começo da memória
+ * de dados do programa a ser compilado.
  */
-// NOTE: para facilitar a implementação, é assumido que o tamanho da memória
-// de dados é o mesmo que o da memória de instruções, assim a posição
-// dos dados de cada programa na memória vai ter um _offset_ igual
-// o da de instruções
-extern int g_slot_start;
+extern int g_mem_start;
 
-/* A variável `g_slot_end` serve para armazenar o fim do slot (não inclusivo)
- * que vai ser usado durante o processo de compilação.
+/* A variável `g_mem_slot_end` serve para armazenar o fim da memória (não
+ * inclusiva) de dados que vai ser usada durante o processo de compilação.
  */
-extern int g_slot_end;
+extern int g_mem_end;
+
+/* A variável `g_inst_start` serve para armazenar o começo da memória
+ * de instruções do programa a ser compilado.
+ */
+extern int g_inst_start;
+
+/* A variável `g_inst_end` serve para armazenar o fim da memória (não
+ * inclusivo) de instruções que vai ser usada durante o processo de compilação.
+ */
+extern int g_inst_end;
 
 #endif /* _GLOBALS_H_ */

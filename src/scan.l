@@ -15,7 +15,7 @@ extern int yylex(void);
 
 digit        [0-9]
 NUM          {digit}+
-letter       [a-zA-Z]
+letter       [a-zA-Z_]
 ID           {letter}+
 newline      [\n\r]+
 whitespace   [ \t]+

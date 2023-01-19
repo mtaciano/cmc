@@ -25,6 +25,8 @@ mod opcodes {
     pub(crate) const JP: u32 = 0b11001 << 27;
     pub(crate) const STORER: u32 = 0b11010 << 27; // RS RD
     pub(crate) const LOADR: u32 = 0b11011 << 27; // RD RS
+    pub(crate) const QTM: u32 = 0b11100 << 27;
+    pub(crate) const PC: u32 = 0b11101 << 27;
 
     // TODO: implementar futuramente
     // const NOT: u32 = 0b01010 << 27;
@@ -59,6 +61,8 @@ mod opcodes {
             "JP" => JP,
             "STORER" => STORER,
             "LOADR" => LOADR,
+            "QTM" => QTM,
+            "PC" => PC,
             _ => panic!("opcode {str} não conhecido!"),
         }
     }
@@ -70,20 +74,23 @@ mod opcodes {
 */
 fn parse_register(reg: &str) -> u32 {
     // Verificar se é um registrador reservado
-    if reg.eq("$r_call") {
+    // NOTE: $r31 é reservado para o SO, então deve sempre estar não usado
+    if reg.eq("$r_os") {
         return 31;
-    } else if reg.eq("$r_jmp") {
+    } else if reg.eq("$r_call") {
         return 30;
-    } else if reg.eq("$r_lab") {
+    } else if reg.eq("$r_jmp") {
         return 29;
-    } else if reg.eq("$r_ret") {
+    } else if reg.eq("$r_lab") {
         return 28;
+    } else if reg.eq("$r_ret") {
+        return 27;
     }
 
     // Não é reservado
-    let number = match reg[2..].parse::<u32>() {
+    match reg[2..].parse::<u32>() {
         Ok(num) => {
-            if num >= 28 {
+            if num >= 27 {
                 panic!("Tamanho inválido de registrador.");
             }
 
@@ -92,9 +99,7 @@ fn parse_register(reg: &str) -> u32 {
         Err(_) => {
             panic!("Registrador não reservado, mas com caracteres inválidos!");
         }
-    };
-
-    number
+    }
 }
 
 /* Função `parse_imediate` é responsável por verificar
@@ -133,6 +138,10 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
             "NOP" | "HLT" => {
                 bin.push(Bin {
                     word: opcodes::from_str(&inst.cmd),
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
                 });
             }
             "LOAD" | "LOADI" | "STORE" => {
@@ -144,7 +153,13 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
                 let reg = parse_register(&inst.arg1);
                 inner |= reg << 22;
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
             "STORER" | "LOADR" | "MOVE" => {
                 let mut inner = opcodes::from_str(&inst.cmd);
@@ -155,7 +170,13 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
                 let rd = parse_register(&inst.arg2);
                 inner |= rd << 17;
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
             "J" => {
                 let mut inner = opcodes::J;
@@ -163,7 +184,13 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
                 let reg = parse_register(&inst.arg1);
                 inner |= reg << 22;
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
             "JZ" | "JN" | "JP" => {
                 let mut inner = opcodes::from_str(&inst.cmd);
@@ -174,7 +201,13 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
                 let rd = parse_register(&inst.arg2);
                 inner |= rd << 17;
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
             "JI" => {
                 // TODO: ver oq fazer com isso
@@ -186,7 +219,13 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
 
                 inner |= inst.arg1.parse::<u32>().unwrap();
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
             "ADD" | "SUB" | "MULT" | "DIV" => {
                 let mut inner = opcodes::from_str(&inst.cmd);
@@ -200,7 +239,13 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
                 let rt = parse_register(&inst.arg3);
                 inner |= rt << 12;
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
             "ADDI" | "SUBI" => {
                 let mut inner = opcodes::from_str(&inst.cmd);
@@ -213,7 +258,13 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
 
                 inner |= parse_imediate(&inst.arg3, 17);
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
             "OUT" => {
                 let mut inner = opcodes::OUT;
@@ -221,15 +272,27 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
                 let rd = parse_register(&inst.arg2);
                 inner |= rd << 17;
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
-            "IN" => {
-                let mut inner = opcodes::IN;
+            "IN" | "QTM" | "PC" => {
+                let mut inner = opcodes::from_str(&inst.cmd);
 
                 let rs = parse_register(&inst.arg1);
                 inner |= rs << 22;
 
-                bin.push(Bin { word: inner });
+                bin.push(Bin {
+                    word: inner,
+                    original_cmd: format!(
+                        "{:>6}, {:>6}, {:>6}, {:>6}",
+                        inst.cmd, inst.arg1, inst.arg2, inst.arg3
+                    ),
+                });
             }
             _ => panic!("Valor de assembly não conhecido!"),
         }
@@ -240,7 +303,10 @@ pub(crate) fn make_binary(asm: Vec<Asm>) -> Vec<Bin> {
     unsafe {
         if g_trace_code == 1 {
             for bin in bin.iter() {
-                print_stream(std_fd, format!("{:032b}\n", bin.word).as_str());
+                print_stream(
+                    std_fd,
+                    format!("{:032b} // {}\n", bin.word, bin.original_cmd).as_str(),
+                );
             }
 
             print_stream(std_fd, "\nGeração do binário concluída.\n");

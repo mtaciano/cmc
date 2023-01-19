@@ -1,0 +1,15 @@
+/* O objetivo desse teste é verificar se operações de entrada
+ * e saída estão funcionando corretamente com múltiplos valores
+ */
+
+void
+main(void)
+{
+    int y;
+    int x;
+
+    y = input();
+    x = input();
+
+    output(y + x);
+}

@@ -1,8 +1,11 @@
 /* Implementação do gerador de código assembly */
-use crate::ffi::{g_slot_start, g_trace_code, print_stream, std_fd};
+use crate::ffi::{
+    g_inst_end, g_inst_start, g_mem_end, g_mem_start, g_trace_code, print_stream, std_fd,
+};
 use crate::{asm, Asm, Quad};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::iter;
 
 enum Comparison {
     LT,
@@ -95,7 +98,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
     let mut vec = Vec::new();
     let mut variables: HashMap<Variable, Memory> = HashMap::new();
     let mut iff = Vec::new();
-    let mut mem_available = unsafe { g_slot_start };
+    let mut mem_available = unsafe { g_mem_start };
 
     let debug = false;
     let mut output_param: Vec<String> = Vec::new();
@@ -172,7 +175,12 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
 
                 variables.insert(k, v);
 
-                mem_available += 1;
+                // HACK: SO não pode ter nada antes do PC
+                unsafe {
+                    if g_inst_start != 0 {
+                        mem_available += 1;
+                    }
+                }
             }
             "ARRLOC" => {
                 let var_size = q.arg3.parse().unwrap();
@@ -408,43 +416,241 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 let asm;
                 let noop = asm!["NOP", "--", "--", "--"];
 
-                if q.arg2 == "output" {
-                    let param = format!(
-                        "$r{}",
-                        output_param.pop().unwrap()[2..].parse::<i32>().unwrap()
-                    );
-                    asm = Asm {
-                        cmd: "OUT".to_string(),
-                        arg1: "--".to_string(),
-                        arg2: param,
-                        arg3: "--".to_string(),
-                    };
-                } else if q.arg2 == "input" {
-                    if debug {
-                        println!("{q:?}");
+                match q.arg2.as_str() {
+                    "output" => {
+                        let param = format!(
+                            "$r{}",
+                            output_param.pop().unwrap()[2..].parse::<i32>().unwrap()
+                        );
+                        asm = Asm {
+                            cmd: "OUT".to_string(),
+                            arg1: "--".to_string(),
+                            arg2: param,
+                            arg3: "--".to_string(),
+                        };
                     }
+                    "save_reg" => {
+                        let memory_start = 4;
 
-                    let dest = format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
-                    asm = Asm {
-                        cmd: "IN".to_string(),
-                        arg1: dest,
-                        arg2: "--".to_string(),
-                        arg3: "--".to_string(),
-                    };
-                } else {
-                    asm = Asm {
-                        cmd: q.cmd.to_owned().to_lowercase(),
-                        arg1: q.arg1.to_owned().to_lowercase(),
-                        arg2: q.arg2.to_owned().to_lowercase(),
-                        arg3: q.arg3.to_owned().to_lowercase(),
-                    };
+                        for i in 0..27 {
+                            vec.push(Asm {
+                                cmd: "STORE".to_string(),
+                                arg1: format!("$r{i}"),
+                                arg2: format!("{}", memory_start + i),
+                                arg3: "KEEP".to_string(),
+                            });
+                        }
 
-                    vec.push(noop.clone());
-                }
+                        vec.push(Asm {
+                            cmd: "STORE".to_string(),
+                            arg1: "$r_ret".to_string(),
+                            arg2: format!("{}", memory_start + 27),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "STORE".to_string(),
+                            arg1: "$r_lab".to_string(),
+                            arg2: format!("{}", memory_start + 28),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "STORE".to_string(),
+                            arg1: "$r_jmp".to_string(),
+                            arg2: format!("{}", memory_start + 29),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "STORE".to_string(),
+                            arg1: "$r_call".to_string(),
+                            arg2: format!("{}", memory_start + 30),
+                            arg3: "KEEP".to_string(),
+                        });
+
+                        asm = Asm {
+                            cmd: "STORE".to_string(),
+                            arg1: "$r_os".to_string(),
+                            arg2: format!("{}", memory_start + 31),
+                            arg3: "KEEP".to_string(),
+                        }
+                    }
+                    "load_reg" => {
+                        let param = format!(
+                            "$r{}",
+                            output_param.pop().unwrap()[2..].parse::<i32>().unwrap()
+                        );
+
+                        vec.push(Asm {
+                            cmd: "MOVE".to_string(),
+                            arg1: "$r_os".to_string(),
+                            arg2: param,
+                            arg3: "--".to_string(),
+                        });
+
+                        // Limpa os registradores
+                        for i in 0..27 {
+                            vec.push(Asm {
+                                cmd: "LOADI".to_string(),
+                                arg1: format!("$r{i}"),
+                                arg2: "0".to_string(),
+                                arg3: "KEEP".to_string(),
+                            });
+                        }
+
+                        vec.push(Asm {
+                            cmd: "LOADI".to_string(),
+                            arg1: "$r_ret".to_string(),
+                            arg2: "0".to_string(),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "LOADI".to_string(),
+                            arg1: "$r_lab".to_string(),
+                            arg2: "0".to_string(),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "LOADI".to_string(),
+                            arg1: "$r_jmp".to_string(),
+                            arg2: "0".to_string(),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "LOADI".to_string(),
+                            arg1: "$r_call".to_string(),
+                            arg2: "0".to_string(),
+                            arg3: "KEEP".to_string(),
+                        });
+
+                        // Carrega os valores
+                        for i in 0..27 {
+                            vec.push(Asm {
+                                cmd: "LOADR".to_string(),
+                                arg1: format!("$r{i}"),
+                                arg2: "$r_os".to_string(),
+                                arg3: "KEEP".to_string(),
+                            });
+                            vec.push(Asm {
+                                cmd: "ADDI".to_string(),
+                                arg1: "$r_os".to_string(),
+                                arg2: "$r_os".to_string(),
+                                arg3: "1".to_string(),
+                            });
+                        }
+
+                        vec.push(Asm {
+                            cmd: "LOADR".to_string(),
+                            arg1: "$r_ret".to_string(),
+                            arg2: "$r_os".to_string(),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "ADDI".to_string(),
+                            arg1: "$r_os".to_string(),
+                            arg2: "$r_os".to_string(),
+                            arg3: "1".to_string(),
+                        });
+
+                        vec.push(Asm {
+                            cmd: "LOADR".to_string(),
+                            arg1: "$r_lab".to_string(),
+                            arg2: "$r_os".to_string(),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "ADDI".to_string(),
+                            arg1: "$r_os".to_string(),
+                            arg2: "$r_os".to_string(),
+                            arg3: "1".to_string(),
+                        });
+
+                        vec.push(Asm {
+                            cmd: "LOADR".to_string(),
+                            arg1: "$r_jmp".to_string(),
+                            arg2: "$r_os".to_string(),
+                            arg3: "KEEP".to_string(),
+                        });
+                        vec.push(Asm {
+                            cmd: "ADDI".to_string(),
+                            arg1: "$r_os".to_string(),
+                            arg2: "$r_os".to_string(),
+                            arg3: "1".to_string(),
+                        });
+
+                        asm = Asm {
+                            cmd: "LOADR".to_string(),
+                            arg1: "$r_call".to_string(),
+                            arg2: "$r_os".to_string(),
+                            arg3: "KEEP".to_string(),
+                        }
+                    }
+                    "set_preempt" => {
+                        let param = format!(
+                            "$r{}",
+                            output_param.pop().unwrap()[2..].parse::<i32>().unwrap()
+                        );
+                        asm = Asm {
+                            cmd: "QTM".to_string(),
+                            arg1: param,
+                            arg2: "--".to_string(),
+                            arg3: "--".to_string(),
+                        };
+                    }
+                    "get_pc" => {
+                        let dest = format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
+                        asm = Asm {
+                            cmd: "PC".to_string(),
+                            arg1: dest,
+                            arg2: "--".to_string(),
+                            arg3: "--".to_string(),
+                        };
+                    }
+                    "set_pc" => {
+                        let param = format!(
+                            "$r{}",
+                            output_param.pop().unwrap()[2..].parse::<i32>().unwrap()
+                        );
+                        asm = Asm {
+                            cmd: "SPC".to_string(),
+                            arg1: param,
+                            arg2: "--".to_string(),
+                            arg3: "--".to_string(),
+                        };
+                    }
+                    "input" => {
+                        if debug {
+                            println!("{q:?}");
+                        }
+
+                        let dest = format!("$r{}", q.arg1[2..].parse::<i32>().unwrap());
+                        asm = Asm {
+                            cmd: "IN".to_string(),
+                            arg1: dest,
+                            arg2: "--".to_string(),
+                            arg3: "--".to_string(),
+                        };
+                    }
+                    _ => {
+                        asm = Asm {
+                            cmd: q.cmd.to_owned().to_lowercase(),
+                            arg1: q.arg1.to_owned().to_lowercase(),
+                            arg2: q.arg2.to_owned().to_lowercase(),
+                            arg3: q.arg3.to_owned().to_lowercase(),
+                        };
+
+                        vec.push(noop.clone());
+                    }
+                };
 
                 vec.push(asm);
 
-                if q.arg2 != "output" && q.arg2 != "input" {
+                if q.arg2 != "output"
+                    && q.arg2 != "input"
+                    && q.arg2 != "save_reg"
+                    && q.arg2 != "load_reg"
+                    && q.arg2 != "set_preempt"
+                    && q.arg2 != "set_pc"
+                    && q.arg2 != "get_pc"
+                {
                     vec.push(noop);
                 }
             }
@@ -459,7 +665,12 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                 });
             }
             "PARAM" => {
-                if quad[i + 1].arg2 == "output" {
+                // Funções não declaradas no arquivo e que tem parametros
+                if quad[i + 1].arg2 == "output"
+                    || quad[i + 1].arg2 == "set_preempt"
+                    || quad[i + 1].arg2 == "load_reg"
+                    || quad[i + 1].arg2 == "set_pc"
+                {
                     output_param.push(q.arg1.clone());
                 } else {
                     vec.push(Asm {
@@ -491,31 +702,33 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
             let param_num = vec[i].arg3.parse::<usize>().unwrap();
             let mut param_count = 0;
             let mut j = i;
-            let params = fun_args.get(scope).unwrap();
-            for p in params.iter().rev() {
-                if param_count >= param_num {
-                    break;
-                }
-                while j > 0 {
+
+            if let Some(params) = fun_args.get(scope) {
+                for p in params.iter().rev() {
                     if param_count >= param_num {
                         break;
                     }
-                    if vec[j].cmd == "param" {
-                        param_count += 1;
-                        let temp = vec[j].arg1.clone();
-                        let loc = p.1.mem_location;
-                        let asm = Asm {
-                            cmd: "STORE".to_string(),
-                            arg1: format!("$r{}", temp[2..].parse::<i32>().unwrap()),
-                            arg2: loc.to_string(),
-                            arg3: "--".to_string(),
-                        };
+                    while j > 0 {
+                        if param_count >= param_num {
+                            break;
+                        }
+                        if vec[j].cmd == "param" {
+                            param_count += 1;
+                            let temp = vec[j].arg1.clone();
+                            let loc = p.1.mem_location;
+                            let asm = Asm {
+                                cmd: "STORE".to_string(),
+                                arg1: format!("$r{}", temp[2..].parse::<i32>().unwrap()),
+                                arg2: loc.to_string(),
+                                arg3: "--".to_string(),
+                            };
 
-                        let _ = std::mem::replace(&mut vec[j], asm);
-                        break;
+                            let _ = std::mem::replace(&mut vec[j], asm);
+                            break;
+                        }
+
+                        j -= 1;
                     }
-
-                    j -= 1;
                 }
             }
         }
@@ -726,6 +939,16 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
         let _ = std::mem::replace(&mut vec[i], load);
     }
 
+    for v in vec.iter_mut() {
+        match v.cmd.as_str() {
+            "JI" => unsafe { v.arg1 = (v.arg1.parse::<i32>().unwrap() + g_inst_start).to_string() },
+            "LOADI" if v.arg1 == "$r_lab" || v.arg1 == "$r_call" => unsafe {
+                v.arg2 = (v.arg2.parse::<i32>().unwrap() + g_inst_start).to_string()
+            },
+            _ => {}
+        }
+    }
+
     let mut register_map: HashMap<usize, usize> = HashMap::new();
     let mut available_reg = Vec::with_capacity(32);
 
@@ -733,7 +956,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
         let mut reserved = false;
         let mut available = true;
 
-        if i >= 28 {
+        if i >= 27 {
             reserved = true;
             available = false;
         }
@@ -756,7 +979,8 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
         for i in 0..vec.len() {
             match vec[i].cmd.as_str() {
                 "LOAD" | "LOADI" => {
-                    if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_lab" {
+                    if vec[i].arg3 != "KEEP" && vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_lab"
+                    {
                         let register = vec[i].arg1[2..].parse::<usize>().unwrap();
                         if let Entry::Vacant(e) = register_map.entry(register) {
                             let available = find_available_reg(&available_reg)
@@ -770,23 +994,30 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                         }
                     }
                 }
-                "LOADR" => {
-                    let register = vec[i].arg1[2..].parse::<usize>().unwrap();
-                    if let Entry::Vacant(e) = register_map.entry(register) {
-                        let available = find_available_reg(&available_reg)
-                            .unwrap_or_else(|| panic!("register overflow"));
-                        available_reg[available].available = false;
-                        e.insert(available);
-                        vec[i].arg1 = format!("$r{available}");
-                        map_reg(&mut vec[i].arg2, &register_map);
+                "LOADR" | "PC" => {
+                    if vec[i].arg3 != "KEEP" {
+                        let register = vec[i].arg1[2..].parse::<usize>().unwrap();
+                        if let Entry::Vacant(e) = register_map.entry(register) {
+                            let available = find_available_reg(&available_reg)
+                                .unwrap_or_else(|| panic!("register overflow"));
+                            available_reg[available].available = false;
+                            e.insert(available);
+                            vec[i].arg1 = format!("$r{available}");
+
+                            if vec[i].cmd != "PC" {
+                                map_reg(&mut vec[i].arg2, &register_map);
+                            }
+                        }
                     }
                 }
                 "STORE" => {
-                    let old = vec[i].arg1.clone();
-                    map_reg(&mut vec[i].arg1, &register_map);
-                    if i > start {
-                        // HACK: não sei melhorar dentro de f()
-                        remove_reg(&old, &mut register_map, &mut available_reg);
+                    if vec[i].arg3 != "KEEP" {
+                        let old = vec[i].arg1.clone();
+                        map_reg(&mut vec[i].arg1, &register_map);
+                        if i > start {
+                            // HACK: não sei melhorar dentro de f()
+                            remove_reg(&old, &mut register_map, &mut available_reg);
+                        }
                     }
                 }
                 "STORER" => {
@@ -827,11 +1058,14 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     }
                 }
                 "ADDI" => {
-                    map_reg(&mut vec[i].arg1, &register_map);
-                    map_reg(&mut vec[i].arg2, &register_map);
+                    if vec[i].arg1 != "$r_os" {
+                        map_reg(&mut vec[i].arg1, &register_map);
+                        map_reg(&mut vec[i].arg2, &register_map);
+                    }
                 }
                 "MOVE" => {
-                    if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_ret" {
+                    if vec[i].arg1 != "$r_call" && vec[i].arg1 != "$r_ret" && vec[i].arg1 != "$r_os"
+                    {
                         if register_map.contains_key(&vec[i].arg1[2..].parse::<usize>().unwrap()) {
                             map_reg(&mut vec[i].arg1, &register_map);
                         } else {
@@ -843,7 +1077,7 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                             vec[i].arg1 = format!("$r{available}");
                         }
                     }
-                    if vec[i].arg2 != "$r_ret" {
+                    if vec[i].arg2 != "$r_ret" && vec[i].arg2 != "$r_os" {
                         let old = vec[i].arg2.clone();
                         map_reg(&mut vec[i].arg2, &register_map);
                         if i > start {
@@ -858,6 +1092,23 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
                     if i > start {
                         // HACK: não sei melhorar dentro de f()
                         remove_reg(&old, &mut register_map, &mut available_reg);
+                    }
+
+                    if vec[i].cmd == "SPC" {
+                        vec[i].cmd = "J".to_string();
+                    }
+                }
+                "SPC" | "QTM" => {
+                    let old = vec[i].arg1.clone();
+
+                    map_reg(&mut vec[i].arg1, &register_map);
+                    if i > start {
+                        // HACK: não sei melhorar dentro de f()
+                        remove_reg(&old, &mut register_map, &mut available_reg);
+                    }
+
+                    if vec[i].cmd == "SPC" {
+                        vec[i].cmd = "J".to_string();
                     }
                 }
                 "IN" => {
@@ -881,6 +1132,13 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
         }
     }
 
+    if mem_available >= unsafe { g_mem_end } {
+        panic!("Terminando compilação, buffer overflow!");
+    }
+
+    let padding = unsafe { (g_inst_end - g_inst_start) as usize - vec.len() };
+    vec.extend(iter::repeat(asm!["NOP", "--", "--", "--"]).take(padding));
+
     // SEGURANÇA: No momento temos acesso único a variável `g_trace_code`
     // justamente pelo código ser _single-thread_
     unsafe {
@@ -901,6 +1159,8 @@ pub(crate) fn make_assembly(quad: Vec<Quad>) -> Vec<Asm> {
             }
 
             for (i, asm) in vec.iter().enumerate() {
+                let i = i + g_inst_start as usize;
+
                 print_stream(
                     std_fd,
                     format!(

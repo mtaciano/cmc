@@ -4,7 +4,7 @@ use std::io::Write;
 
 /* Bindings com C */
 mod common;
-use common::ffi;
+use common::ffi::{self, g_inst_start};
 
 /* Gerador de assembly */
 mod assembly;
@@ -47,6 +47,7 @@ struct Asm {
 #[derive(Debug)]
 struct Bin {
     word: u32,
+    original_cmd: String,
 }
 
 /* Conversor de quádrupla única de C para Rust */
@@ -79,15 +80,15 @@ trait FromQuad {
     fn from_quad(quad: ffi::Quad) -> Self;
 }
 
-impl<T> FromQuad for Vec<T>
+impl<Q> FromQuad for Vec<Q>
 where
-    T: From<ffi::Quad>,
+    Q: From<ffi::Quad>,
 {
-    fn from_quad(mut quad: ffi::Quad) -> Vec<T> {
+    fn from_quad(mut quad: ffi::Quad) -> Vec<Q> {
         let mut quadruple = Vec::new();
 
         while !quad.is_null() {
-            quadruple.push(T::from(quad));
+            quadruple.push(Q::from(quad));
 
             // SEGURANÇA: Há pelo menos um elemento para quadruplas,
             // logo há pelo menos um `q.next`, então o ponteiro é verificado
@@ -111,56 +112,67 @@ where
 */
 #[no_mangle]
 pub extern "C" fn make_assembly_and_binary(quad: ffi::Quad) {
+    let slot = unsafe { ffi::g_inst_start / (ffi::g_inst_end - ffi::g_inst_start) };
+    let file_name = match slot {
+        0 => "sistema_operacional".to_string(),
+        num @ 1..=3 => format!("programa{num}"),
+        _ => unreachable!(),
+    };
+
     let quads = Vec::<Quad>::from_quad(quad);
-    let mut asm = crate::assembly::make_assembly(quads);
-
-    asm.extend(vec![
-        asm!["NOP", "--", "--", "--"];
-        unsafe {
-            (ffi::g_slot_end - ffi::g_slot_start) as usize - asm.len()
-        }
-    ]);
-
+    let asm = crate::assembly::make_assembly(quads);
     let bin = crate::binary::make_binary(asm);
 
     unsafe {
-        ffi::print_stream(ffi::std_fd, "\nCriando arquivo output.txt\n");
+        let success = format!("\nCriando arquivo {file_name}.txt\n");
+        ffi::print_stream(ffi::std_fd, &success);
     }
 
     let mut binary_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open("build/output.txt")
+        .open(format!("build/{file_name}.txt"))
         .expect("Não foi possível criar um arquivo de saída para o binário.");
 
     for bin in bin.iter() {
-        writeln!(&mut binary_file, "{:032b}", bin.word)
-            .expect("Erro escrevendo binário em arquivo.");
+        writeln!(
+            &mut binary_file,
+            "{:032b} // {}",
+            bin.word, bin.original_cmd
+        )
+        .expect("Erro escrevendo binário em arquivo.");
     }
 
     unsafe {
-        ffi::print_stream(ffi::std_fd, "\nArquivo output.txt criado.\n");
-        ffi::print_stream(ffi::std_fd, "\nCriando arquivo verilog_output.txt\n");
+        let success = format!("\nArquivo {file_name}.txt criado.\n");
+        ffi::print_stream(ffi::std_fd, &success);
+        let success = format!("\nCriando arquivo verilog_{file_name}.txt\n");
+        ffi::print_stream(ffi::std_fd, &success);
     }
 
     let mut verilog_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open("build/verilog_output.txt")
+        .open(format!("build/verilog_{file_name}.txt"))
         .expect("Não foi possível criar um arquivo de saída para o binário.");
 
-    for (i, bin) in bin.iter().enumerate() {
-        writeln!(
-            &mut verilog_file,
-            "memoriaI[{}] = 32'b{:032b};",
-            i, bin.word
-        )
-        .expect("Erro escrevendo binário em arquivo.");
+    unsafe {
+        for (i, bin) in bin.iter().enumerate() {
+            writeln!(
+                &mut verilog_file,
+                "memory[{}] = 32'b{:032b}; // {}",
+                i + g_inst_start as usize,
+                bin.word,
+                bin.original_cmd
+            )
+            .expect("Erro escrevendo binário em arquivo.");
+        }
     }
 
     unsafe {
-        ffi::print_stream(ffi::std_fd, "\nArquivo verilog_output.txt criado.\n");
+        let success = format!("\nArquivo verilog_{file_name}.txt criado.\n");
+        ffi::print_stream(ffi::std_fd, &success);
     }
 }
