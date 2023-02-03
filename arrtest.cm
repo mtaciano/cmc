@@ -1,7 +1,0 @@
-void
-main(void)
-{
-    int QUANTUM;
-    QUANTUM = 10;
-    set_preempt(QUANTUM);
-}
